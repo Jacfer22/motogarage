@@ -177,8 +177,15 @@ export default function PaginaAccount() {
           />
         </label>
         <div>
-          <p className="font-mono text-xs uppercase text-asfalto/50">Email</p>
-          <p className="text-sm">{user.email}</p>
+          {/* Nome pubblico: username (non email) */}
+          <p className="font-display text-2xl font-bold uppercase tracking-tight">
+            {profilo?.username ?? 'Senza username'}
+          </p>
+          {!profilo?.username && (
+            <p className="mt-1 font-mono text-xs text-cartello">
+              ↓ Scegli un username qui sotto
+            </p>
+          )}
           <p className="mt-2">
             {profilo?.is_admin ? (
               <span className="bg-cartello px-2 py-0.5 font-mono text-xs font-medium uppercase text-cemento">
@@ -199,6 +206,17 @@ export default function PaginaAccount() {
           </p>
         </div>
       </div>
+
+      {/* Dati privati: visibili solo all'utente loggato, non pubblici */}
+      <details className="mt-4 border-2 border-asfalto/20">
+        <summary className="cursor-pointer px-3 py-2 font-mono text-xs uppercase tracking-wide text-asfalto/50 hover:text-asfalto">
+          Dati riservati (solo tu puoi vederli)
+        </summary>
+        <div className="border-t border-asfalto/20 px-3 py-3">
+          <p className="font-mono text-xs uppercase text-asfalto/40">Email</p>
+          <p className="text-sm">{user.email}</p>
+        </div>
+      </details>
 
       <form onSubmit={salvaProfilo} className="mt-8 space-y-4">
         <div>

@@ -20,6 +20,7 @@ export default function PaginaAccedi() {
   const [errore, setErrore] = useState<string | null>(null);
   const [messaggio, setMessaggio] = useState<string | null>(null);
   const [caricamento, setCaricamento] = useState(false);
+  const [giaLoggato, setGiaLoggato] = useState(false);
 
   useEffect(() => {
     if (window.location.hash === '#registrati') {
@@ -27,13 +28,11 @@ export default function PaginaAccedi() {
     }
   }, []);
 
-  // Se già loggato, vai direttamente all'account
+  // Se già loggato, mostra messaggio invece di rimbalzare ciecamente
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) {
-        window.location.href = '/account';
-      }
+      if (data.session?.user) setGiaLoggato(true);
     });
   }, [supabase]);
 
@@ -115,6 +114,17 @@ export default function PaginaAccedi() {
       <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
         {modalita === 'accedi' ? 'Accedi' : 'Crea il tuo account'}
       </h1>
+
+      {giaLoggato && (
+        <div className="mt-6 border-2 border-bosco bg-bosco/10 p-4">
+          <p className="text-sm text-bosco">
+            Sei già loggato.{' '}
+            <a href="/account" className="font-medium underline">
+              Vai al tuo profilo →
+            </a>
+          </p>
+        </div>
+      )}
       <p className="mt-3 text-asfalto/70">
         {modalita === 'accedi'
           ? 'Per salvare i tuoi giri preferiti e, presto, commentare e caricare foto.'

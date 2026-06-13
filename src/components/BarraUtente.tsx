@@ -8,7 +8,7 @@ export default function BarraUtente() {
 
   if (loading || nonConfigurato || !user) return null;
 
-  const nome = profilo?.username ?? user.email?.split('@')[0] ?? 'motociclista';
+  const nome = profilo?.username ?? 'motociclista';
 
   return (
     <div className="border-b-2 border-segnale bg-asfalto text-cemento">
