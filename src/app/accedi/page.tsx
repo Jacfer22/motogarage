@@ -28,11 +28,14 @@ export default function PaginaAccedi() {
     }
   }, []);
 
-  // Se già loggato, mostra messaggio invece di rimbalzare ciecamente
+  // Se già loggato, mostra banner e rimanda alla home dopo 1 secondo
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) setGiaLoggato(true);
+      if (data.session?.user) {
+        setGiaLoggato(true);
+        setTimeout(() => { window.location.href = '/'; }, 1000);
+      }
     });
   }, [supabase]);
 
@@ -116,11 +119,11 @@ export default function PaginaAccedi() {
       </h1>
 
       {giaLoggato && (
-        <div className="mt-6 border-2 border-bosco bg-bosco/10 p-4">
-          <p className="text-sm text-bosco">
-            Sei già loggato.{' '}
-            <a href="/account" className="font-medium underline">
-              Vai al tuo profilo →
+        <div className="mt-6 border-2 border-segnale bg-segnale/10 p-4">
+          <p className="font-medium text-asfalto">
+            Sei già loggato — ti riportiamo alla home…{' '}
+            <a href="/" className="underline">
+              vai subito →
             </a>
           </p>
         </div>
