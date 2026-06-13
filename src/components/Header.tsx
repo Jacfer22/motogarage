@@ -27,12 +27,12 @@ export default function Header() {
           </span>
         </Link>
         <nav className="flex items-center gap-4">
-          <Link
+          <a
             href="/#itinerari"
             className="font-mono text-sm uppercase tracking-wide hover:text-segnale"
           >
             Itinerari
-          </Link>
+          </a>
           <Link
             href="/pro"
             className="bg-segnale px-3 py-1.5 font-mono text-sm font-medium uppercase tracking-wide text-asfalto hover:bg-white"

@@ -63,8 +63,8 @@ export default function PaginaAccedi() {
         );
         return;
       }
-      router.push('/account');
       router.refresh();
+      window.location.href = '/account';
     } else {
       const { error } = await supabase!.auth.signUp({
         email,
