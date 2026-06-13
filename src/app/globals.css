@@ -114,3 +114,31 @@ body {
   outline: 3px solid var(--segnale);
   outline-offset: 2px;
 }
+
+/* Marker posizione GPS corrente, durante la traccia */
+.marker-posizione {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #2563eb;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6);
+  animation: pulsazione-posizione 2s infinite;
+}
+@keyframes pulsazione-posizione {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(37, 99, 235, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marker-posizione {
+    animation: none;
+  }
+}

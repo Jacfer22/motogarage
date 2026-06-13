@@ -38,6 +38,13 @@ const AZIONI = [
     soloFree: true,
   },
   {
+    href: '/traccia',
+    titolo: 'Traccia un giro',
+    sotto: 'Registra il percorso via GPS e crea la card da condividere',
+    colore: 'bg-asfalto text-cemento',
+    span: 'col-span-1',
+  },
+  {
     href: '/admin',
     titolo: 'Pannello admin',
     sotto: 'Avvisi, utenti Pro, aggiornamenti strade in tempo reale',
@@ -189,19 +196,6 @@ export default function PaginaHub() {
               </Link>
             );
           })}
-
-          {/* Tile "Card del giro" coming soon */}
-          <div className="col-span-1 flex flex-col border-2 border-dashed border-asfalto/20 p-5 text-asfalto/30">
-            <h2 className="font-display text-3xl font-bold uppercase leading-tight tracking-tight sm:text-4xl">
-              Card del giro
-            </h2>
-            <p className="mt-2 text-sm">
-              Genera la card da condividere su TikTok e Instagram
-            </p>
-            <span className="mt-4 block font-mono text-xs uppercase tracking-wide">
-              In arrivo
-            </span>
-          </div>
         </div>
       </section>
 

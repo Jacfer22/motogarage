@@ -35,9 +35,9 @@ const TILES: Tile[] = [
     evidenza: true,
   },
   {
-    href: '/#itinerari',
-    titolo: 'Card del tuo giro',
-    sotto: 'Crea la card da condividere su TikTok e Instagram — presto',
+    href: '/traccia',
+    titolo: 'Traccia un giro',
+    sotto: 'Registra il percorso via GPS e crea la card da condividere',
     icona: '📱',
     solo: 'loggato',
   },
