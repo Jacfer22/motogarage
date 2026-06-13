@@ -66,6 +66,7 @@ create table public.profiles (
   moto text,
   avatar_url text,
   is_pro boolean not null default false,
+  is_admin boolean not null default false,
   pro_scadenza timestamptz,
   created_at timestamptz not null default now()
 );
@@ -149,6 +150,13 @@ create policy "avvisi leggibili da tutti" on public.avvisi for select using (tru
 -- Profili: ognuno gestisce il suo
 create policy "profili leggibili da tutti" on public.profiles for select using (true);
 create policy "ognuno aggiorna il proprio profilo" on public.profiles for update using (auth.uid() = id);
+create policy "admin aggiorna profili" on public.profiles for update using (
+  exists (select 1 from public.profiles p2 where p2.id = auth.uid() and p2.is_admin = true)
+);
+
+create policy "admin aggiorna avvisi" on public.avvisi for update using (
+  exists (select 1 from public.profiles p2 where p2.id = auth.uid() and p2.is_admin = true)
+);
 
 -- Commenti: lettura pubblica, scrittura solo autenticati
 create policy "commenti leggibili da tutti" on public.commenti for select using (true);

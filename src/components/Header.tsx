@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from './AuthProvider';
 
 export default function Header() {
-  const { user, loading, nonConfigurato } = useAuth();
+  const { user, profilo, loading, nonConfigurato } = useAuth();
 
   return (
     <header className="bg-asfalto text-cemento">
@@ -33,12 +33,23 @@ export default function Header() {
           >
             Itinerari
           </a>
+
+          {!loading && profilo?.is_admin && (
+            <Link
+              href="/admin"
+              className="border border-cartello px-3 py-1.5 font-mono text-sm font-medium uppercase tracking-wide text-cartello hover:bg-cartello hover:text-cemento"
+            >
+              Admin
+            </Link>
+          )}
+
           <Link
             href="/pro"
             className="bg-segnale px-3 py-1.5 font-mono text-sm font-medium uppercase tracking-wide text-asfalto hover:bg-white"
           >
-            Pro
+            {profilo?.is_pro ? 'Pro ✓' : 'Pro'}
           </Link>
+
           {!nonConfigurato && !loading && (
             <Link
               href={user ? '/account' : '/accedi'}

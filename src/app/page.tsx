@@ -1,5 +1,6 @@
 import { getItinerari, getItinerariConAvvisi } from '@/lib/supabase';
 import ItinerarioCard from '@/components/ItinerarioCard';
+import BarraUtente from '@/components/BarraUtente';
 
 export const revalidate = 3600;
 
@@ -12,6 +13,7 @@ export default async function Home() {
 
   return (
     <>
+      <BarraUtente />
       {/* Hero */}
       <section className="bg-asfalto text-cemento">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:py-20">

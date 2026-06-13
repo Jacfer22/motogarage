@@ -8,6 +8,7 @@ export interface Profilo {
   username: string | null;
   moto: string | null;
   is_pro: boolean;
+  is_admin: boolean;
 }
 
 interface AuthState {
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const { data } = await supabase!
         .from('profiles')
-        .select('username, moto, is_pro')
+        .select('username, moto, is_pro, is_admin')
         .eq('id', user.id)
         .single();
       setStato({
