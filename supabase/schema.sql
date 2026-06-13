@@ -64,6 +64,9 @@ create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   username text unique,
   moto text,
+  categoria_moto text check (
+    categoria_moto in ('naked','sportiva','touring','adventure','custom','cafe_racer','enduro','scooter','vintage','altro')
+  ),
   avatar_url text,
   is_pro boolean not null default false,
   is_admin boolean not null default false,
