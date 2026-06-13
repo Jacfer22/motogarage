@@ -58,10 +58,10 @@ export default function Header() {
 
           {!nonConfigurato && !loading && (
             <Link
-              href={user ? '/account' : '/accedi'}
+              href={user ? '/hub' : '/accedi'}
               className="font-mono text-sm uppercase tracking-wide hover:text-segnale"
             >
-              {user ? 'Account' : 'Accedi'}
+              {user ? 'Hub' : 'Accedi'}
             </Link>
           )}
         </nav>

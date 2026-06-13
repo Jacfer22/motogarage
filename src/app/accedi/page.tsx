@@ -34,7 +34,7 @@ export default function PaginaAccedi() {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
         setGiaLoggato(true);
-        setTimeout(() => { window.location.href = '/'; }, 1000);
+        setTimeout(() => { window.location.href = '/hub'; }, 800);
       }
     });
   }, [supabase]);
@@ -82,7 +82,7 @@ export default function PaginaAccedi() {
         return;
       }
       router.refresh();
-      window.location.href = '/';
+      window.location.href = '/hub';
     } else {
       const { error } = await supabase!.auth.signUp({
         email,
@@ -121,10 +121,8 @@ export default function PaginaAccedi() {
       {giaLoggato && (
         <div className="mt-6 border-2 border-segnale bg-segnale/10 p-4">
           <p className="font-medium text-asfalto">
-            Sei già loggato — ti riportiamo alla home…{' '}
-            <a href="/" className="underline">
-              vai subito →
-            </a>
+            Sei già loggato — ti riportiamo all'hub…{' '}
+            <a href="/hub" className="underline">vai subito →</a>
           </p>
         </div>
       )}
