@@ -20,9 +20,24 @@ Apri http://localhost:3000 — vedi già i 10 itinerari con mappe e avvisi demo.
 1. Vai su supabase.com → New project → nome `girosecco`
 2. SQL Editor → New query → incolla `supabase/schema.sql` → Run
 3. New query → incolla `supabase/seed.sql` → Run
-4. Project Settings → API → copia URL e anon key
-5. Crea `.env.local` (copia da `.env.local.example`) e incolla i valori
-6. Riavvia `npm run dev` — ora i dati arrivano dal database
+4. New query → incolla `supabase/migration_admin.sql` → Run (ti rende admin)
+5. New query → incolla `supabase/migration_profilo.sql` → Run (categoria moto + foto profilo)
+6. Project Settings → API → copia URL e anon key
+7. Crea `.env.local` (copia da `.env.local.example`) e incolla i valori
+8. Riavvia `npm run dev` — ora i dati arrivano dal database
+
+> Su un progetto già esistente (creato prima di queste due migrazioni):
+> esegui solo i passi 4 e 5, lo schema base resta quello che hai già.
+
+### Livelli account
+
+Il sito mostra contenuti diversi in base a chi sei:
+
+- **Anonimo**: home, descrizione e avvisi (sicurezza) di ogni itinerario.
+- **Registrato (free)**: + mappa, roadbook e GPX per i 6 itinerari free.
+- **Pro**: + mappa, roadbook, GPX, variante e weekend per i 4 itinerari Pro.
+- **Admin** (solo il tuo account): + pannello `/admin` per attivare/disattivare
+  avvisi e rendere Pro un utente con un click.
 
 ### Autenticazione
 

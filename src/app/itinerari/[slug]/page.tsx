@@ -1,21 +1,11 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getItinerario } from '@/lib/supabase';
-import MappaItinerario from '@/components/MappaItinerario';
 import AvvisoBanner from '@/components/AvvisoBanner';
-import ContenutoPro from '@/components/ContenutoPro';
+import ContenutoItinerario from '@/components/ContenutoItinerario';
 import { ChipDato, ChipDifficolta } from '@/components/Chips';
 
 export const revalidate = 3600;
-
-const TIPO_LABEL: Record<string, string> = {
-  partenza: 'Partenza',
-  panorama: 'Panorama',
-  cibo: 'Dove si mangia',
-  benzina: 'Benzina',
-  sosta: 'Sosta',
-  arrivo: 'Arrivo',
-};
 
 export default async function PaginaItinerario({
   params,
@@ -53,23 +43,8 @@ export default async function PaginaItinerario({
         </div>
       </header>
 
+      {/* Avvisi: info di sicurezza, visibili a tutti indipendentemente dall'account */}
       <AvvisoBanner avvisi={itinerario.avvisi ?? []} />
-
-      <div className="mt-8">
-        {tappe.length > 0 ? (
-          <MappaItinerario tappe={tappe} tracciato={itinerario.tracciato ?? []} />
-        ) : (
-          <div className="flex h-72 items-center justify-center border-2 border-dashed border-asfalto/30 font-mono text-sm text-asfalto/50">
-            Mappa in arrivo
-          </div>
-        )}
-        {itinerario.strada && (
-          <p className="mt-2 font-mono text-xs uppercase tracking-wide text-asfalto/50">
-            Percorso: {itinerario.strada}
-            {itinerario.strada_fonte && <> · fonte: {itinerario.strada_fonte}</>}
-          </p>
-        )}
-      </div>
 
       <section className="mt-8">
         <h2 className="font-display text-3xl font-bold uppercase tracking-tight">
@@ -80,34 +55,13 @@ export default async function PaginaItinerario({
         </p>
       </section>
 
-      {tappe.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-3xl font-bold uppercase tracking-tight">
-            Roadbook
-          </h2>
-          <ol className="mt-4 divide-y-2 divide-asfalto/10 border-2 border-asfalto bg-white">
-            {tappe.map((t) => (
-              <li key={t.id} className="flex gap-4 px-4 py-3">
-                <span className="font-mono text-lg font-medium text-cartello">
-                  {String(t.ordine).padStart(2, '0')}
-                </span>
-                <div>
-                  <p className="font-medium">
-                    {t.nome}
-                    <span className="ml-2 font-mono text-xs uppercase text-asfalto/50">
-                      {TIPO_LABEL[t.tipo] ?? t.tipo}
-                    </span>
-                  </p>
-                  {t.note && <p className="text-sm text-asfalto/70">{t.note}</p>}
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
-
-      <ContenutoPro
+      {/* Mappa, roadbook, GPX (+ variante/weekend se Pro): in base al livello account */}
+      <ContenutoItinerario
         isPremium={itinerario.is_premium}
+        tappe={tappe}
+        tracciato={itinerario.tracciato ?? []}
+        strada={itinerario.strada ?? null}
+        stradaFonte={itinerario.strada_fonte ?? null}
         proExtra={itinerario.pro_extra}
         gpxUrl={itinerario.gpx_url}
       />

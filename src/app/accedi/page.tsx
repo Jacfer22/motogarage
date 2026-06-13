@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
@@ -20,6 +20,12 @@ export default function PaginaAccedi() {
   const [errore, setErrore] = useState<string | null>(null);
   const [messaggio, setMessaggio] = useState<string | null>(null);
   const [caricamento, setCaricamento] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash === '#registrati') {
+      setModalita('registrati');
+    }
+  }, []);
 
   if (!supabase) {
     return (

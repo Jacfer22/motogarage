@@ -7,6 +7,8 @@ import { getSupabaseBrowser } from '@/lib/supabase-browser';
 export interface Profilo {
   username: string | null;
   moto: string | null;
+  categoria_moto: string | null;
+  avatar_url: string | null;
   is_pro: boolean;
   is_admin: boolean;
 }
@@ -17,6 +19,7 @@ interface AuthState {
   loading: boolean;
   // true se le variabili NEXT_PUBLIC_SUPABASE_* non sono configurate
   nonConfigurato: boolean;
+  ricaricaProfilo: () => void;
 }
 
 const AuthContext = createContext<AuthState>({
@@ -24,6 +27,7 @@ const AuthContext = createContext<AuthState>({
   profilo: null,
   loading: true,
   nonConfigurato: false,
+  ricaricaProfilo: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -32,32 +36,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profilo: null,
     loading: true,
     nonConfigurato: false,
+    ricaricaProfilo: () => {},
   });
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
     if (!supabase) {
-      setStato({ user: null, profilo: null, loading: false, nonConfigurato: true });
+      setStato((s) => ({ ...s, user: null, profilo: null, loading: false, nonConfigurato: true }));
       return;
     }
 
     async function caricaProfilo(user: User | null) {
       if (!user) {
-        setStato({ user: null, profilo: null, loading: false, nonConfigurato: false });
+        setStato((s) => ({ ...s, user: null, profilo: null, loading: false, nonConfigurato: false }));
         return;
       }
       const { data } = await supabase!
         .from('profiles')
-        .select('username, moto, is_pro, is_admin')
+        .select('username, moto, categoria_moto, avatar_url, is_pro, is_admin')
         .eq('id', user.id)
         .single();
-      setStato({
+      setStato((s) => ({
+        ...s,
         user,
         profilo: (data as Profilo) ?? null,
         loading: false,
         nonConfigurato: false,
-      });
+      }));
     }
+
+    const ricaricaProfilo = () => {
+      supabase.auth.getSession().then(({ data }) => {
+        caricaProfilo(data.session?.user ?? null);
+      });
+    };
+
+    setStato((s) => ({ ...s, ricaricaProfilo }));
 
     supabase.auth.getSession().then(({ data }) => {
       caricaProfilo(data.session?.user ?? null);
