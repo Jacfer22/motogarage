@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getItinerariPerRegione, getItinerariConAvvisi } from '@/lib/supabase';
 import { nomeRegione, regioneEsiste, REGIONI } from '@/lib/regioni';
+import { livelliAccessoRegione } from '@/lib/accesso';
 import ItinerarioCard from '@/components/ItinerarioCard';
 
 export const revalidate = 3600;
@@ -36,8 +37,14 @@ export default async function PaginaRegione({
     getItinerariConAvvisi(),
   ]);
 
-  const free = itinerari.filter((i) => !i.is_premium);
-  const pro = itinerari.filter((i) => i.is_premium);
+  const livelli = livelliAccessoRegione(itinerari);
+  const ordinati = [...itinerari].sort((a, b) => {
+    const ra = livelli.get(a.id) === 'aperto' ? 0 : livelli.get(a.id) === 'registrati' ? 1 : 2;
+    const rb = livelli.get(b.id) === 'aperto' ? 0 : livelli.get(b.id) === 'registrati' ? 1 : 2;
+    return ra - rb;
+  });
+  const liberi = ordinati.filter((i) => livelli.get(i.id) !== 'pro');
+  const pro = ordinati.filter((i) => livelli.get(i.id) === 'pro');
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
@@ -75,9 +82,22 @@ export default async function PaginaRegione({
         </div>
       ) : (
         <>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {free.map((i) => (
-              <ItinerarioCard key={i.id} itinerario={i} haAvviso={idConAvvisi.has(i.id)} />
+          <div className="mt-10 flex items-end justify-between gap-4 border-b-2 border-asfalto pb-3">
+            <h2 className="font-display text-3xl font-bold uppercase tracking-tight">
+              Liberi e gratuiti
+            </h2>
+            <span className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
+              {liberi.length > 1 ? '1 aperto · 1 con registrazione' : 'aperto a tutti'}
+            </span>
+          </div>
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {liberi.map((i) => (
+              <ItinerarioCard
+                key={i.id}
+                itinerario={i}
+                haAvviso={idConAvvisi.has(i.id)}
+                accesso={livelli.get(i.id)}
+              />
             ))}
           </div>
 
@@ -94,7 +114,12 @@ export default async function PaginaRegione({
               </div>
               <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {pro.map((i) => (
-                  <ItinerarioCard key={i.id} itinerario={i} haAvviso={idConAvvisi.has(i.id)} />
+                  <ItinerarioCard
+                    key={i.id}
+                    itinerario={i}
+                    haAvviso={idConAvvisi.has(i.id)}
+                    accesso="pro"
+                  />
                 ))}
               </div>
             </div>

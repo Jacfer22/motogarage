@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getItinerario } from '@/lib/supabase';
+import { getItinerario, getItinerari } from '@/lib/supabase';
+import { accessoItinerario } from '@/lib/accesso';
 import AvvisoBanner from '@/components/AvvisoBanner';
 import ContenutoItinerario from '@/components/ContenutoItinerario';
 import { ChipDato, ChipDifficolta } from '@/components/Chips';
@@ -13,9 +14,13 @@ export default async function PaginaItinerario({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const itinerario = await getItinerario(slug);
+  const [itinerario, tuttiItinerari] = await Promise.all([
+    getItinerario(slug),
+    getItinerari(),
+  ]);
   if (!itinerario) notFound();
 
+  const accesso = accessoItinerario(itinerario, tuttiItinerari);
   const tappe = itinerario.tappe ?? [];
 
   return (
@@ -71,7 +76,7 @@ export default async function PaginaItinerario({
       {/* Mappa, roadbook, GPX (+ variante/weekend se Pro): in base al livello account */}
       <ContenutoItinerario
         titolo={itinerario.titolo}
-        isPremium={itinerario.is_premium}
+        accesso={accesso}
         tappe={tappe}
         tracciato={itinerario.tracciato ?? []}
         strada={itinerario.strada ?? null}

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import MappaItinerario from '@/components/MappaItinerario';
 import NavigazioneClient from '@/components/NavigazioneClient';
 import { useAuth } from './AuthProvider';
-import { ProExtra, Tappa } from '@/lib/types';
+import { Accesso, ProExtra, Tappa } from '@/lib/types';
 
 const TIPO_LABEL: Record<string, string> = {
   partenza: 'Partenza',
@@ -17,7 +17,7 @@ const TIPO_LABEL: Record<string, string> = {
 
 interface Props {
   titolo: string;
-  isPremium: boolean;
+  accesso: Accesso;
   tappe: Tappa[];
   tracciato: [number, number][];
   strada: string | null;
@@ -154,7 +154,7 @@ function Lucchetto({
 
 export default function ContenutoItinerario({
   titolo,
-  isPremium,
+  accesso,
   tappe,
   tracciato,
   strada,
@@ -173,7 +173,8 @@ export default function ContenutoItinerario({
   const loggato = nonConfigurato || !!user;
   const pro = nonConfigurato || !!profilo?.is_pro || !!profilo?.is_admin;
 
-  if (isPremium && !pro) {
+  // Pro: serve abbonamento.
+  if (accesso === 'pro' && !pro) {
     return (
       <Lucchetto
         titolo="Itinerario Pro"
@@ -201,11 +202,12 @@ export default function ContenutoItinerario({
     );
   }
 
-  if (!isPremium && !loggato) {
+  // Registrati: basta un account gratuito.
+  if (accesso === 'registrati' && !loggato) {
     return (
       <Lucchetto
-        titolo="Mappa, roadbook e GPX"
-        testo="Crea un account gratuito per vedere il percorso sulla mappa, il roadbook tappa per tappa e scaricare il GPX per il navigatore."
+        titolo="Sblocca con un account gratuito"
+        testo="Crea un account gratis per vedere il percorso sulla mappa, il roadbook tappa per tappa e scaricare il GPX. Nessun costo."
         azione={
           <a
             href="/accedi#registrati"
@@ -218,6 +220,7 @@ export default function ContenutoItinerario({
     );
   }
 
+  // Aperto a tutti: nessun lucchetto.
   return (
     <>
       <BloccoMappa tappe={tappe} tracciato={tracciato} strada={strada} stradaFonte={stradaFonte} />
@@ -225,7 +228,7 @@ export default function ContenutoItinerario({
       {tappe.length > 0 && tracciato.length > 1 && (
         <NavigazioneClient titolo={titolo} tappe={tappe} tracciato={tracciato} />
       )}
-      {isPremium && proExtra && <BloccoProExtra proExtra={proExtra} />}
+      {pro && proExtra && <BloccoProExtra proExtra={proExtra} />}
       <BloccoGpx gpxUrl={gpxUrl} />
     </>
   );

@@ -1,5 +1,10 @@
 export type Difficolta = 'facile' | 'medio' | 'impegnativo';
 
+// Livello di accesso a un itinerario, calcolato in base alla posizione nella
+// sua regione: il più accessibile è aperto a tutti, il secondo si sblocca
+// registrandosi gratis, gli altri sono Pro.
+export type Accesso = 'aperto' | 'registrati' | 'pro';
+
 export type TipoTappa = 'partenza' | 'panorama' | 'cibo' | 'benzina' | 'sosta' | 'arrivo';
 
 export interface Tappa {
