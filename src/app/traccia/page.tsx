@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/AuthProvider';
-import { distanzaMetri, formattaDurata, formattaKm, Punto } from '@/lib/geo';
+import { distanzaMetri, formattaDurata, formattaKm, statisticheGiro, Punto } from '@/lib/geo';
 import { generaCardGiro } from '@/lib/card-canvas';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 const MappaTraccia = dynamic(() => import('@/components/MappaTraccia'), { ssr: false });
 
@@ -21,6 +22,10 @@ interface GiroSalvato {
   km: number;
   durataSec: number;
   punti: Punto[];
+  velMediaKmh?: number;
+  velMaxKmh?: number;
+  dislivelloM?: number;
+  curve?: number;
 }
 
 function caricaStorico(): GiroSalvato[] {
@@ -52,6 +57,7 @@ export default function PaginaTraccia() {
   const [punti, setPunti] = useState<Punto[]>([]);
   const [distanzaM, setDistanzaM] = useState(0);
   const [durataSec, setDurataSec] = useState(0);
+  const [velCorrenteKmh, setVelCorrenteKmh] = useState(0);
   const [errore, setErrore] = useState<string | null>(null);
   const [storico, setStorico] = useState<GiroSalvato[]>([]);
   const [cardUrl, setCardUrl] = useState<string | null>(null);
@@ -82,11 +88,25 @@ export default function PaginaTraccia() {
     setDurataSec(trascorso);
   }
 
-  function aggiungiPunto(lat: number, lng: number, accuratezza: number) {
+  function aggiungiPunto(
+    lat: number,
+    lng: number,
+    accuratezza: number,
+    alt?: number | null,
+    vel?: number | null
+  ) {
     if (accuratezza > ACCURATEZZA_MAX_M) return;
 
-    const nuovo: Punto = { lat, lng };
+    const nuovo: Punto = { lat, lng, alt: alt ?? null, vel: vel ?? null, t: Date.now() };
     const precedente = puntiRef.current[puntiRef.current.length - 1];
+
+    // velocità live: dal GPS se disponibile, altrimenti stimata dall'ultimo segmento
+    if (typeof vel === 'number' && vel >= 0) {
+      setVelCorrenteKmh(Math.round(vel * 3.6));
+    } else if (precedente && precedente.t) {
+      const dt = (Date.now() - precedente.t) / 1000;
+      if (dt > 0) setVelCorrenteKmh(Math.round((distanzaMetri(precedente, nuovo) / dt) * 3.6));
+    }
 
     if (precedente) {
       const d = distanzaMetri(precedente, nuovo);
@@ -109,13 +129,14 @@ export default function PaginaTraccia() {
     setPunti([]);
     setDistanzaM(0);
     setDurataSec(0);
+    setVelCorrenteKmh(0);
     setCardUrl(null);
     inizioRef.current = Date.now();
     pausaAccumulataRef.current = 0;
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        aggiungiPunto(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 999);
+        aggiungiPunto(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 999, pos.coords.altitude, pos.coords.speed);
       },
       (err) => {
         setErrore(
@@ -145,7 +166,7 @@ export default function PaginaTraccia() {
     }
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        aggiungiPunto(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 999);
+        aggiungiPunto(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy ?? 999, pos.coords.altitude, pos.coords.speed);
       },
       () => {
         setErrore('Non riesco a leggere la posizione GPS. Controlla di avere il GPS attivo.');
@@ -163,18 +184,48 @@ export default function PaginaTraccia() {
     setStato('concluso');
 
     if (puntiRef.current.length > 1) {
+      const stat = statisticheGiro(puntiRef.current, durataSec, distanzaM);
       const nuovo: GiroSalvato = {
         id: `${Date.now()}`,
         data: new Date().toISOString(),
         km: distanzaM,
         durataSec,
         punti: puntiRef.current,
+        velMediaKmh: stat.velMediaKmh,
+        velMaxKmh: stat.velMaxKmh,
+        dislivelloM: stat.dislivelloPositivoM,
+        curve: stat.curve,
       };
       setStorico((prev) => {
         const aggiornato = [nuovo, ...prev];
         salvaStorico(aggiornato);
         return aggiornato;
       });
+      // salvataggio nel cloud per chi è loggato (così resta su ogni dispositivo)
+      salvaGiroCloud(nuovo, stat);
+    }
+  }
+
+  async function salvaGiroCloud(
+    giro: GiroSalvato,
+    stat: ReturnType<typeof statisticheGiro>
+  ) {
+    const supabase = getSupabaseBrowser();
+    if (!supabase || !user) return;
+    try {
+      await supabase.from('giri').insert({
+        utente_id: user.id,
+        nome: 'Giro libero',
+        km: Number((giro.km / 1000).toFixed(2)),
+        durata_sec: Math.round(giro.durataSec),
+        vel_media_kmh: stat.velMediaKmh,
+        vel_max_kmh: stat.velMaxKmh,
+        dislivello_m: stat.dislivelloPositivoM,
+        curve: stat.curve,
+        tracciato: giro.punti.map((p) => [p.lat, p.lng]),
+      });
+    } catch {
+      // se il salvataggio cloud fallisce, il giro resta comunque in locale
     }
   }
 
@@ -183,6 +234,7 @@ export default function PaginaTraccia() {
     setPunti([]);
     setDistanzaM(0);
     setDurataSec(0);
+    setVelCorrenteKmh(0);
     setCardUrl(null);
     puntiRef.current = [];
   }
@@ -284,21 +336,29 @@ export default function PaginaTraccia() {
 
       {/* Stats live */}
       {stato !== 'pronto' && (
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="border-2 border-asfalto bg-white p-4 text-center">
-            <p className="font-mono text-xs uppercase text-asfalto/50">Distanza</p>
-            <p className="font-display text-3xl font-bold">{formattaKm(distanzaM)} km</p>
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="card-app p-4 text-center">
+            <p className="font-mono text-[11px] uppercase tracking-wide text-asfalto/50">Distanza</p>
+            <p className="mt-1 font-display text-3xl font-bold leading-none">{formattaKm(distanzaM)}</p>
+            <p className="font-mono text-[10px] uppercase text-asfalto/40">km</p>
           </div>
-          <div className="border-2 border-asfalto bg-white p-4 text-center">
-            <p className="font-mono text-xs uppercase text-asfalto/50">Tempo</p>
-            <p className="font-display text-3xl font-bold">{formattaDurata(durataSec)}</p>
+          <div className="card-app p-4 text-center">
+            <p className="font-mono text-[11px] uppercase tracking-wide text-asfalto/50">Tempo</p>
+            <p className="mt-1 font-display text-3xl font-bold leading-none">{formattaDurata(durataSec)}</p>
+            <p className="font-mono text-[10px] uppercase text-asfalto/40">&nbsp;</p>
           </div>
-          <div className="col-span-2 border-2 border-asfalto bg-white p-4 text-center sm:col-span-1">
-            <p className="font-mono text-xs uppercase text-asfalto/50">Stato</p>
-            <p className="font-display text-3xl font-bold uppercase">
+          <div className="card-app p-4 text-center">
+            <p className="font-mono text-[11px] uppercase tracking-wide text-asfalto/50">Velocità</p>
+            <p className="mt-1 font-display text-3xl font-bold leading-none text-segnale-scuro">
+              {stato === 'in_corso' ? velCorrenteKmh : 0}
+            </p>
+            <p className="font-mono text-[10px] uppercase text-asfalto/40">km/h</p>
+          </div>
+          <div className="col-span-3 text-center">
+            <p className="font-mono text-xs uppercase tracking-wide">
               {stato === 'in_corso' && <span className="text-bosco">● In corso</span>}
-              {stato === 'in_pausa' && <span className="text-cartello">In pausa</span>}
-              {stato === 'concluso' && <span>Concluso</span>}
+              {stato === 'in_pausa' && <span className="text-cartello">‖ In pausa</span>}
+              {stato === 'concluso' && <span className="text-asfalto/60">Concluso</span>}
             </p>
           </div>
         </div>
@@ -362,7 +422,7 @@ export default function PaginaTraccia() {
 
       {/* Riepilogo + card */}
       {stato === 'concluso' && (
-        <div className="mt-8 border-2 border-segnale bg-white p-6">
+        <div className="mt-8 rounded-app-lg border border-segnale bg-white p-6 shadow-app animate-scale-in">
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight">
             Giro registrato
           </h2>
@@ -370,12 +430,37 @@ export default function PaginaTraccia() {
             {formattaKm(distanzaM)} km in {formattaDurata(durataSec)}.
           </p>
 
+          {(() => {
+            const s = statisticheGiro(punti, durataSec, distanzaM);
+            const stats = [
+              { l: 'Vel. media', v: `${s.velMediaKmh}`, u: 'km/h' },
+              { l: 'Vel. max', v: `${s.velMaxKmh}`, u: 'km/h' },
+              { l: 'Curve', v: `${s.curve}`, u: '' },
+              { l: 'Dislivello', v: `${s.dislivelloPositivoM}`, u: 'm' },
+            ];
+            return (
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {stats.map((x) => (
+                  <div key={x.l} className="rounded-app bg-cemento p-3 text-center">
+                    <p className="font-mono text-[10px] uppercase tracking-wide text-asfalto/50">{x.l}</p>
+                    <p className="mt-0.5 font-display text-2xl font-bold leading-none">{x.v}</p>
+                    {x.u && <p className="font-mono text-[10px] uppercase text-asfalto/40">{x.u}</p>}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          <p className="mt-4 font-mono text-xs uppercase tracking-wide text-asfalto/50">
+            {user ? '✓ Salvato nei tuoi giri' : 'Accedi per salvare i tuoi giri e ritrovarli ovunque'}
+          </p>
+
           {!cardUrl ? (
             <button
               type="button"
               onClick={() => creaCard(punti, distanzaM, durataSec, new Date().toISOString())}
               disabled={generandoCard}
-              className="mt-4 bg-segnale px-5 py-2.5 font-mono font-medium uppercase text-asfalto hover:bg-white disabled:opacity-60"
+              className="tap mt-4 rounded-app bg-segnale px-5 py-2.5 font-mono font-medium uppercase text-asfalto hover:bg-white disabled:opacity-60"
             >
               {generandoCard ? 'Genero la card…' : 'Crea la card da condividere'}
             </button>
@@ -416,19 +501,23 @@ export default function PaginaTraccia() {
       {storico.length > 0 && stato === 'pronto' && (
         <div className="mt-10">
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight">I tuoi giri</h2>
-          <ul className="mt-3 divide-y-2 divide-asfalto/10 border-2 border-asfalto bg-white">
+          <ul className="mt-3 space-y-3">
             {storico.map((g) => (
-              <li key={g.id} className="flex items-center justify-between gap-4 p-4">
-                <div>
+              <li key={g.id} className="card-app flex items-center justify-between gap-4 p-4">
+                <div className="min-w-0">
                   <p className="font-medium">{formattaDataBreve(g.data)}</p>
-                  <p className="font-mono text-xs text-asfalto/50">
+                  <p className="mt-0.5 font-mono text-xs text-asfalto/50">
                     {formattaKm(g.km)} km · {formattaDurata(g.durataSec)}
+                    {typeof g.velMediaKmh === 'number' && g.velMediaKmh > 0 && (
+                      <> · {g.velMediaKmh} km/h media</>
+                    )}
+                    {typeof g.curve === 'number' && g.curve > 0 && <> · {g.curve} curve</>}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => creaCard(g.punti, g.km, g.durataSec, g.data)}
-                  className="shrink-0 border-2 border-asfalto px-3 py-1.5 font-mono text-xs font-medium uppercase hover:bg-asfalto hover:text-cemento"
+                  className="tap shrink-0 rounded-app border border-asfalto/15 px-3 py-1.5 font-mono text-xs font-medium uppercase hover:bg-asfalto hover:text-cemento"
                 >
                   Card
                 </button>
