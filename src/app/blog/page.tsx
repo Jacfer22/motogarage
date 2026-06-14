@@ -1,102 +1,172 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import { getArticoliPubblicati } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
-// Esempi mostrati finché non ci sono articoli pubblicati dalla community.
-const ESEMPI = [
-  {
-    id: 'esempio-braccianese',
-    titolo: 'La Braccianese Claudia: perché è la strada di casa dei romani',
-    data: '10 giugno 2026',
-    autore: 'GiroSecco',
-    anteprima:
-      'Chilometri di asfalto curato, curve in appoggio sul mare, butteri a cavallo se sei fortunato. La SP3A Braccianese Claudia non fa notizia ma è il posto dove si torna ogni domenica. Ecco perché.',
-  },
-  {
-    id: 'esempio-adventure',
-    titolo: 'Adventure nel Lazio: dove finisce la strada asfaltata',
-    data: '2 giugno 2026',
-    autore: 'GiroSecco',
-    anteprima:
-      "Non serve l'Himalaya. A un'ora da Roma ci sono sentieri e strade bianche che mettono alla prova qualsiasi adventure. Una guida ai percorsi misti del Lazio, con consigli su quando andare e cosa portare.",
-  },
-];
+export default function PaginaNuovoArticolo() {
+  const { user, loading, nonConfigurato } = useAuth();
+  const supabase = getSupabaseBrowser();
 
-function formattaData(iso: string): string {
-  return new Date(iso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
-}
+  const [titolo, setTitolo] = useState('');
+  const [contenuto, setContenuto] = useState('');
+  const [errore, setErrore] = useState<string | null>(null);
+  const [inviato, setInviato] = useState(false);
+  const [caricamento, setCaricamento] = useState(false);
 
-export default async function PaginaBlog() {
-  const articoli = await getArticoliPubblicati();
+  async function invia(e: React.FormEvent) {
+    e.preventDefault();
+    if (!supabase || !user) return;
+    setErrore(null);
+
+    if (titolo.trim().length < 5) {
+      setErrore('Il titolo deve avere almeno 5 caratteri.');
+      return;
+    }
+    if (contenuto.trim().length < 100) {
+      setErrore('Il testo deve avere almeno 100 caratteri: raccontaci qualcosa di vero!');
+      return;
+    }
+
+    setCaricamento(true);
+    const { error } = await supabase.from('articoli').insert({
+      autore_id: user.id,
+      titolo: titolo.trim(),
+      contenuto: contenuto.trim(),
+    });
+    setCaricamento(false);
+
+    if (error) {
+      setErrore(error.message);
+      return;
+    }
+    setInviato(true);
+  }
+
+  if (loading) {
+    return (
+      <section className="mx-auto max-w-2xl px-4 py-14">
+        <p className="font-mono text-sm uppercase text-asfalto/40">Caricamento…</p>
+      </section>
+    );
+  }
+
+  if (nonConfigurato) {
+    return (
+      <section className="mx-auto max-w-2xl px-4 py-14">
+        <h1 className="font-display text-4xl font-bold uppercase tracking-tight">
+          Non disponibile
+        </h1>
+        <p className="mt-3 text-asfalto/70">
+          Il sito non è ancora collegato a Supabase in questo ambiente.
+        </p>
+      </section>
+    );
+  }
+
+  if (!user) {
+    return (
+      <section className="mx-auto max-w-2xl px-4 py-14">
+        <p className="font-mono text-sm uppercase tracking-widest text-cartello">GiroSecco</p>
+        <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
+          Scrivi un articolo
+        </h1>
+        <div className="mt-8 border-2 border-asfalto bg-asfalto p-6 text-cemento">
+          <p className="text-guardrail">Per scrivere un articolo serve un account gratuito.</p>
+          <a
+            href="/accedi#registrati"
+            className="mt-4 inline-block bg-segnale px-5 py-2.5 font-mono font-medium uppercase text-asfalto hover:bg-white"
+          >
+            Registrati gratis
+          </a>
+        </div>
+      </section>
+    );
+  }
+
+  if (inviato) {
+    return (
+      <section className="mx-auto max-w-2xl px-4 py-14">
+        <p className="font-mono text-sm uppercase tracking-widest text-cartello">GiroSecco</p>
+        <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
+          Articolo inviato
+        </h1>
+        <div className="mt-6 border-2 border-bosco bg-bosco/10 p-6">
+          <p className="text-bosco">
+            Grazie! Il tuo articolo è in revisione. Se va bene lo pubblichiamo
+            sul blog con il tuo username.
+          </p>
+        </div>
+        <Link
+          href="/blog"
+          className="mt-6 inline-block font-mono text-sm uppercase text-asfalto/60 underline hover:text-asfalto"
+        >
+          ← Torna al blog
+        </Link>
+      </section>
+    );
+  }
 
   return (
-    <section className="mx-auto max-w-4xl px-4 py-14">
-      <p className="font-mono text-sm uppercase tracking-widest text-cartello">
-        GiroSecco
-      </p>
+    <section className="mx-auto max-w-2xl px-4 py-14">
+      <p className="font-mono text-sm uppercase tracking-widest text-cartello">GiroSecco</p>
       <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
-        Blog
+        Scrivi un articolo
       </h1>
-      <p className="mt-3 max-w-xl text-asfalto/70">
-        Strade, moto e storie da chi guida davvero. Scritto dalla community,
-        revisionato da noi prima della pubblicazione.
+      <p className="mt-3 text-asfalto/70">
+        Racconta un giro, una strada, un consiglio utile. Lo leggiamo e, se va
+        bene, lo pubblichiamo sul blog con il tuo username.
       </p>
 
-      <div className="mt-6 border-2 border-asfalto bg-asfalto p-5 text-cemento">
-        <p className="font-display text-xl font-bold uppercase tracking-tight">
-          Hai un giro da raccontare?
-        </p>
-        <p className="mt-1 text-sm text-guardrail">
-          Gli utenti registrati possono scrivere un articolo. Lo revisioniamo
-          e, se va bene, lo pubblichiamo qui.
-        </p>
-        <Link
-          href="/blog/nuovo"
-          className="mt-3 inline-block bg-segnale px-4 py-2 font-mono text-sm font-medium uppercase text-asfalto hover:bg-white"
+      <form onSubmit={invia} className="mt-8 space-y-4">
+        <div>
+          <label htmlFor="titolo" className="font-mono text-xs uppercase text-asfalto/60">
+            Titolo
+          </label>
+          <input
+            id="titolo"
+            type="text"
+            value={titolo}
+            onChange={(e) => setTitolo(e.target.value)}
+            className="mt-1 w-full border-2 border-asfalto bg-white px-3 py-2 focus:outline-none"
+            placeholder="es. Tre passi della Tuscia che non conosce nessuno"
+          />
+        </div>
+        <div>
+          <label htmlFor="contenuto" className="font-mono text-xs uppercase text-asfalto/60">
+            Testo
+          </label>
+          <textarea
+            id="contenuto"
+            value={contenuto}
+            onChange={(e) => setContenuto(e.target.value)}
+            rows={12}
+            className="mt-1 w-full border-2 border-asfalto bg-white px-3 py-2 leading-relaxed focus:outline-none"
+            placeholder="Racconta il giro: dove sei partito, le strade, le soste, cosa ricordi..."
+          />
+          <p className="mt-1 font-mono text-xs text-asfalto/40">{contenuto.length} caratteri</p>
+        </div>
+
+        {errore && (
+          <p className="border-2 border-red-700 bg-red-50 p-3 text-sm text-red-900">{errore}</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={caricamento}
+          className="w-full bg-segnale px-5 py-2.5 font-mono font-medium uppercase text-asfalto hover:bg-white disabled:opacity-60"
         >
-          Scrivi un articolo
-        </Link>
-      </div>
+          {caricamento ? 'Invio…' : 'Invia per la revisione'}
+        </button>
+      </form>
 
-      <div className="mt-10 space-y-6">
-        {articoli.length === 0
-          ? ESEMPI.map((a) => (
-              <article key={a.id} className="border-2 border-asfalto bg-white p-6">
-                <p className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
-                  {a.autore} · {a.data}
-                </p>
-                <h2 className="mt-2 font-display text-3xl font-bold uppercase leading-tight tracking-tight">
-                  {a.titolo}
-                </h2>
-                <p className="mt-3 leading-relaxed text-asfalto/80">{a.anteprima}</p>
-              </article>
-            ))
-          : articoli.map((a) => (
-              <article key={a.id} className="border-2 border-asfalto bg-white p-6 hover:bg-cemento">
-                <p className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
-                  {a.autore?.username ?? 'GiroSecco'}
-                  {a.pubblicato_at && <> · {formattaData(a.pubblicato_at)}</>}
-                </p>
-                <h2 className="mt-2 font-display text-3xl font-bold uppercase leading-tight tracking-tight">
-                  <Link href={`/blog/${a.id}`} className="hover:underline">
-                    {a.titolo}
-                  </Link>
-                </h2>
-                <p className="mt-3 line-clamp-3 leading-relaxed text-asfalto/80">{a.contenuto}</p>
-                <Link
-                  href={`/blog/${a.id}`}
-                  className="mt-3 inline-block font-mono text-xs uppercase tracking-wide text-asfalto/50 underline hover:text-asfalto"
-                >
-                  Leggi tutto →
-                </Link>
-              </article>
-            ))}
-      </div>
-
-      <p className="mt-12">
-        <Link href="/hub" className="font-mono text-sm uppercase text-asfalto/60 underline hover:text-asfalto">
-          ← Torna all&apos;hub
-        </Link>
-      </p>
+      <Link
+        href="/blog"
+        className="mt-6 inline-block font-mono text-sm uppercase text-asfalto/60 underline hover:text-asfalto"
+      >
+        ← Torna al blog
+      </Link>
     </section>
   );
 }

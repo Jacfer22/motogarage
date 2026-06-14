@@ -39,10 +39,18 @@ export default function PaginaPro() {
         </div>
       </div>
 
-      <p className="mt-8 border-2 border-dashed border-asfalto/30 p-4 font-mono text-sm text-asfalto/60">
-        I pagamenti arrivano a breve. Intanto gli itinerari free sono tutti
-        aperti: <Link href="/#itinerari" className="underline">vai a sceglierne uno</Link>.
-      </p>
+      <div className="mt-8 border-2 border-asfalto bg-cemento p-5">
+        <p className="font-mono text-sm text-asfalto/70">
+          I pagamenti non sono ancora attivi. Nel frattempo gli itinerari free
+          sono tutti aperti.
+        </p>
+        <Link
+          href="/itinerari"
+          className="mt-3 inline-block bg-segnale px-5 py-2.5 font-mono text-sm font-medium uppercase text-asfalto hover:bg-asfalto hover:text-cemento"
+        >
+          Vai agli itinerari
+        </Link>
+      </div>
     </section>
   );
 }

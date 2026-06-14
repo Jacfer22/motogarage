@@ -27,12 +27,12 @@ export default function Header() {
           </span>
         </Link>
         <nav className="flex items-center gap-4">
-          <a
-            href="/#itinerari"
+          <Link
+            href="/itinerari"
             className="font-mono text-sm uppercase tracking-wide hover:text-segnale"
           >
             Itinerari
-          </a>
+          </Link>
 
           {!loading && profilo?.is_admin && (
             <Link

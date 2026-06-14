@@ -1,17 +1,26 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/components/AuthProvider';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { etichettaCategoria } from '@/lib/categorie-moto';
+
+interface AvvisoHub {
+  id: string;
+  titolo: string;
+  descrizione: string;
+  fonte: string;
+  itinerari: { slug: string; titolo: string } | null;
+}
 
 const AZIONI = [
   {
-    href: '/#itinerari',
+    href: '/itinerari',
     ancora: true,
     titolo: 'Itinerari',
-    sotto: '10 giri curati nel Lazio, con mappa, roadbook e GPX',
+    sotto: 'I giri nel Lazio, con mappa, roadbook e GPX',
     colore: 'bg-asfalto text-cemento',
     span: 'col-span-2',
   },
@@ -25,14 +34,14 @@ const AZIONI = [
   {
     href: '/blog',
     titolo: 'Blog',
-    sotto: 'Strade e storie da chi guida davvero',
+    sotto: 'Strade e storie da chi guida',
     colore: 'bg-white border-2 border-asfalto text-asfalto',
     span: 'col-span-1',
   },
   {
     href: '/pro',
     titolo: 'Piano Pro',
-    sotto: 'GPX, varianti, pacchetti weekend — tutto sbloccato',
+    sotto: 'GPX, varianti e pacchetti weekend',
     colore: 'bg-white border-2 border-asfalto text-asfalto',
     span: 'col-span-1',
     soloFree: true,
@@ -40,14 +49,14 @@ const AZIONI = [
   {
     href: '/traccia',
     titolo: 'Traccia un giro',
-    sotto: 'Registra il percorso via GPS e crea la card da condividere',
+    sotto: 'Registra il percorso GPS e crea la card',
     colore: 'bg-asfalto text-cemento',
     span: 'col-span-1',
   },
   {
     href: '/admin',
     titolo: 'Pannello admin',
-    sotto: 'Avvisi, utenti Pro, aggiornamenti strade in tempo reale',
+    sotto: 'Avvisi, utenti Pro, articoli del blog',
     colore: 'bg-cartello text-cemento',
     span: 'col-span-1',
     soloAdmin: true,
@@ -56,12 +65,28 @@ const AZIONI = [
 
 export default function PaginaHub() {
   const { user, profilo, loading } = useAuth();
+  const [avviso, setAvviso] = useState<AvvisoHub | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       window.location.href = '/accedi';
     }
   }, [loading, user]);
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return;
+    supabase
+      .from('avvisi')
+      .select('id, titolo, descrizione, fonte, itinerari(slug, titolo)')
+      .eq('attivo', true)
+      .order('data', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setAvviso(data as unknown as AvvisoHub);
+      });
+  }, []);
 
   if (loading || !user) {
     return (
@@ -199,27 +224,26 @@ export default function PaginaHub() {
         </div>
       </section>
 
-      {/* Avviso strade attivo */}
-      <section className="mx-auto max-w-6xl px-4 pb-10">
-        <div className="border-2 border-cartello bg-cartello/10 p-5">
-          <p className="font-mono text-xs uppercase tracking-wide text-cartello">
-            🚧 Avviso strade attivo
-          </p>
-          <p className="mt-1 font-medium">
-            Senso unico alternato sulla Braccianese Claudia ad Allumiere (km 31+650)
-          </p>
-          <p className="mt-1 text-sm text-asfalto/70">
-            Lavori di messa in sicurezza, partiti il 24 febbraio 2026 — possibile ancora attivo.
-            Verifica su Luceverde Lazio prima di partire.
-          </p>
-          <Link
-            href="/itinerari/monti-della-tolfa"
-            className="mt-3 inline-block font-mono text-xs uppercase underline hover:text-cartello"
-          >
-            Vedi itinerario Monti della Tolfa →
-          </Link>
-        </div>
-      </section>
+      {/* Condizioni strada: avviso attivo dal database */}
+      {avviso && (
+        <section className="mx-auto max-w-6xl px-4 pb-10">
+          <div className="border-2 border-cartello bg-cartello/10 p-5">
+            <p className="font-mono text-xs uppercase tracking-wide text-cartello">
+              Condizioni strada
+            </p>
+            <p className="mt-1 font-medium">{avviso.titolo}</p>
+            <p className="mt-1 text-sm text-asfalto/70">{avviso.descrizione}</p>
+            {avviso.itinerari && (
+              <Link
+                href={`/itinerari/${avviso.itinerari.slug}`}
+                className="mt-3 inline-block font-mono text-xs uppercase underline hover:text-cartello"
+              >
+                Vedi {avviso.itinerari.titolo} →
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
