@@ -1,6 +1,11 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Articolo, Avviso, Itinerario } from './types';
 import { AVVISI_FALLBACK, ITINERARI_FALLBACK } from './fallback';
+import { ITINERARI_CLASSICI } from './itinerari-classici';
+
+// Tutti gli itinerari disponibili senza database: i 10 verificati del Lazio
+// più le strade-icona classiche delle altre regioni.
+const TUTTI_FALLBACK = [...ITINERARI_FALLBACK, ...ITINERARI_CLASSICI];
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -24,6 +29,7 @@ function mappaRiga(riga: RigaItinerario): Itinerario {
     ...resto,
     tracciato: riga.tracciato ?? [],
     regioni: riga.regioni ?? [],
+    origine: riga.origine ?? 'verificato',
     pro_extra:
       variante_pro && weekend_pro
         ? { variante: variante_pro, weekend: weekend_pro }
@@ -33,14 +39,14 @@ function mappaRiga(riga: RigaItinerario): Itinerario {
 
 export async function getItinerari(): Promise<Itinerario[]> {
   const supabase = getClient();
-  if (!supabase) return ITINERARI_FALLBACK;
+  if (!supabase) return TUTTI_FALLBACK;
 
   const { data, error } = await supabase
     .from('itinerari')
     .select('*')
     .order('km', { ascending: true });
 
-  if (error || !data || data.length === 0) return ITINERARI_FALLBACK;
+  if (error || !data || data.length === 0) return TUTTI_FALLBACK;
   return (data as RigaItinerario[]).map(mappaRiga);
 }
 
@@ -54,7 +60,7 @@ export async function getItinerariPerRegione(regioneSlug: string): Promise<Itine
 export async function getItinerario(slug: string): Promise<Itinerario | null> {
   const supabase = getClient();
   if (!supabase) {
-    const itinerario = ITINERARI_FALLBACK.find((i) => i.slug === slug) ?? null;
+    const itinerario = TUTTI_FALLBACK.find((i) => i.slug === slug) ?? null;
     if (!itinerario) return null;
     return {
       ...itinerario,
@@ -70,7 +76,7 @@ export async function getItinerario(slug: string): Promise<Itinerario | null> {
     .single();
 
   if (error || !data) {
-    const itinerario = ITINERARI_FALLBACK.find((i) => i.slug === slug) ?? null;
+    const itinerario = TUTTI_FALLBACK.find((i) => i.slug === slug) ?? null;
     if (!itinerario) return null;
     return {
       ...itinerario,

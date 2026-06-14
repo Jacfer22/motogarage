@@ -47,6 +47,10 @@ export interface Itinerario {
   durata_ore: number;
   difficolta: Difficolta;
   periodo_ideale: string;
+  // 'verificato' = percorso provato in sella con tappe GPS;
+  // 'classico' = strada-icona della regione, dati da fonti pubbliche,
+  // tracciato di dettaglio ancora da rifinire.
+  origine: 'verificato' | 'classico';
   gpx_url: string | null;
   is_premium: boolean;
   cover_url: string | null;

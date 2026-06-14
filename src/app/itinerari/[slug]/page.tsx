@@ -43,6 +43,19 @@ export default async function PaginaItinerario({
         </div>
       </header>
 
+      {itinerario.origine === 'classico' && (
+        <div className="mt-6 border-2 border-asfalto/20 bg-cemento p-4">
+          <p className="font-mono text-xs uppercase tracking-wide text-cartello">
+            Percorso classico
+          </p>
+          <p className="mt-1 text-sm text-asfalto/70">
+            Una delle strade-icona della zona, descritta da fonti pubbliche. La
+            traccia GPS di dettaglio non è ancora rifinita: se lo conosci e vuoi
+            aggiungere tappe o GPX, scrivici dal blog.
+          </p>
+        </div>
+      )}
+
       {/* Avvisi: info di sicurezza, visibili a tutti indipendentemente dall'account */}
       <AvvisoBanner avvisi={itinerario.avvisi ?? []} />
 

@@ -13,6 +13,8 @@ create table public.itinerari (
   zona text not null default '',
   -- Una o più regioni (slug). Un giro a cavallo del confine ne ha due.
   regioni text[] not null default '{}',
+  -- 'verificato' (provato in sella) o 'classico' (strada-icona da fonti pubbliche)
+  origine text not null default 'verificato' check (origine in ('verificato','classico')),
   km integer not null default 0,
   durata_ore integer not null default 0,
   difficolta text not null default 'facile' check (difficolta in ('facile','medio','impegnativo')),
