@@ -10,7 +10,7 @@ type TipoTappa = Tappa['tipo'];
 function t(itinerario_id: string, righe: [number, string, TipoTappa, number, number, string | null][]): Tappa[] {
   return righe.map(([ordine, nome, tipo, lat, lng, note]) => ({
     id: `${itinerario_id}-${ordine}`, itinerario_id, ordine, nome, tipo, lat, lng,
-    note: note ?? undefined,
+    note: note ?? null,
   }));
 }
 
