@@ -3,6 +3,7 @@ import { Barlow_Condensed, Archivo, IBM_Plex_Mono, Caveat } from 'next/font/goog
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import BottomNav from '@/components/BottomNav';
 import { AuthProvider } from '@/components/AuthProvider';
 
 const display = Barlow_Condensed({
@@ -52,11 +53,12 @@ export default function RootLayout({
           crossOrigin=""
         />
       </head>
-      <body className="font-body antialiased min-h-screen flex flex-col">
+      <body className="font-body antialiased min-h-screen flex flex-col con-bottomnav">
         <AuthProvider>
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <BottomNav />
         </AuthProvider>
       </body>
     </html>

@@ -5,6 +5,18 @@ export type Difficolta = 'facile' | 'medio' | 'impegnativo';
 // registrandosi gratis, gli altri sono Pro.
 export type Accesso = 'aperto' | 'registrati' | 'pro';
 
+// Foto caricata da un biker, opzionalmente legata a un itinerario.
+export interface Foto {
+  id: string;
+  autore_id: string;
+  itinerario_id: string | null;
+  url: string;
+  didascalia: string | null;
+  created_at: string;
+  autore?: { username: string | null } | null;
+  itinerario?: { slug: string; titolo: string } | null;
+}
+
 export type TipoTappa = 'partenza' | 'panorama' | 'cibo' | 'benzina' | 'sosta' | 'arrivo';
 
 export interface Tappa {

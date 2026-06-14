@@ -17,9 +17,9 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-asfalto text-cemento">
+    <header className="vetro-scuro sticky top-0 z-40 text-cemento shadow-app-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex min-w-0 items-center gap-2" onClick={chiudi}>
+        <Link href="/" className="tap flex min-w-0 items-center gap-2" onClick={chiudi}>
           <Image
             src="/icon-bike.png"
             alt=""
@@ -37,28 +37,40 @@ export default function Header() {
         <nav className="hidden items-center gap-4 sm:flex">
           <Link
             href="/itinerari"
-            className="font-mono text-sm uppercase tracking-wide hover:text-segnale"
+            className="font-mono text-sm uppercase tracking-wide transition-colors hover:text-segnale"
           >
             Itinerari
+          </Link>
+          <Link
+            href="/foto"
+            className="font-mono text-sm uppercase tracking-wide transition-colors hover:text-segnale"
+          >
+            Foto
+          </Link>
+          <Link
+            href="/blog"
+            className="font-mono text-sm uppercase tracking-wide transition-colors hover:text-segnale"
+          >
+            Blog
           </Link>
           {isAdmin && (
             <Link
               href="/admin"
-              className="border border-cartello px-3 py-1.5 font-mono text-sm font-medium uppercase tracking-wide text-cartello hover:bg-cartello hover:text-cemento"
+              className="tap rounded-app border border-cartello px-3 py-1.5 font-mono text-sm font-medium uppercase tracking-wide text-cartello hover:bg-cartello hover:text-cemento"
             >
               Admin
             </Link>
           )}
           <Link
             href="/pro"
-            className="bg-segnale px-3 py-1.5 font-mono text-sm font-medium uppercase tracking-wide text-asfalto hover:bg-white"
+            className="tap rounded-app bg-segnale px-3 py-1.5 font-mono text-sm font-medium uppercase tracking-wide text-asfalto shadow-segnale hover:bg-white"
           >
             {profilo?.is_pro ? 'Pro ✓' : 'Pro'}
           </Link>
           {mostraAuth && (
             <Link
               href={user ? '/hub' : '/accedi'}
-              className="font-mono text-sm uppercase tracking-wide hover:text-segnale"
+              className="font-mono text-sm uppercase tracking-wide transition-colors hover:text-segnale"
             >
               {user ? 'Hub' : 'Accedi'}
             </Link>
@@ -86,6 +98,20 @@ export default function Header() {
             className="block border-b border-guardrail/10 py-3 font-mono text-sm uppercase tracking-wide hover:text-segnale"
           >
             Itinerari
+          </Link>
+          <Link
+            href="/foto"
+            onClick={chiudi}
+            className="block border-b border-guardrail/10 py-3 font-mono text-sm uppercase tracking-wide hover:text-segnale"
+          >
+            Foto dei Bikers
+          </Link>
+          <Link
+            href="/blog"
+            onClick={chiudi}
+            className="block border-b border-guardrail/10 py-3 font-mono text-sm uppercase tracking-wide hover:text-segnale"
+          >
+            Blog
           </Link>
           <Link
             href="/pro"

@@ -39,6 +39,13 @@ const AZIONI = [
     span: 'col-span-1',
   },
   {
+    href: '/foto',
+    titolo: 'Foto dei Bikers',
+    sotto: 'Le foto della community, e le tue',
+    colore: 'bg-white border-2 border-asfalto text-asfalto',
+    span: 'col-span-1',
+  },
+  {
     href: '/pro',
     titolo: 'Piano Pro',
     sotto: 'GPX, varianti e pacchetti weekend',

@@ -4,6 +4,7 @@ import { getItinerario, getItinerari } from '@/lib/supabase';
 import { accessoItinerario } from '@/lib/accesso';
 import AvvisoBanner from '@/components/AvvisoBanner';
 import ContenutoItinerario from '@/components/ContenutoItinerario';
+import SezioneFotoItinerario from '@/components/SezioneFotoItinerario';
 import { ChipDato, ChipDifficolta } from '@/components/Chips';
 
 export const revalidate = 3600;
@@ -84,6 +85,8 @@ export default async function PaginaItinerario({
         proExtra={itinerario.pro_extra}
         gpxUrl={itinerario.gpx_url}
       />
+
+      <SezioneFotoItinerario itinerarioId={itinerario.id} />
     </article>
   );
 }

@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Articolo, Avviso, Itinerario } from './types';
+import { Articolo, Avviso, Foto, Itinerario } from './types';
 import { AVVISI_FALLBACK, ITINERARI_FALLBACK } from './fallback';
 import { ITINERARI_CLASSICI } from './itinerari-classici';
 
@@ -110,6 +110,45 @@ export async function getItinerariConAvvisi(): Promise<Set<string>> {
 }
 
 export type { Avviso };
+
+// ============ FOTO DEI BIKER ============
+
+// URL pubblico di un file nel bucket foto-bikers.
+export function urlFoto(storagePath: string): string {
+  if (!url) return '';
+  return `${url}/storage/v1/object/public/foto-bikers/${storagePath}`;
+}
+
+// Galleria completa, più recenti prima.
+export async function getFoto(limite = 60): Promise<Foto[]> {
+  const supabase = getClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('foto')
+    .select('id, autore_id, itinerario_id, storage_path, didascalia, created_at, autore:profiles(username), itinerario:itinerari(slug, titolo)')
+    .order('created_at', { ascending: false })
+    .limit(limite);
+
+  if (error || !data) return [];
+  return (data as unknown as Array<Record<string, unknown>>).map(mappaFoto);
+}
+
+// Foto collegate a un itinerario: vedi SezioneFotoItinerario (caricate via
+// client per restare aggiornate dopo un upload, senza cache statica).
+
+function mappaFoto(r: Record<string, unknown>): Foto {
+  return {
+    id: r.id as string,
+    autore_id: r.autore_id as string,
+    itinerario_id: (r.itinerario_id as string) ?? null,
+    url: urlFoto(r.storage_path as string),
+    didascalia: (r.didascalia as string) ?? null,
+    created_at: r.created_at as string,
+    autore: (r.autore as { username: string | null }) ?? null,
+    itinerario: (r.itinerario as { slug: string; titolo: string }) ?? null,
+  };
+}
 
 // ============ BLOG ============
 
