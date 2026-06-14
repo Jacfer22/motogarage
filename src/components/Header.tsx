@@ -3,11 +3,20 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 
 export default function Header() {
   const { user, profilo, loading, nonConfigurato } = useAuth();
+  const pathname = usePathname();
   const [menuAperto, setMenuAperto] = useState(false);
+
+  // evidenzia la voce di menu corrispondente alla pagina corrente
+  const attivo = (prefisso: string) => pathname.startsWith(prefisso);
+  const voce = (prefisso: string) =>
+    `font-mono text-sm uppercase tracking-wide transition-colors ${
+      attivo(prefisso) ? 'text-segnale' : 'hover:text-segnale'
+    }`;
 
   const isAdmin = !loading && profilo?.is_admin;
   const mostraAuth = !nonConfigurato && !loading;
@@ -35,22 +44,13 @@ export default function Header() {
 
         {/* Nav desktop */}
         <nav className="hidden items-center gap-4 sm:flex">
-          <Link
-            href="/itinerari"
-            className="font-mono text-sm uppercase tracking-wide transition-colors hover:text-segnale"
-          >
+          <Link href="/itinerari" className={voce('/itinerari')}>
             Itinerari
           </Link>
-          <Link
-            href="/foto"
-            className="font-mono text-sm uppercase tracking-wide transition-colors hover:text-segnale"
-          >
+          <Link href="/foto" className={voce('/foto')}>
             Foto
           </Link>
-          <Link
-            href="/blog"
-            className="font-mono text-sm uppercase tracking-wide transition-colors hover:text-segnale"
-          >
+          <Link href="/blog" className={voce('/blog')}>
             Blog
           </Link>
           {isAdmin && (

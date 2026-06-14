@@ -15,60 +15,98 @@ interface AvvisoHub {
   itinerari: { slug: string; titolo: string } | null;
 }
 
-const AZIONI = [
+interface AzioneHub {
+  href: string;
+  ancora?: boolean;
+  icona: string;
+  titolo: string;
+  sotto: string;
+  accento?: boolean;
+  soloFree?: boolean;
+  soloAdmin?: boolean;
+}
+
+const AZIONI: AzioneHub[] = [
   {
     href: '/itinerari',
-    ancora: true,
+    ancora: false,
+    icona: 'strada',
     titolo: 'Itinerari',
     sotto: 'Gli itinerari, regione per regione',
-    colore: 'bg-asfalto text-cemento',
-    span: 'col-span-2',
-  },
-  {
-    href: '/account',
-    titolo: 'Il tuo profilo',
-    sotto: 'Foto, username, tipo di moto',
-    colore: 'bg-segnale text-asfalto',
-    span: 'col-span-1',
-  },
-  {
-    href: '/blog',
-    titolo: 'Blog',
-    sotto: 'Strade e storie da chi guida',
-    colore: 'bg-white border-2 border-asfalto text-asfalto',
-    span: 'col-span-1',
-  },
-  {
-    href: '/foto',
-    titolo: 'Foto dei Bikers',
-    sotto: 'Le foto della community, e le tue',
-    colore: 'bg-white border-2 border-asfalto text-asfalto',
-    span: 'col-span-1',
-  },
-  {
-    href: '/pro',
-    titolo: 'Piano Pro',
-    sotto: 'GPX, varianti e pacchetti weekend',
-    colore: 'bg-white border-2 border-asfalto text-asfalto',
-    span: 'col-span-1',
-    soloFree: true,
+    accento: true,
   },
   {
     href: '/traccia',
+    icona: 'gps',
     titolo: 'Traccia un giro',
-    sotto: 'Registra il percorso GPS e crea la card',
-    colore: 'bg-asfalto text-cemento',
-    span: 'col-span-1',
+    sotto: 'Registra il percorso e le statistiche',
+  },
+  {
+    href: '/foto',
+    icona: 'foto',
+    titolo: 'Foto dei Bikers',
+    sotto: 'Le foto della community, e le tue',
+  },
+  {
+    href: '/blog',
+    icona: 'blog',
+    titolo: 'Blog',
+    sotto: 'Strade e storie da chi guida',
+  },
+  {
+    href: '/account',
+    icona: 'profilo',
+    titolo: 'Il tuo profilo',
+    sotto: 'Foto, username, tipo di moto',
+  },
+  {
+    href: '/pro',
+    icona: 'pro',
+    titolo: 'Piano Pro',
+    sotto: 'GPX, varianti e pacchetti weekend',
+    soloFree: true,
   },
   {
     href: '/admin',
+    icona: 'admin',
     titolo: 'Pannello admin',
     sotto: 'Avvisi, utenti Pro, articoli del blog',
-    colore: 'bg-cartello text-cemento',
-    span: 'col-span-1',
     soloAdmin: true,
   },
 ];
+
+// Icone SVG inline per le card dell'hub.
+function IconaHub({ nome }: { nome: string }) {
+  const props = {
+    width: 26,
+    height: 26,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  };
+  switch (nome) {
+    case 'strada':
+      return <svg {...props}><path d="M4 22 9 2" /><path d="M20 22 15 2" /><path d="M12 6v2M12 12v2M12 18v2" /></svg>;
+    case 'gps':
+      return <svg {...props}><circle cx="12" cy="10" r="3" /><path d="M12 2a8 8 0 0 0-8 8c0 5.5 8 12 8 12s8-6.5 8-12a8 8 0 0 0-8-8z" /></svg>;
+    case 'foto':
+      return <svg {...props}><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="8.5" cy="10" r="1.5" /><path d="m21 16-4.5-4.5L7 21" /></svg>;
+    case 'blog':
+      return <svg {...props}><path d="M4 4h16v16H4z" /><path d="M8 9h8M8 13h6" /></svg>;
+    case 'profilo':
+      return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6" /></svg>;
+    case 'pro':
+      return <svg {...props}><path d="m12 2 3 6 6 .9-4.5 4.2 1 6.4L12 16.8 6.5 19.5l1-6.4L3 8.9 9 8z" /></svg>;
+    case 'admin':
+      return <svg {...props}><path d="M12 2 4 6v6c0 4.5 3.5 8 8 10 4.5-2 8-5.5 8-10V6z" /><path d="m9 12 2 2 4-4" /></svg>;
+    default:
+      return null;
+  }
+}
 
 export default function PaginaHub() {
   const { user, profilo, loading } = useAuth();
@@ -168,8 +206,8 @@ export default function PaginaHub() {
           </div>
 
           {/* Stato abbonamento */}
-          <div className="shrink-0 border-2 border-guardrail/20 p-4 sm:text-right">
-            <p className="font-mono text-xs uppercase text-guardrail">Stato account</p>
+          <div className="shrink-0 rounded-app border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm sm:text-right">
+            <p className="font-mono text-xs uppercase tracking-wide text-guardrail">Stato account</p>
             {isAdmin ? (
               <p className="mt-1 font-display text-xl font-bold uppercase text-cartello">
                 Admin · tutto sbloccato
@@ -185,7 +223,7 @@ export default function PaginaHub() {
                 </p>
                 <Link
                   href="/pro"
-                  className="mt-2 inline-block bg-segnale px-3 py-1.5 font-mono text-xs font-medium uppercase text-asfalto hover:bg-white"
+                  className="tap mt-2 inline-block rounded-app bg-segnale px-3 py-1.5 font-mono text-xs font-medium uppercase text-asfalto hover:bg-white"
                 >
                   Passa a Pro →
                 </Link>
@@ -199,24 +237,41 @@ export default function PaginaHub() {
 
       {/* Griglia azioni */}
       <section className="mx-auto max-w-6xl px-4 py-10">
-        <p className="font-mono text-xs uppercase tracking-widest text-asfalto/40">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-asfalto/40">
           Cosa vuoi fare?
         </p>
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
           {azioni.map((a) => {
+            const accento = a.accento === true;
+            const cls = accento
+              ? 'card-app tap group flex flex-col p-5 bg-asfalto text-cemento border-asfalto'
+              : 'card-app tap group flex flex-col p-5';
+
             const contenuto = (
               <>
-                <h2 className="font-display text-3xl font-bold uppercase leading-tight tracking-tight sm:text-4xl">
+                <span
+                  className={`flex h-11 w-11 items-center justify-center rounded-app ${
+                    accento ? 'bg-segnale text-asfalto' : 'bg-asfalto/[0.04] text-asfalto group-hover:bg-segnale group-hover:text-asfalto'
+                  } transition-colors`}
+                >
+                  <IconaHub nome={a.icona} />
+                </span>
+                <h2 className="mt-4 font-display text-2xl font-bold uppercase leading-tight tracking-tight sm:text-3xl">
                   {a.titolo}
                 </h2>
-                <p className="mt-2 text-sm opacity-75">{a.sotto}</p>
-                <span className="mt-4 block font-mono text-xs uppercase tracking-wide opacity-60">
-                  Vai →
+                <p className={`mt-1 text-sm ${accento ? 'text-guardrail' : 'text-asfalto/60'}`}>
+                  {a.sotto}
+                </p>
+                <span
+                  className={`mt-4 inline-flex items-center gap-1 font-mono text-xs uppercase tracking-wide ${
+                    accento ? 'text-segnale' : 'text-asfalto/50 group-hover:text-asfalto'
+                  } transition-colors`}
+                >
+                  Vai
+                  <span className="transition-transform group-hover:translate-x-0.5">→</span>
                 </span>
               </>
             );
-
-            const cls = `${a.span ?? 'col-span-1'} ${a.colore} flex flex-col p-5 transition-opacity hover:opacity-90`;
 
             return a.ancora ? (
               <a key={a.titolo} href={a.href} className={cls}>
