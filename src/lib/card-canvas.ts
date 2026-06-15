@@ -31,6 +31,10 @@ interface DatiCard {
   durata: string; // già formattato, es. "2:14"
   data: string; // es. "13 giugno 2026"
   punti: Punto[];
+  // opzionali, in stile Strava
+  fotoDataUrl?: string | null; // foto di sfondo scelta dall'utente
+  dislivelloM?: number | null; // metri di dislivello positivo
+  velMediaKmh?: number | null; // velocità media
 }
 
 function caricaImmagine(src: string): Promise<HTMLImageElement> {
@@ -85,17 +89,43 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas non disponibile');
 
-  // Sfondo: gradiente verde "paesaggio" sopra, asfalto sotto
-  const sfondo = ctx.createLinearGradient(0, 0, 0, ALTEZZA);
-  sfondo.addColorStop(0, '#cfe3d6');
-  sfondo.addColorStop(0.45, '#9fc1ad');
-  sfondo.addColorStop(0.62, '#5b7a64');
-  sfondo.addColorStop(0.62, ASFALTO);
-  sfondo.addColorStop(1, ASFALTO);
-  ctx.fillStyle = sfondo;
-  ctx.fillRect(0, 0, LARGHEZZA, ALTEZZA);
+  // Sfondo: foto scelta dall'utente (stile Strava) oppure gradiente paesaggio
+  let conFoto = false;
+  if (dati.fotoDataUrl) {
+    try {
+      const foto = await caricaImmagine(dati.fotoDataUrl);
+      // copertura "cover": riempie tutta la card mantenendo le proporzioni
+      const scala = Math.max(LARGHEZZA / foto.width, ALTEZZA / foto.height);
+      const w = foto.width * scala;
+      const h = foto.height * scala;
+      ctx.drawImage(foto, (LARGHEZZA - w) / 2, (ALTEZZA - h) / 2, w, h);
 
-  // Tracciato: disegnato come "firma" dorata nella metà superiore
+      // velo scuro dall'alto per far risaltare tracciato e testo
+      const velo = ctx.createLinearGradient(0, 0, 0, ALTEZZA);
+      velo.addColorStop(0, 'rgba(14,16,18,0.55)');
+      velo.addColorStop(0.4, 'rgba(14,16,18,0.15)');
+      velo.addColorStop(0.72, 'rgba(14,16,18,0.35)');
+      velo.addColorStop(1, 'rgba(14,16,18,0.85)');
+      ctx.fillStyle = velo;
+      ctx.fillRect(0, 0, LARGHEZZA, ALTEZZA);
+      conFoto = true;
+    } catch {
+      conFoto = false;
+    }
+  }
+
+  if (!conFoto) {
+    const sfondo = ctx.createLinearGradient(0, 0, 0, ALTEZZA);
+    sfondo.addColorStop(0, '#cfe3d6');
+    sfondo.addColorStop(0.45, '#9fc1ad');
+    sfondo.addColorStop(0.62, '#5b7a64');
+    sfondo.addColorStop(0.62, ASFALTO);
+    sfondo.addColorStop(1, ASFALTO);
+    ctx.fillStyle = sfondo;
+    ctx.fillRect(0, 0, LARGHEZZA, ALTEZZA);
+  }
+
+  // Tracciato: "firma" dorata. Con foto: compatto in alto a sinistra (stile Strava).
   if (dati.punti.length > 1) {
     const lats = dati.punti.map((p) => p.lat);
     const lngs = dati.punti.map((p) => p.lng);
@@ -106,25 +136,28 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     const spanLat = Math.max(maxLat - minLat, 0.0005);
     const spanLng = Math.max(maxLng - minLng, 0.0005);
 
+    // area di disegno: con foto è un riquadro in alto a sinistra, senza è metà card
     const margine = 140;
-    const areaW = LARGHEZZA - margine * 2;
-    const areaH = ALTEZZA * 0.5 - margine * 2;
+    const areaX = conFoto ? 80 : margine;
+    const areaY = conFoto ? 200 : margine;
+    const areaW = conFoto ? LARGHEZZA * 0.5 : LARGHEZZA - margine * 2;
+    const areaH = conFoto ? ALTEZZA * 0.32 : ALTEZZA * 0.5 - margine * 2;
     const scala = Math.min(areaW / spanLng, areaH / spanLat);
 
-    const offsetX = margine + (areaW - spanLng * scala) / 2;
-    const offsetY = margine + (areaH - spanLat * scala) / 2;
+    const offsetX = areaX + (areaW - spanLng * scala) / 2;
+    const offsetY = areaY + (areaH - spanLat * scala) / 2;
 
     const toXY = (p: Punto) => ({
       x: offsetX + (p.lng - minLng) * scala,
       y: offsetY + (maxLat - p.lat) * scala,
     });
 
-    ctx.lineWidth = 14;
+    ctx.lineWidth = conFoto ? 12 : 14;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.strokeStyle = SEGNALE;
-    ctx.shadowColor = 'rgba(0,0,0,0.35)';
-    ctx.shadowBlur = 12;
+    ctx.shadowColor = 'rgba(0,0,0,0.45)';
+    ctx.shadowBlur = 14;
     ctx.beginPath();
     dati.punti.forEach((p, i) => {
       const { x, y } = toXY(p);
@@ -134,17 +167,46 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Pallini inizio/fine
     [dati.punti[0], dati.punti[dati.punti.length - 1]].forEach((p) => {
       const { x, y } = toXY(p);
-      ctx.fillStyle = ASFALTO;
+      ctx.fillStyle = conFoto ? CEMENTO : ASFALTO;
       ctx.beginPath();
-      ctx.arc(x, y, 16, 0, Math.PI * 2);
+      ctx.arc(x, y, 14, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = SEGNALE;
       ctx.lineWidth = 5;
       ctx.stroke();
     });
+  }
+
+  // Statistiche stile Strava (etichetta piccola + numero grande), colonna destra,
+  // solo quando c'è la foto di sfondo.
+  if (conFoto) {
+    const statX = LARGHEZZA - 80;
+    let statY = 300;
+    ctx.textAlign = 'right';
+    const blocchi: Array<{ label: string; valore: string }> = [
+      { label: 'DISTANZA', valore: `${dati.km} km` },
+    ];
+    if (dati.dislivelloM != null && dati.dislivelloM > 0) {
+      blocchi.push({ label: 'DISLIVELLO', valore: `${dati.dislivelloM} m` });
+    }
+    blocchi.push({ label: 'DURATA', valore: dati.durata });
+    if (dati.velMediaKmh != null && dati.velMediaKmh > 0) {
+      blocchi.push({ label: 'MEDIA', valore: `${dati.velMediaKmh} km/h` });
+    }
+    for (const b of blocchi) {
+      ctx.fillStyle = 'rgba(240,241,242,0.85)';
+      ctx.font = `500 30px ${fontMono}`;
+      ctx.fillText(b.label, statX, statY);
+      ctx.fillStyle = CEMENTO;
+      ctx.font = `700 76px ${fontDisplay}`;
+      ctx.fillText(b.valore, statX, statY + 76);
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      statY += 170;
+    }
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'left';
   }
 
   // Logo in alto a destra
@@ -156,17 +218,24 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     // se il logo non carica, si procede senza
   }
 
-  // Titolo (nome itinerario o "Giro libero")
+  // Titolo (nome itinerario o "Giro libero") in basso a sinistra
   ctx.fillStyle = CEMENTO;
   ctx.textBaseline = 'alphabetic';
+  ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
+  ctx.shadowBlur = conFoto ? 10 : 0;
   ctx.font = `700 64px ${fontDisplay}`;
   scriviTestoMultilinea(ctx, dati.titolo.toUpperCase(), 64, ALTEZZA - 540, LARGHEZZA - 128, 70);
 
-  // Statistiche + marchio, in Caveat giallo
+  // Riga statistiche/data in Caveat giallo. Con foto mostra solo la data
+  // (le statistiche sono già nella colonna), senza foto mostra tutto.
   ctx.fillStyle = SEGNALE;
   ctx.font = `600 56px ${fontHand}`;
-  ctx.fillText(`${dati.km} km · ${dati.durata} · ${dati.data}`, 64, ALTEZZA - 400);
+  const rigaSotto = conFoto ? dati.data : `${dati.km} km · ${dati.durata} · ${dati.data}`;
+  ctx.fillText(rigaSotto, 64, ALTEZZA - 400);
+  ctx.shadowBlur = 0;
 
+  // Marchio
+  ctx.fillStyle = SEGNALE;
   ctx.font = `600 80px ${fontHand}`;
   ctx.textAlign = 'right';
   ctx.fillText('GiroSecco', LARGHEZZA - 64, ALTEZZA - 64);

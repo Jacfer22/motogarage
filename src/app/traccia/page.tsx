@@ -58,6 +58,7 @@ export default function PaginaTraccia() {
   const [distanzaM, setDistanzaM] = useState(0);
   const [durataSec, setDurataSec] = useState(0);
   const [velCorrenteKmh, setVelCorrenteKmh] = useState(0);
+  const [fotoCard, setFotoCard] = useState<string | null>(null);
   const [errore, setErrore] = useState<string | null>(null);
   const [storico, setStorico] = useState<GiroSalvato[]>([]);
   const [cardUrl, setCardUrl] = useState<string | null>(null);
@@ -239,15 +240,25 @@ export default function PaginaTraccia() {
     puntiRef.current = [];
   }
 
-  async function creaCard(datiPunti: Punto[], km: number, durata: number, data: string) {
+  async function creaCard(
+    datiPunti: Punto[],
+    km: number,
+    durata: number,
+    data: string,
+    foto?: string | null
+  ) {
     setGenerandoCard(true);
     try {
+      const stat = statisticheGiro(datiPunti, durata, km);
       const url = await generaCardGiro({
         titolo: 'Giro libero',
         km: formattaKm(km),
         durata: formattaDurata(durata),
         data: formattaDataBreve(data),
         punti: datiPunti,
+        fotoDataUrl: foto ?? null,
+        dislivelloM: stat.dislivelloPositivoM,
+        velMediaKmh: stat.velMediaKmh,
       });
       setCardUrl(url);
     } catch {
@@ -255,6 +266,28 @@ export default function PaginaTraccia() {
     } finally {
       setGenerandoCard(false);
     }
+  }
+
+  // Legge la foto scelta come data URL (ridimensionata per non pesare troppo)
+  async function scegliFotoCard(file: File): Promise<string> {
+    const bitmap = await createImageBitmap(file);
+    const max = 1280;
+    let { width, height } = bitmap;
+    if (width > max || height > max) {
+      if (width >= height) {
+        height = Math.round((height * max) / width);
+        width = max;
+      } else {
+        width = Math.round((width * max) / height);
+        height = max;
+      }
+    }
+    const c = document.createElement('canvas');
+    c.width = width;
+    c.height = height;
+    const cx = c.getContext('2d');
+    if (cx) cx.drawImage(bitmap, 0, 0, width, height);
+    return c.toDataURL('image/jpeg', 0.85);
   }
 
   function scaricaCard() {
@@ -456,32 +489,60 @@ export default function PaginaTraccia() {
           </p>
 
           {!cardUrl ? (
-            <button
-              type="button"
-              onClick={() => creaCard(punti, distanzaM, durataSec, new Date().toISOString())}
-              disabled={generandoCard}
-              className="tap mt-4 rounded-app bg-segnale px-5 py-2.5 font-mono font-medium uppercase text-asfalto hover:bg-white disabled:opacity-60"
-            >
-              {generandoCard ? 'Genero la card…' : 'Crea la card da condividere'}
-            </button>
+            <div className="mt-4 space-y-3">
+              <p className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
+                Crea la card da condividere nelle storie
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <label className="tap cursor-pointer rounded-app bg-segnale px-5 py-2.5 font-mono text-sm font-medium uppercase text-asfalto hover:bg-white">
+                  {generandoCard ? 'Genero…' : '📷 Con una tua foto'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      const foto = await scegliFotoCard(f);
+                      await creaCard(punti, distanzaM, durataSec, new Date().toISOString(), foto);
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => creaCard(punti, distanzaM, durataSec, new Date().toISOString())}
+                  disabled={generandoCard}
+                  className="tap rounded-app border border-asfalto/20 px-5 py-2.5 font-mono text-sm font-medium uppercase hover:bg-asfalto hover:text-cemento disabled:opacity-60"
+                >
+                  Solo tracciato
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="mt-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={cardUrl} alt="Card del giro" className="w-full max-w-xs border-2 border-asfalto" />
+              <img src={cardUrl} alt="Card del giro" className="w-full max-w-xs rounded-app border-2 border-asfalto shadow-app" />
               <div className="mt-3 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={condividiCard}
-                  className="bg-segnale px-5 py-2.5 font-mono font-medium uppercase text-asfalto hover:bg-white"
+                  className="tap rounded-app bg-segnale px-5 py-2.5 font-mono font-medium uppercase text-asfalto hover:bg-white"
                 >
                   Condividi
                 </button>
                 <button
                   type="button"
                   onClick={scaricaCard}
-                  className="border-2 border-asfalto px-5 py-2.5 font-mono font-medium uppercase hover:bg-asfalto hover:text-cemento"
+                  className="tap rounded-app border-2 border-asfalto px-5 py-2.5 font-mono font-medium uppercase hover:bg-asfalto hover:text-cemento"
                 >
                   Scarica
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCardUrl(null)}
+                  className="tap rounded-app px-4 py-2.5 font-mono text-sm uppercase text-asfalto/60 hover:text-asfalto"
+                >
+                  Rifai
                 </button>
               </div>
             </div>
