@@ -259,6 +259,7 @@ export default function PaginaTraccia() {
         fotoDataUrl: foto ?? null,
         dislivelloM: stat.dislivelloPositivoM,
         velMediaKmh: stat.velMediaKmh,
+        curve: stat.curve,
       });
       setCardUrl(url);
     } catch {
