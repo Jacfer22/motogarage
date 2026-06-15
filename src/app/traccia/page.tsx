@@ -58,7 +58,8 @@ export default function PaginaTraccia() {
   const [distanzaM, setDistanzaM] = useState(0);
   const [durataSec, setDurataSec] = useState(0);
   const [velCorrenteKmh, setVelCorrenteKmh] = useState(0);
-  const [fotoCard, setFotoCard] = useState<string | null>(null);
+  const [temaCard, setTemaCard] = useState<'tracciato' | 'foto'>('tracciato');
+  const [luogoCard, setLuogoCard] = useState('');
   const [errore, setErrore] = useState<string | null>(null);
   const [storico, setStorico] = useState<GiroSalvato[]>([]);
   const [cardUrl, setCardUrl] = useState<string | null>(null);
@@ -251,11 +252,13 @@ export default function PaginaTraccia() {
     try {
       const stat = statisticheGiro(datiPunti, durata, km);
       const url = await generaCardGiro({
-        titolo: 'Giro libero',
+        titolo: luogoCard.trim() || 'Giro libero',
         km: formattaKm(km),
         durata: formattaDurata(durata),
         data: formattaDataBreve(data),
         punti: datiPunti,
+        tema: temaCard,
+        luogo: luogoCard.trim() || null,
         fotoDataUrl: foto ?? null,
         dislivelloM: stat.dislivelloPositivoM,
         velMediaKmh: stat.velMediaKmh,
@@ -490,13 +493,57 @@ export default function PaginaTraccia() {
           </p>
 
           {!cardUrl ? (
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4">
               <p className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
                 Crea la card da condividere nelle storie
               </p>
+
+              {/* Scelta tema */}
+              <div>
+                <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Stile</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTemaCard('tracciato')}
+                    className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
+                      temaCard === 'tracciato'
+                        ? 'border-segnale bg-segnale/10 text-asfalto'
+                        : 'border-asfalto/15 text-asfalto/60'
+                    }`}
+                  >
+                    Tracciato 3D
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTemaCard('foto')}
+                    className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
+                      temaCard === 'foto'
+                        ? 'border-segnale bg-segnale/10 text-asfalto'
+                        : 'border-asfalto/15 text-asfalto/60'
+                    }`}
+                  >
+                    Foto (Strava)
+                  </button>
+                </div>
+              </div>
+
+              {/* Luogo */}
+              <div>
+                <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Luogo (opzionale)</p>
+                <input
+                  type="text"
+                  value={luogoCard}
+                  onChange={(e) => setLuogoCard(e.target.value)}
+                  placeholder="Es. Lago di Bracciano"
+                  maxLength={40}
+                  className="w-full rounded-app border border-asfalto/15 px-3 py-2 text-sm focus:border-segnale focus:outline-none"
+                />
+              </div>
+
+              {/* Genera */}
               <div className="flex flex-wrap gap-3">
                 <label className="tap cursor-pointer rounded-app bg-segnale px-5 py-2.5 font-mono text-sm font-medium uppercase text-asfalto hover:bg-white">
-                  {generandoCard ? 'Genero…' : '📷 Con una tua foto'}
+                  {generandoCard ? 'Genero…' : '📷 Con una foto'}
                   <input
                     type="file"
                     accept="image/*"
@@ -515,7 +562,7 @@ export default function PaginaTraccia() {
                   disabled={generandoCard}
                   className="tap rounded-app border border-asfalto/20 px-5 py-2.5 font-mono text-sm font-medium uppercase hover:bg-asfalto hover:text-cemento disabled:opacity-60"
                 >
-                  Solo tracciato
+                  Senza foto
                 </button>
               </div>
             </div>
