@@ -3,17 +3,21 @@
 import { useState } from 'react';
 import { generaCardGiro } from '@/lib/card-canvas';
 import { Punto } from '@/lib/geo';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
-// Pulsante che genera al volo la card del percorso di un itinerario (tema
-// tracciato 3D) e la condivide. Serve a rendere ogni itinerario "postabile"
-// sui social, anche da chi non l'ha registrato col GPS — pubblicità per il sito.
+// Pulsante che genera al volo la card del percorso di un itinerario e la
+// condivide. Usa la traccia GPS reale se qualcuno l'ha registrata e resa
+// pubblica su questo itinerario (così le curve sono vere); altrimenti ripiega
+// sui punti-città del tracciato base.
 export default function CondividiItinerario({
+  itinerarioId,
   titolo,
   zona,
   km,
   durataOre,
   tracciato,
 }: {
+  itinerarioId: string;
   titolo: string;
   zona: string;
   km: number;
@@ -22,11 +26,35 @@ export default function CondividiItinerario({
 }) {
   const [stato, setStato] = useState<'idle' | 'genero' | 'errore'>('idle');
 
+  // Cerca l'ultima traccia GPS pubblica e densa registrata su questo itinerario.
+  async function tracciaReale(): Promise<[number, number][] | null> {
+    const supabase = getSupabaseBrowser();
+    if (!supabase) return null;
+    try {
+      const { data } = await supabase
+        .from('giri')
+        .select('tracciato')
+        .eq('itinerario_id', itinerarioId)
+        .eq('pubblico', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const t = data?.tracciato as [number, number][] | undefined;
+      // serve densa per avere curve vere
+      if (t && Array.isArray(t) && t.length >= 15) return t;
+    } catch {
+      // ignora: si userà il tracciato base
+    }
+    return null;
+  }
+
   async function condividi() {
     if (tracciato.length < 2) return;
     setStato('genero');
     try {
-      const punti: Punto[] = tracciato.map(([lat, lng]) => ({ lat, lng }));
+      const reale = await tracciaReale();
+      const coords = reale ?? tracciato;
+      const punti: Punto[] = coords.map(([lat, lng]) => ({ lat, lng }));
       const durata = `${Math.floor(durataOre)}:${String(Math.round((durataOre % 1) * 60)).padStart(2, '0')}`;
       const url = await generaCardGiro({
         titolo,
@@ -49,7 +77,6 @@ export default function CondividiItinerario({
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: titolo, text: testo });
       } else {
-        // fallback: scarica l'immagine
         const a = document.createElement('a');
         a.href = url;
         a.download = 'girosecco-itinerario.png';

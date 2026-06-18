@@ -51,6 +51,7 @@ export default async function PaginaItinerario({
         </div>
         <div className="mt-4">
           <CondividiItinerario
+            itinerarioId={itinerario.id}
             titolo={itinerario.titolo}
             zona={itinerario.zona}
             km={itinerario.km}
