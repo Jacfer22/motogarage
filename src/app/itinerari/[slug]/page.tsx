@@ -5,6 +5,7 @@ import { accessoItinerario } from '@/lib/accesso';
 import AvvisoBanner from '@/components/AvvisoBanner';
 import ContenutoItinerario from '@/components/ContenutoItinerario';
 import SezioneFotoItinerario from '@/components/SezioneFotoItinerario';
+import CommentiItinerario from '@/components/CommentiItinerario';
 import { ChipDato, ChipDifficolta } from '@/components/Chips';
 
 export const revalidate = 3600;
@@ -87,6 +88,8 @@ export default async function PaginaItinerario({
       />
 
       <SezioneFotoItinerario itinerarioId={itinerario.id} />
+
+      <CommentiItinerario itinerarioId={itinerario.id} />
     </article>
   );
 }

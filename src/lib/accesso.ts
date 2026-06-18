@@ -18,22 +18,20 @@ export function ordinaPerAccessibilita(itinerari: Itinerario[]): Itinerario[] {
 }
 
 // Mappa ogni itinerario di UNA regione al suo livello di accesso.
-// Modello attuale (Pro non ancora attivo): i primi 2 giri più accessibili di
-// ogni regione sono "aperti" a tutti, tutti gli altri si sbloccano con la
-// registrazione gratuita. Nessun giro reale è bloccato dietro il Pro: il Pro
-// per ora è solo uno spazio "coming soon" fatto di slot placeholder dedicati.
+// Modello attuale (Pro non ancora attivo): il giro più accessibile di ogni
+// regione è "aperto" a tutti, tutti gli altri si sbloccano con la
+// registrazione gratuita. Nessun giro reale è bloccato dietro il Pro.
 export function livelliAccessoRegione(
   itinerariRegione: Itinerario[]
 ): Map<string, Accesso> {
   const ordinati = ordinaPerAccessibilita(itinerariRegione);
   const mappa = new Map<string, Accesso>();
   ordinati.forEach((it, i) => {
-    // gli slot placeholder del Pro restano 'pro' (oscurati); i giri veri no
     if (it.is_placeholder) {
       mappa.set(it.id, 'pro');
       return;
     }
-    const livello: Accesso = i <= 1 ? 'aperto' : 'registrati';
+    const livello: Accesso = i === 0 ? 'aperto' : 'registrati';
     mappa.set(it.id, livello);
   });
   return mappa;

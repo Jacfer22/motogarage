@@ -12,6 +12,8 @@ export interface Foto {
   itinerario_id: string | null;
   url: string;
   didascalia: string | null;
+  lat?: number | null;
+  lng?: number | null;
   created_at: string;
   autore?: { username: string | null } | null;
   itinerario?: { slug: string; titolo: string } | null;

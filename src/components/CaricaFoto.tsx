@@ -6,6 +6,74 @@ import { useAuth } from './AuthProvider';
 
 // Ridimensiona e comprime l'immagine lato browser prima dell'upload:
 // lato lungo max 1600px, JPEG qualità ~0.82. Tiene leggero lo storage.
+// Prova a estrarre la posizione GPS dai metadati EXIF di una foto JPEG,
+// leggendo i byte del file. Ritorna null se non c'è (molte foto non la hanno,
+// o il browser l'ha rimossa). Nessuna libreria esterna.
+async function leggiGpsExif(file: File): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const buf = await file.arrayBuffer();
+    const view = new DataView(buf);
+    if (view.getUint16(0) !== 0xffd8) return null; // non è JPEG
+
+    let offset = 2;
+    const len = view.byteLength;
+    while (offset < len) {
+      const marker = view.getUint16(offset);
+      offset += 2;
+      if (marker === 0xffe1) {
+        // APP1 (EXIF)
+        const exifStart = offset + 2;
+        if (view.getUint32(exifStart) !== 0x45786966) return null; // "Exif"
+        const tiff = exifStart + 6;
+        const little = view.getUint16(tiff) === 0x4949;
+        const get16 = (o: number) => view.getUint16(o, little);
+        const get32 = (o: number) => view.getUint32(o, little);
+
+        const ifd0 = tiff + get32(tiff + 4);
+        const entries = get16(ifd0);
+        let gpsIfd = 0;
+        for (let i = 0; i < entries; i++) {
+          const e = ifd0 + 2 + i * 12;
+          if (get16(e) === 0x8825) gpsIfd = tiff + get32(e + 8);
+        }
+        if (!gpsIfd) return null;
+
+        const gpsEntries = get16(gpsIfd);
+        let latRef = 'N';
+        let lngRef = 'E';
+        let lat: number | null = null;
+        let lng: number | null = null;
+        const leggiCoord = (o: number) => {
+          const d = get32(o) / get32(o + 4);
+          const m = get32(o + 8) / get32(o + 12);
+          const s = get32(o + 16) / get32(o + 20);
+          return d + m / 60 + s / 3600;
+        };
+        for (let i = 0; i < gpsEntries; i++) {
+          const e = gpsIfd + 2 + i * 12;
+          const tag = get16(e);
+          const valOff = tiff + get32(e + 8);
+          if (tag === 1) latRef = String.fromCharCode(view.getUint8(e + 8));
+          else if (tag === 2) lat = leggiCoord(valOff);
+          else if (tag === 3) lngRef = String.fromCharCode(view.getUint8(e + 8));
+          else if (tag === 4) lng = leggiCoord(valOff);
+        }
+        if (lat == null || lng == null) return null;
+        if (latRef === 'S') lat = -lat;
+        if (lngRef === 'W') lng = -lng;
+        return { lat, lng };
+      } else if ((marker & 0xff00) !== 0xff00) {
+        break;
+      } else {
+        offset += view.getUint16(offset);
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function comprimi(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const max = 1600;
@@ -80,6 +148,18 @@ export default function CaricaFoto({
     setStato('invio');
     setErrore(null);
     try {
+      // posizione: prima dall'EXIF della foto, poi (fallback) dal dispositivo
+      let posizione = await leggiGpsExif(f);
+      if (!posizione && 'geolocation' in navigator) {
+        posizione = await new Promise((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            () => resolve(null),
+            { timeout: 4000, maximumAge: 60000 }
+          );
+        });
+      }
+
       const blob = await comprimi(f);
       const nome = `${user.id}/${Date.now()}.jpg`;
       const up = await supabase.storage
@@ -92,6 +172,8 @@ export default function CaricaFoto({
         itinerario_id: itinerarioId,
         storage_path: nome,
         didascalia: didascalia.trim() || null,
+        lat: posizione?.lat ?? null,
+        lng: posizione?.lng ?? null,
       });
       if (ins.error) throw ins.error;
 

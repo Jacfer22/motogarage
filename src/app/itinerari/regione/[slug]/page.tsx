@@ -91,7 +91,7 @@ export default async function PaginaRegione({
               Gli itinerari
             </h2>
             <span className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
-              {liberi.length > 2 ? '2 liberi · gli altri con registrazione' : 'liberi a tutti'}
+              {liberi.length > 1 ? '1 libero · gli altri con registrazione' : 'libero a tutti'}
             </span>
           </div>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

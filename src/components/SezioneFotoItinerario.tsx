@@ -1,10 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { Foto } from '@/lib/types';
 import GalleriaFoto from './GalleriaFoto';
 import CaricaFoto from './CaricaFoto';
+
+const MappaFoto = dynamic(() => import('./MappaFoto'), { ssr: false });
 
 function urlPubblico(base: string, path: string) {
   return `${base}/storage/v1/object/public/foto-bikers/${path}`;
@@ -27,7 +30,7 @@ export default function SezioneFotoItinerario({
     }
     const { data } = await supabase
       .from('foto')
-      .select('id, autore_id, itinerario_id, storage_path, didascalia, created_at, autore:profiles(username)')
+      .select('id, autore_id, itinerario_id, storage_path, didascalia, lat, lng, created_at, autore:profiles(username)')
       .eq('itinerario_id', itinerarioId)
       .order('created_at', { ascending: false });
 
@@ -39,6 +42,8 @@ export default function SezioneFotoItinerario({
         itinerario_id: (r.itinerario_id as string) ?? null,
         url: urlPubblico(base, r.storage_path as string),
         didascalia: (r.didascalia as string) ?? null,
+        lat: (r.lat as number) ?? null,
+        lng: (r.lng as number) ?? null,
         created_at: r.created_at as string,
         autore: (r.autore as { username: string | null }) ?? null,
       }))
@@ -66,6 +71,8 @@ export default function SezioneFotoItinerario({
       <div className="mt-5">
         <CaricaFoto itinerarioId={itinerarioId} onCaricata={carica} />
       </div>
+
+      {caricato && <MappaFoto foto={foto} />}
 
       <div className="mt-6">
         {!caricato ? (
