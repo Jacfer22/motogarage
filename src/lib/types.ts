@@ -70,6 +70,9 @@ export interface Itinerario {
   origine: 'verificato' | 'classico';
   gpx_url: string | null;
   is_premium: boolean;
+  // true = "slot" segnaposto per un futuro giro Pro (oscurato, coming soon),
+  // non un itinerario reale.
+  is_placeholder?: boolean;
   cover_url: string | null;
   // Sequenza di punti che disegna il percorso reale su strada (più densa delle tappe)
   tracciato: [number, number][];

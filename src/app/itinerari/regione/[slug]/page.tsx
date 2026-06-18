@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { getItinerariPerRegione, getItinerariConAvvisi } from '@/lib/supabase';
 import { nomeRegione, regioneEsiste, REGIONI } from '@/lib/regioni';
 import { livelliAccessoRegione } from '@/lib/accesso';
+import { slotProRegione } from '@/lib/slot-pro';
 import ItinerarioCard from '@/components/ItinerarioCard';
+import SlotProCard from '@/components/SlotProCard';
 
 export const revalidate = 3600;
 
@@ -43,8 +45,10 @@ export default async function PaginaRegione({
     const rb = livelli.get(b.id) === 'aperto' ? 0 : livelli.get(b.id) === 'registrati' ? 1 : 2;
     return ra - rb;
   });
-  const liberi = ordinati.filter((i) => livelli.get(i.id) !== 'pro');
-  const pro = ordinati.filter((i) => livelli.get(i.id) === 'pro');
+  // Tutti i giri reali sono accessibili (aperti o con registrazione).
+  const liberi = ordinati;
+  // Gli slot Pro "coming soon" di questa regione (numero, senza nomi).
+  const numSlotPro = slotProRegione(slug);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
@@ -84,10 +88,10 @@ export default async function PaginaRegione({
         <>
           <div className="mt-10 flex items-end justify-between gap-4 border-b-2 border-asfalto pb-3">
             <h2 className="font-display text-3xl font-bold uppercase tracking-tight">
-              Liberi e gratuiti
+              Gli itinerari
             </h2>
             <span className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
-              {liberi.length > 1 ? '1 aperto · 1 con registrazione' : 'aperto a tutti'}
+              {liberi.length > 2 ? '2 liberi · gli altri con registrazione' : 'liberi a tutti'}
             </span>
           </div>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -101,25 +105,27 @@ export default async function PaginaRegione({
             ))}
           </div>
 
-          {pro.length > 0 && (
+          {numSlotPro > 0 && (
             <div className="mt-14">
-              <div className="flex items-end justify-between gap-4 border-b-2 border-asfalto pb-3">
-                <h2 className="font-display text-3xl font-bold uppercase tracking-tight">Pro</h2>
+              <div className="flex items-end justify-between gap-4 border-b-2 border-segnale pb-3">
+                <div>
+                  <h2 className="font-display text-3xl font-bold uppercase tracking-tight">
+                    Pro <span className="text-segnale-scuro">· in arrivo</span>
+                  </h2>
+                  <p className="mt-1 text-sm text-asfalto/60">
+                    Itinerari premium con GPX, varianti e pacchetti weekend. Stanno arrivando.
+                  </p>
+                </div>
                 <Link
                   href="/pro"
-                  className="font-mono text-xs uppercase tracking-wide text-cartello underline hover:text-asfalto"
+                  className="tap shrink-0 rounded-app bg-segnale px-4 py-2 font-mono text-xs font-medium uppercase tracking-wide text-asfalto hover:bg-asfalto hover:text-cemento"
                 >
-                  Cos&apos;è Pro →
+                  Pre-iscriviti →
                 </Link>
               </div>
               <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {pro.map((i) => (
-                  <ItinerarioCard
-                    key={i.id}
-                    itinerario={i}
-                    haAvviso={idConAvvisi.has(i.id)}
-                    accesso="pro"
-                  />
+                {Array.from({ length: numSlotPro }).map((_, i) => (
+                  <SlotProCard key={i} />
                 ))}
               </div>
             </div>

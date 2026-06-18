@@ -213,9 +213,30 @@ export default function PaginaHub() {
                 Admin · tutto sbloccato
               </p>
             ) : isPro ? (
-              <p className="mt-1 font-display text-xl font-bold uppercase text-segnale">
-                Pro attivo
-              </p>
+              <>
+                <p className="mt-1 font-display text-xl font-bold uppercase text-segnale">
+                  Pro attivo
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const supabase = getSupabaseBrowser();
+                    const sess = await supabase?.auth.getSession();
+                    const accessToken = sess?.data?.session?.access_token;
+                    if (!accessToken) return;
+                    const res = await fetch('/api/stripe/portale', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ accessToken }),
+                    });
+                    const json = await res.json();
+                    if (json.url) window.location.href = json.url;
+                  }}
+                  className="tap mt-2 inline-block font-mono text-xs uppercase tracking-wide text-guardrail underline hover:text-cemento"
+                >
+                  Gestisci abbonamento
+                </button>
+              </>
             ) : (
               <>
                 <p className="mt-1 font-display text-xl font-bold uppercase text-cemento">

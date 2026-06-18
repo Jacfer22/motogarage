@@ -31,6 +31,13 @@ interface RigaArticolo {
   autore: { username: string | null } | null;
 }
 
+interface RigaListaAttesa {
+  id: string;
+  email: string;
+  piano_interesse: string | null;
+  created_at: string;
+}
+
 export default function PaginaAdmin() {
   const { user, profilo, loading, nonConfigurato } = useAuth();
   const supabase = getSupabaseBrowser();
@@ -38,6 +45,7 @@ export default function PaginaAdmin() {
   const [avvisi, setAvvisi] = useState<RigaAvviso[] | null>(null);
   const [profili, setProfili] = useState<RigaProfilo[] | null>(null);
   const [articoli, setArticoli] = useState<RigaArticolo[] | null>(null);
+  const [listaAttesa, setListaAttesa] = useState<RigaListaAttesa[] | null>(null);
   const [errore, setErrore] = useState<string | null>(null);
 
   const autorizzato = !!profilo?.is_admin;
@@ -71,6 +79,14 @@ export default function PaginaAdmin() {
       .then(({ data, error }) => {
         if (error) setErrore(error.message);
         else setArticoli(data as unknown as RigaArticolo[]);
+      });
+
+    supabase
+      .from('lista_attesa_pro')
+      .select('id, email, piano_interesse, created_at')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) setListaAttesa(data as RigaListaAttesa[]);
       });
   }, [supabase, autorizzato]);
 
@@ -163,6 +179,51 @@ export default function PaginaAdmin() {
           {errore}
         </p>
       )}
+
+      {/* Lista d'attesa Pro */}
+      <div className="mt-10 rounded-app-lg border-2 border-segnale bg-white p-6">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-display text-2xl font-bold uppercase tracking-tight">
+            Lista d&apos;attesa Pro
+          </h2>
+          {listaAttesa && (
+            <span className="rounded-full bg-segnale px-3 py-1 font-display text-2xl font-bold text-asfalto">
+              {listaAttesa.length}
+            </span>
+          )}
+        </div>
+        <p className="mt-1 text-sm text-asfalto/60">
+          Chi ha lasciato l&apos;email in attesa del Pro. Questi numeri ti dicono se
+          conviene aprire la P.IVA e attivare i pagamenti.
+        </p>
+        {listaAttesa && listaAttesa.length > 0 && (
+          <>
+            <div className="mt-3 flex gap-3 font-mono text-xs uppercase text-asfalto/60">
+              <span>Annuale: {listaAttesa.filter((r) => r.piano_interesse === 'annuale').length}</span>
+              <span>·</span>
+              <span>Mensile: {listaAttesa.filter((r) => r.piano_interesse === 'mensile').length}</span>
+            </div>
+            <ul className="mt-3 max-h-64 space-y-1 overflow-auto">
+              {listaAttesa.map((r) => (
+                <li key={r.id} className="flex items-center justify-between gap-3 border-b border-asfalto/10 py-1.5 text-sm">
+                  <span className="truncate">{r.email}</span>
+                  <span className="shrink-0 font-mono text-[11px] uppercase text-asfalto/45">
+                    {r.piano_interesse ?? '—'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 font-mono text-[11px] text-asfalto/40">
+              Suggerimento: esporta queste email quando attivi il Pro per avvisare i primi interessati.
+            </p>
+          </>
+        )}
+        {listaAttesa && listaAttesa.length === 0 && (
+          <p className="mt-3 font-mono text-sm text-asfalto/50">
+            Ancora nessuna iscrizione. Promuovi il sito e guarda crescere la lista.
+          </p>
+        )}
+      </div>
 
       <h2 className="mt-10 font-display text-2xl font-bold uppercase tracking-tight">
         Articoli da revisionare
