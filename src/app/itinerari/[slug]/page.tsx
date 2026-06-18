@@ -6,6 +6,7 @@ import AvvisoBanner from '@/components/AvvisoBanner';
 import ContenutoItinerario from '@/components/ContenutoItinerario';
 import SezioneFotoItinerario from '@/components/SezioneFotoItinerario';
 import CommentiItinerario from '@/components/CommentiItinerario';
+import CondividiItinerario from '@/components/CondividiItinerario';
 import { ChipDato, ChipDifficolta } from '@/components/Chips';
 
 export const revalidate = 3600;
@@ -47,6 +48,15 @@ export default async function PaginaItinerario({
           <ChipDato label="ore" value={`~${itinerario.durata_ore}`} />
           <ChipDifficolta value={itinerario.difficolta} />
           <ChipDato label="quando" value={itinerario.periodo_ideale} />
+        </div>
+        <div className="mt-4">
+          <CondividiItinerario
+            titolo={itinerario.titolo}
+            zona={itinerario.zona}
+            km={itinerario.km}
+            durataOre={itinerario.durata_ore}
+            tracciato={itinerario.tracciato ?? []}
+          />
         </div>
       </header>
 

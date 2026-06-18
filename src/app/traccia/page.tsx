@@ -304,6 +304,11 @@ export default function PaginaTraccia() {
 
   async function condividiCard() {
     if (!cardUrl) return;
+    const testo =
+      `${luogoCard.trim() ? luogoCard.trim() + ' · ' : ''}` +
+      `${formattaKm(distanzaM)} km in moto 🏍️\n` +
+      `Il mio giro su GiroSecco — itinerari moto in Italia\n` +
+      `https://girosecco.vercel.app`;
     try {
       const res = await fetch(cardUrl);
       const blob = await res.blob();
@@ -312,8 +317,13 @@ export default function PaginaTraccia() {
         await navigator.share({
           files: [file],
           title: 'Il mio giro su GiroSecco',
-          text: 'Fatto con GiroSecco',
+          text: testo,
         });
+        return;
+      }
+      // fallback: prova a condividere almeno il testo+link
+      if (navigator.share) {
+        await navigator.share({ title: 'GiroSecco', text: testo });
         return;
       }
     } catch {

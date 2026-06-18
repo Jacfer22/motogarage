@@ -387,20 +387,24 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     ctx.fillText(dati.data, 64, ALTEZZA - 150);
   }
 
-  // Marchio
+  // Marchio + invito: una barra in basso che fa "pubblicità" al sito.
+  // Logo GiroSecco a destra, dominio + invito a sinistra.
   ctx.fillStyle = SEGNALE;
   ctx.font = `600 76px ${fontHand}`;
   ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
   ctx.shadowBlur = conFoto ? 8 : 0;
   ctx.textAlign = 'right';
-  ctx.fillText('GiroSecco', LARGHEZZA - 64, ALTEZZA - 64);
-  ctx.textAlign = 'left';
+  ctx.fillText('GiroSecco', LARGHEZZA - 64, ALTEZZA - 96);
   ctx.shadowBlur = 0;
+  ctx.textAlign = 'left';
 
-  // Etichetta dominio
-  ctx.fillStyle = 'rgba(240,241,242,0.6)';
-  ctx.font = `500 30px ${fontMono}`;
-  ctx.fillText('GIROSECCO.IT', 64, ALTEZZA - 64);
+  // Dominio + invito in mono
+  ctx.fillStyle = conFoto ? 'rgba(240,241,242,0.85)' : 'rgba(240,241,242,0.65)';
+  ctx.font = `500 32px ${fontMono}`;
+  ctx.fillText('GIROSECCO.VERCEL.APP', 64, ALTEZZA - 96);
+  ctx.fillStyle = SEGNALE;
+  ctx.font = `500 28px ${fontMono}`;
+  ctx.fillText('ITINERARI MOTO · ITALIA', 64, ALTEZZA - 60);
 
   return canvas.toDataURL('image/png');
 }
