@@ -59,9 +59,18 @@ export default function PaginaTraccia() {
   const [durataSec, setDurataSec] = useState(0);
   const [velCorrenteKmh, setVelCorrenteKmh] = useState(0);
   const [temaCard, setTemaCard] = useState<'tracciato' | 'foto'>('tracciato');
+  const [paletteCard, setPaletteCard] = useState<'scuro' | 'chiaro'>('scuro');
   const [luogoCard, setLuogoCard] = useState('');
   const [giroIdSalvato, setGiroIdSalvato] = useState<string | null>(null);
   const [giroPubblico, setGiroPubblico] = useState(false);
+  // stat toggles
+  const [mostraMedia, setMostraMedia] = useState(true);
+  const [mostraMax, setMostraMax] = useState(false);
+  const [mostraCurve, setMostraCurve] = useState(true);
+  const [mostraDislivello, setMostraDislivello] = useState(true);
+  // offset tracciato 0.0–1.0
+  const [tracciatoX, setTracciatoX] = useState(0.5);
+  const [tracciatoY, setTracciatoY] = useState(0.5);
   const [errore, setErrore] = useState<string | null>(null);
   const [storico, setStorico] = useState<GiroSalvato[]>([]);
   const [cardUrl, setCardUrl] = useState<string | null>(null);
@@ -73,6 +82,44 @@ export default function PaginaTraccia() {
   const pausaInizioRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const puntiRef = useRef<Punto[]>([]);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  // Tiene lo schermo acceso durante la traccia (evita che il GPS si fermi)
+  async function attivaWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+      wakeLockRef.current = await (navigator as unknown as { wakeLock: { request: (t: string) => Promise<WakeLockSentinel> } }).wakeLock.request('screen');
+    } catch { /* non supportato: non critico */ }
+  }
+  function rilasciaWakeLock() {
+    wakeLockRef.current?.release().catch(() => {});
+    wakeLockRef.current = null;
+  }
+
+  // Audio silenzioso: tiene il browser "vivo" su Android quando lo schermo
+  // va in background. Un oscillatore a volume 0 attiva la sessione audio
+  // del browser — Android Chrome non sospende le tab con audio attivo,
+  // quindi il GPS continua a ricevere punti anche a schermo spento.
+  // Su iOS non ha effetto (Apple blocca comunque il background), ma non fa danni.
+  function attivaAudioSilenzioso() {
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      gain.gain.value = 0; // volume zero: completamente silenzioso
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      audioCtxRef.current = ctx;
+    } catch { /* browser non supporta Web Audio: non critico */ }
+  }
+  function rilasciaAudioSilenzioso() {
+    try {
+      audioCtxRef.current?.close();
+    } catch { /* ignora */ }
+    audioCtxRef.current = null;
+  }
 
   useEffect(() => {
     setStorico(caricaStorico());
@@ -82,6 +129,8 @@ export default function PaginaTraccia() {
     return () => {
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
       if (timerRef.current) clearInterval(timerRef.current);
+      rilasciaWakeLock();
+      rilasciaAudioSilenzioso();
     };
   }, []);
 
@@ -129,6 +178,8 @@ export default function PaginaTraccia() {
       return;
     }
 
+    attivaWakeLock(); // schermo sempre acceso durante la traccia
+    attivaAudioSilenzioso(); // GPS attivo in background su Android
     puntiRef.current = [];
     setPunti([]);
     setDistanzaM(0);
@@ -184,6 +235,8 @@ export default function PaginaTraccia() {
   function terminaGiro() {
     if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
     if (timerRef.current) clearInterval(timerRef.current);
+    rilasciaWakeLock();
+    rilasciaAudioSilenzioso();
     aggiornaDurata();
     setStato('concluso');
 
@@ -256,6 +309,10 @@ export default function PaginaTraccia() {
     setCardUrl(null);
     setGiroIdSalvato(null);
     setGiroPubblico(false);
+    setTracciatoX(0.5);
+    setTracciatoY(0.5);
+    rilasciaWakeLock();
+    rilasciaAudioSilenzioso();
     puntiRef.current = [];
   }
 
@@ -276,11 +333,15 @@ export default function PaginaTraccia() {
         data: formattaDataBreve(data),
         punti: datiPunti,
         tema: temaCard,
+        palette: paletteCard,
         luogo: luogoCard.trim() || null,
         fotoDataUrl: foto ?? null,
-        dislivelloM: stat.dislivelloPositivoM,
-        velMediaKmh: stat.velMediaKmh,
-        curve: stat.curve,
+        dislivelloM: mostraDislivello ? stat.dislivelloPositivoM : null,
+        velMediaKmh: mostraMedia ? stat.velMediaKmh : null,
+        velMaxKmh: mostraMax ? stat.velMaxKmh : null,
+        curve: mostraCurve ? stat.curve : null,
+        tracciatoOffsetX: tracciatoX,
+        tracciatoOffsetY: tracciatoY,
       });
       setCardUrl(url);
     } catch {
@@ -549,85 +610,147 @@ export default function PaginaTraccia() {
             </button>
           )}
 
-          {!cardUrl ? (
-            <div className="mt-4 space-y-4">
-              <p className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
-                Crea la card da condividere nelle storie
-              </p>
+          {/* Editor card: sempre visibile quando giro concluso */}
+          <div className="mt-4 space-y-4">
+            <p className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
+              Crea la card da condividere nelle storie
+            </p>
 
-              {/* Scelta tema */}
-              <div>
-                <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Stile</p>
-                <div className="flex gap-2">
+            {/* Tema: scuro / chiaro */}
+            <div>
+              <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Tema</p>
+              <div className="flex gap-2">
+                {(['scuro', 'chiaro'] as const).map((p) => (
                   <button
+                    key={p}
                     type="button"
-                    onClick={() => setTemaCard('tracciato')}
+                    onClick={() => { setPaletteCard(p); setCardUrl(null); }}
                     className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
-                      temaCard === 'tracciato'
-                        ? 'border-segnale bg-segnale/10 text-asfalto'
+                      paletteCard === p
+                        ? 'border-segnale bg-segnale/10'
                         : 'border-asfalto/15 text-asfalto/60'
                     }`}
                   >
-                    Tracciato 3D
+                    {p === 'scuro' ? '🌑 Tema scuro' : '☀️ Tema chiaro'}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setTemaCard('foto')}
-                    className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
-                      temaCard === 'foto'
-                        ? 'border-segnale bg-segnale/10 text-asfalto'
-                        : 'border-asfalto/15 text-asfalto/60'
-                    }`}
-                  >
-                    Foto (Strava)
-                  </button>
-                </div>
-              </div>
-
-              {/* Luogo */}
-              <div>
-                <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Luogo (opzionale)</p>
-                <input
-                  type="text"
-                  value={luogoCard}
-                  onChange={(e) => setLuogoCard(e.target.value)}
-                  placeholder="Es. Lago di Bracciano"
-                  maxLength={40}
-                  className="w-full rounded-app border border-asfalto/15 px-3 py-2 text-sm focus:border-segnale focus:outline-none"
-                />
-              </div>
-
-              {/* Genera */}
-              <div className="flex flex-wrap gap-3">
-                <label className="tap cursor-pointer rounded-app bg-segnale px-5 py-2.5 font-mono text-sm font-medium uppercase text-asfalto hover:bg-white">
-                  {generandoCard ? 'Genero…' : '📷 Con una foto'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const f = e.target.files?.[0];
-                      if (!f) return;
-                      const foto = await scegliFotoCard(f);
-                      await creaCard(punti, distanzaM, durataSec, new Date().toISOString(), foto);
-                    }}
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={() => creaCard(punti, distanzaM, durataSec, new Date().toISOString())}
-                  disabled={generandoCard}
-                  className="tap rounded-app border border-asfalto/20 px-5 py-2.5 font-mono text-sm font-medium uppercase hover:bg-asfalto hover:text-cemento disabled:opacity-60"
-                >
-                  Senza foto
-                </button>
+                ))}
               </div>
             </div>
-          ) : (
-            <div className="mt-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={cardUrl} alt="Card del giro" className="w-full max-w-xs rounded-app border-2 border-asfalto shadow-app" />
-              <div className="mt-3 flex flex-wrap gap-3">
+
+            {/* Stile layout */}
+            <div>
+              <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Stile</p>
+              <div className="flex gap-2">
+                {(['tracciato', 'foto'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => { setTemaCard(t); setCardUrl(null); }}
+                    className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
+                      temaCard === t
+                        ? 'border-segnale bg-segnale/10'
+                        : 'border-asfalto/15 text-asfalto/60'
+                    }`}
+                  >
+                    {t === 'tracciato' ? 'Tracciato 3D' : 'Con foto'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Posizione tracciato */}
+            <div>
+              <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Posizione tracciato</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="w-10 font-mono text-[11px] text-asfalto/40">SX-DX</span>
+                  <input type="range" min="0" max="1" step="0.05" value={tracciatoX}
+                    onChange={(e) => { setTracciatoX(Number(e.target.value)); setCardUrl(null); }}
+                    className="flex-1 accent-segnale" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="w-10 font-mono text-[11px] text-asfalto/40">SU-GIÙ</span>
+                  <input type="range" min="0" max="1" step="0.05" value={tracciatoY}
+                    onChange={(e) => { setTracciatoY(Number(e.target.value)); setCardUrl(null); }}
+                    className="flex-1 accent-segnale" />
+                </div>
+              </div>
+            </div>
+
+            {/* Statistiche da mostrare */}
+            <div>
+              <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Statistiche nella card</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: 'Vel. media', attivo: mostraMedia, set: setMostraMedia },
+                  { label: 'Vel. massima', attivo: mostraMax, set: setMostraMax },
+                  { label: 'Curve', attivo: mostraCurve, set: setMostraCurve },
+                  { label: 'Dislivello', attivo: mostraDislivello, set: setMostraDislivello },
+                ].map(({ label, attivo, set }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => { set(!attivo); setCardUrl(null); }}
+                    className={`tap flex items-center gap-2 rounded-app border px-3 py-2 font-mono text-xs font-medium ${
+                      attivo ? 'border-bosco bg-bosco/10 text-bosco' : 'border-asfalto/15 text-asfalto/40'
+                    }`}
+                  >
+                    <span>{attivo ? '✓' : '○'}</span>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Luogo */}
+            <div>
+              <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Luogo (opzionale)</p>
+              <input
+                type="text"
+                value={luogoCard}
+                onChange={(e) => { setLuogoCard(e.target.value); setCardUrl(null); }}
+                placeholder="Es. Lago di Bracciano"
+                maxLength={40}
+                className="w-full rounded-app border border-asfalto/20 bg-transparent px-3 py-2 text-sm text-asfalto placeholder-asfalto/40 focus:border-segnale focus:outline-none"
+              />
+            </div>
+
+            {/* Card generata */}
+            {cardUrl && (
+              <div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={cardUrl} alt="Card del giro" className="w-full max-w-xs rounded-app border-2 border-asfalto/20 shadow-app" />
+              </div>
+            )}
+
+            {/* Pulsanti genera / salva / condividi */}
+            <div className="flex flex-wrap gap-3">
+              <label className="tap cursor-pointer rounded-app bg-segnale px-5 py-2.5 font-mono text-sm font-medium uppercase text-asfalto hover:bg-white">
+                {generandoCard ? 'Genero…' : '📷 Con una foto'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    const foto = await scegliFotoCard(f);
+                    await creaCard(punti, distanzaM, durataSec, new Date().toISOString(), foto);
+                  }}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => creaCard(punti, distanzaM, durataSec, new Date().toISOString())}
+                disabled={generandoCard}
+                className="tap rounded-app border border-asfalto/20 px-5 py-2.5 font-mono text-sm font-medium uppercase hover:bg-asfalto hover:text-cemento disabled:opacity-60"
+              >
+                Senza foto
+              </button>
+            </div>
+
+            {cardUrl && (
+              <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={condividiCard}
@@ -640,18 +763,11 @@ export default function PaginaTraccia() {
                   onClick={scaricaCard}
                   className="tap rounded-app border-2 border-asfalto px-5 py-2.5 font-mono font-medium uppercase hover:bg-asfalto hover:text-cemento"
                 >
-                  Scarica
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCardUrl(null)}
-                  className="tap rounded-app px-4 py-2.5 font-mono text-sm uppercase text-asfalto/60 hover:text-asfalto"
-                >
-                  Rifai
+                  Salva card
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <button
             type="button"

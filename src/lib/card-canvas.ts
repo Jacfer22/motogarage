@@ -31,14 +31,20 @@ interface DatiCard {
   durata: string; // già formattato, es. "2:14"
   data: string; // es. "13 giugno 2026"
   punti: Punto[];
-  // tema della card: 'tracciato' (3D + griglia stats) o 'foto' (stile Strava)
+  // tema della card
   tema?: 'tracciato' | 'foto';
-  luogo?: string | null; // luogo del giro, es. "Lago di Bracciano"
-  // opzionali
-  fotoDataUrl?: string | null; // foto di sfondo (usabile con entrambi i temi)
-  dislivelloM?: number | null; // metri di dislivello positivo
-  velMediaKmh?: number | null; // velocità media
-  curve?: number | null; // numero di curve del percorso
+  // 'scuro' (default, sfondo nero testo bianco) o 'chiaro' (sfondo bianco testo nero)
+  palette?: 'scuro' | 'chiaro';
+  luogo?: string | null;
+  // statistiche opzionali
+  fotoDataUrl?: string | null;
+  dislivelloM?: number | null;
+  velMediaKmh?: number | null;
+  velMaxKmh?: number | null;
+  curve?: number | null;
+  // posizione del tracciato 3D nella card (0.0-1.0)
+  tracciatoOffsetX?: number; // spostamento orizzontale relativo
+  tracciatoOffsetY?: number; // spostamento verticale relativo
 }
 
 function caricaImmagine(src: string): Promise<HTMLImageElement> {
@@ -261,6 +267,15 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
   if (!ctx) throw new Error('Canvas non disponibile');
 
   const tema = dati.tema ?? 'tracciato';
+  const palette = dati.palette ?? 'scuro';
+  const chiaro = palette === 'chiaro';
+
+  // Colori in base alla palette
+  const SFONDO_CARD = chiaro ? '#f0f1f2' : ASFALTO;
+  const TESTO_PRIMARIO = chiaro ? ASFALTO : CEMENTO;
+  const TESTO_SECONDARIO = chiaro ? 'rgba(21,24,26,0.55)' : 'rgba(240,241,242,0.6)';
+  const SEGNALE_CARD = chiaro ? '#c49200' : SEGNALE; // giallo più scuro su bianco per contrasto
+  const TRACCIATO_COLORE = SEGNALE;
 
   // Sfondo: foto (se presente, su entrambi i temi) oppure gradiente
   let conFoto = false;
@@ -286,8 +301,9 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
   }
 
   if (!conFoto) {
-    if (tema === 'foto') {
-      // tema foto senza foto: sfondo paesaggio
+    if (chiaro) {
+      ctx.fillStyle = '#f0f1f2';
+    } else if (tema === 'foto') {
       const sfondo = ctx.createLinearGradient(0, 0, 0, ALTEZZA);
       sfondo.addColorStop(0, '#cfe3d6');
       sfondo.addColorStop(0.45, '#9fc1ad');
@@ -296,32 +312,33 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       sfondo.addColorStop(1, ASFALTO);
       ctx.fillStyle = sfondo;
     } else {
-      // tema tracciato: sfondo scuro pulito
       ctx.fillStyle = ASFALTO;
     }
     ctx.fillRect(0, 0, LARGHEZZA, ALTEZZA);
   }
 
-  // Logo in alto a sinistra (testuale)
+  // Logo in alto a sinistra
   ctx.textBaseline = 'alphabetic';
   ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
   ctx.shadowBlur = conFoto ? 8 : 0;
   ctx.font = `700 48px ${fontDisplay}`;
-  ctx.fillStyle = CEMENTO;
+  ctx.fillStyle = TESTO_PRIMARIO;
   ctx.fillText('GIRO', 64, 90);
   const wGiro = ctx.measureText('GIRO').width;
-  ctx.fillStyle = SEGNALE;
+  ctx.fillStyle = SEGNALE_CARD;
   ctx.fillText('SECCO', 64 + wGiro, 90);
   ctx.shadowBlur = 0;
 
   // ===== TEMA "FOTO" (stile Strava): tracciato piccolo + stats in colonna =====
   if (tema === 'foto') {
+    const offsetX = ((dati.tracciatoOffsetX ?? 0) - 0.5) * LARGHEZZA * 0.6;
+    const offsetY = ((dati.tracciatoOffsetY ?? 0) - 0.5) * ALTEZZA * 0.15;
     if (dati.punti.length > 1) {
       disegnaTracciato3D(
         ctx,
         dati.punti,
-        { x: 64, y: 150, w: LARGHEZZA * 0.42, h: ALTEZZA * 0.18 },
-        { compatto: true, segnale: SEGNALE, cemento: CEMENTO }
+        { x: 64 + offsetX, y: 140 + offsetY, w: LARGHEZZA * 0.42, h: ALTEZZA * 0.18 },
+        { compatto: true, segnale: TRACCIATO_COLORE, cemento: TESTO_PRIMARIO }
       );
     }
 
@@ -334,15 +351,19 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     ];
     if (dati.velMediaKmh != null && dati.velMediaKmh > 0)
       blocchi.push({ label: 'MEDIA', valore: `${dati.velMediaKmh} km/h` });
+    if (dati.velMaxKmh != null && dati.velMaxKmh > 0)
+      blocchi.push({ label: 'MAX', valore: `${dati.velMaxKmh} km/h` });
     if (dati.dislivelloM != null && dati.dislivelloM > 0)
       blocchi.push({ label: 'DISLIVELLO', valore: `+${dati.dislivelloM} m` });
+    if (dati.curve != null && dati.curve > 0)
+      blocchi.push({ label: 'CURVE', valore: `${dati.curve}` });
     ctx.shadowColor = 'rgba(0,0,0,0.45)';
     for (const b of blocchi) {
       ctx.shadowBlur = conFoto ? 8 : 0;
-      ctx.fillStyle = 'rgba(240,241,242,0.85)';
+      ctx.fillStyle = TESTO_SECONDARIO;
       ctx.font = `500 28px ${fontMono}`;
       ctx.fillText(b.label, statX, statY);
-      ctx.fillStyle = CEMENTO;
+      ctx.fillStyle = TESTO_PRIMARIO;
       ctx.font = `700 70px ${fontDisplay}`;
       ctx.fillText(b.valore, statX, statY + 70);
       statY += 150;
@@ -351,29 +372,31 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     ctx.textAlign = 'left';
 
     // luogo + data in basso a sinistra
-    ctx.fillStyle = CEMENTO;
+    ctx.fillStyle = TESTO_PRIMARIO;
     ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
     ctx.shadowBlur = conFoto ? 10 : 0;
     ctx.font = `700 60px ${fontDisplay}`;
     const luogo = (dati.luogo || dati.titolo).toUpperCase();
     scriviTestoMultilinea(ctx, luogo, 64, ALTEZZA - 200, LARGHEZZA - 128, 66);
     ctx.shadowBlur = 0;
-    ctx.fillStyle = SEGNALE;
+    ctx.fillStyle = SEGNALE_CARD;
     ctx.font = `600 46px ${fontHand}`;
     ctx.fillText(dati.data, 64, ALTEZZA - 140);
   } else {
-    // ===== TEMA "TRACCIATO": 3D grande + griglia stats completa =====
+    // ===== TEMA "TRACCIATO": 3D grande + griglia stats =====
+    const offX = ((dati.tracciatoOffsetX ?? 0.5) - 0.5) * LARGHEZZA * 0.5;
+    const offY = ((dati.tracciatoOffsetY ?? 0.5) - 0.5) * ALTEZZA * 0.2;
     if (dati.punti.length > 1) {
       disegnaTracciato3D(
         ctx,
         dati.punti,
-        { x: 110, y: 170, w: LARGHEZZA - 220, h: ALTEZZA * 0.32 },
-        { compatto: false, segnale: SEGNALE, cemento: CEMENTO }
+        { x: 110 + offX, y: 170 + offY, w: LARGHEZZA - 220, h: ALTEZZA * 0.32 },
+        { compatto: false, segnale: TRACCIATO_COLORE, cemento: TESTO_PRIMARIO }
       );
     }
 
     // luogo come titolo
-    ctx.fillStyle = CEMENTO;
+    ctx.fillStyle = TESTO_PRIMARIO;
     ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
     ctx.shadowBlur = conFoto ? 10 : 0;
     ctx.font = `700 64px ${fontDisplay}`;
@@ -381,21 +404,21 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     scriviTestoMultilinea(ctx, luogo, 64, ALTEZZA - 560, LARGHEZZA - 128, 70);
     ctx.shadowBlur = 0;
 
-    // Profilo altimetrico (se ci sono dati di quota): sopra le statistiche
+    // Profilo altimetrico
     const haProfilo = disegnaProfiloAltimetrico(
       ctx,
       dati.punti,
       { x: 64, y: ALTEZZA - 700, w: LARGHEZZA - 128, h: 120 },
-      SEGNALE
+      TRACCIATO_COLORE
     );
     if (haProfilo) {
-      ctx.fillStyle = 'rgba(240,241,242,0.5)';
+      ctx.fillStyle = TESTO_SECONDARIO;
       ctx.font = `500 26px ${fontMono}`;
       ctx.fillText('ALTIMETRIA', 64, ALTEZZA - 715);
     }
 
     const linaY = ALTEZZA - 470;
-    ctx.strokeStyle = conFoto ? 'rgba(240,241,242,0.3)' : 'rgba(240,241,242,0.15)';
+    ctx.strokeStyle = chiaro ? 'rgba(21,24,26,0.15)' : 'rgba(240,241,242,0.15)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(64, linaY);
@@ -414,10 +437,10 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
         ctx.shadowColor = 'rgba(0,0,0,0.5)';
         ctx.shadowBlur = 8;
       }
-      ctx.fillStyle = 'rgba(240,241,242,0.55)';
+      ctx.fillStyle = TESTO_SECONDARIO;
       ctx.font = `500 28px ${fontMono}`;
       ctx.fillText(label, x, y);
-      ctx.fillStyle = giallo ? SEGNALE : CEMENTO;
+      ctx.fillStyle = giallo ? SEGNALE_CARD : TESTO_PRIMARIO;
       ctx.font = `700 ${grande ? 72 : 50}px ${fontDisplay}`;
       ctx.fillText(valore, x, y + (grande ? 72 : 54));
       ctx.shadowBlur = 0;
@@ -427,10 +450,12 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     disegnaStat('DISTANZA', `${dati.km} km`, 64, linaY + 50, true, false);
     disegnaStat('DURATA', dati.durata, LARGHEZZA / 2 + 20, linaY + 50, true, false);
 
-    // riga bassa: media, curve, dislivello (quelle che ci sono)
+    // riga bassa: stat selezionate dall'utente
     const rigaBassa: Array<{ label: string; valore: string; giallo: boolean }> = [];
     if (dati.velMediaKmh != null && dati.velMediaKmh > 0)
       rigaBassa.push({ label: 'MEDIA', valore: `${dati.velMediaKmh} km/h`, giallo: false });
+    if (dati.velMaxKmh != null && dati.velMaxKmh > 0)
+      rigaBassa.push({ label: 'MAX', valore: `${dati.velMaxKmh} km/h`, giallo: false });
     if (dati.curve != null && dati.curve > 0)
       rigaBassa.push({ label: 'CURVE', valore: `${dati.curve}`, giallo: true });
     if (dati.dislivelloM != null && dati.dislivelloM > 0)
@@ -442,19 +467,23 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       disegnaStat(s.label, s.valore, 64 + i * larghColonna, yBassa, false, s.giallo);
     });
 
-    ctx.fillStyle = SEGNALE;
+    ctx.fillStyle = SEGNALE_CARD;
     ctx.font = `600 46px ${fontHand}`;
     ctx.fillText(dati.data, 64, ALTEZZA - 150);
   }
 
-  // Marchio + tagline (niente dominio finché non è quello definitivo).
-  ctx.fillStyle = SEGNALE;
+  // Marchio + tagline
+  ctx.fillStyle = SEGNALE_CARD;
   ctx.font = `600 76px ${fontHand}`;
   ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
   ctx.shadowBlur = conFoto ? 8 : 0;
   ctx.textAlign = 'right';
   ctx.fillText('GiroSecco', LARGHEZZA - 64, ALTEZZA - 70);
   ctx.shadowBlur = 0;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = chiaro ? 'rgba(21,24,26,0.5)' : 'rgba(240,241,242,0.55)';
+  ctx.font = `500 30px ${fontMono}`;
+  ctx.fillText('ITINERARI MOTO · ITALIA', 64, ALTEZZA - 70);
   ctx.textAlign = 'left';
 
   // Tagline in mono a sinistra
