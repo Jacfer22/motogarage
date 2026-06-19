@@ -213,7 +213,8 @@ export default function PaginaGarage() {
 // ── Three.js Garage 3D ──────────────────────────────────────────────────────
 function avviaGarage3D(canvas: HTMLCanvasElement, moto: Moto[], selezionata: string | null, onSelezione: (id: string) => void) {
   let animId: number;
-  const T = (window as typeof window & { THREE?: typeof import('three') }).THREE;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const T = (window as any).THREE;
   if (!T) {
     // Carica Three.js dinamicamente
     const s = document.createElement('script');
