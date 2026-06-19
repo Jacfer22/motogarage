@@ -9,6 +9,9 @@ import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import CreaGemello from '@/components/CreaGemello';
 import GenerazioneProgress from '@/components/GenerazioneProgress';
 import { dataMoto, GarageMoto, nomeMoto, statoMotoLabel, urlModello } from '@/lib/garage';
+import EditorSchedaMoto from '@/components/EditorSchedaMoto';
+import { risolviCategoriaMoto } from '@/lib/foto-categoria-moto';
+import { normalizzaScheda, type SchedaModifiche } from '@/lib/scheda-moto';
 import { richiedeApprovazioneAdmin } from '@/lib/garage-limite';
 
 const GarageAmbiente = dynamic(() => import('@/components/GarageAmbiente'), {
@@ -363,6 +366,20 @@ export default function PaginaGarage() {
                         <input type="checkbox" checked={selezionata.is_public} onChange={(event) => aggiornaMoto({ is_public: event.target.checked })} disabled={salvando} className="h-5 w-5 accent-brand" />
                       </label>
                     )}
+
+                    <div className="mt-4 border-t border-white/10 pt-4">
+                      <EditorSchedaMoto
+                        scheda={normalizzaScheda(selezionata.scheda_modifiche)}
+                        salvando={salvando}
+                        onSalva={async (scheda: SchedaModifiche) => {
+                          const categoria = risolviCategoriaMoto(
+                            selezionata.categoria,
+                            `${selezionata.marca} ${selezionata.modello}`,
+                          );
+                          await aggiornaMoto({ scheda_modifiche: scheda, categoria });
+                        }}
+                      />
+                    </div>
 
                     <div className="mt-4 flex flex-col gap-2">
                       {urlModello(selezionata) && (

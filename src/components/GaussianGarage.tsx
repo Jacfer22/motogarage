@@ -130,12 +130,9 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${modalitaHero ? 'min-h-0 bg-transparent' : 'min-h-[460px] bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.16),transparent_30%),#030405] sm:min-h-[580px]'}`}>
-      <div ref={hostRef} className="absolute inset-0" aria-label="Viewer Gaussian Splat 3D interattivo" />
+      <div ref={hostRef} className="absolute inset-0" aria-label="Viewer 3D interattivo" />
       {!modalitaHero && (
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3">
-        <span className="rounded-full border border-white/10 bg-black/60 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-white/65 backdrop-blur">
-          Gaussian Splat · trascina · zoom · pan
-        </span>
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-end gap-3 p-3">
         <button type="button" onClick={fullscreen} className="pointer-events-auto rounded-full border border-white/15 bg-black/60 px-3 py-2 font-mono text-[10px] font-bold uppercase text-white/75 backdrop-blur">
           Fullscreen
         </button>

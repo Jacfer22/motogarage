@@ -20,6 +20,8 @@ export interface GarageMoto {
   errore: string | null;
   provider?: string | null;
   is_public?: boolean;
+  categoria?: string | null;
+  scheda_modifiche?: Record<string, string> | null;
   created_at: string;
   updated_at: string;
   foto_sx_signed_url?: string | null;

@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
-import MotoSVG from '@/components/MotoSVG';
-import type { TipoMoto } from '@/components/MotoSVG';
+import FotoCategoriaMoto from '@/components/FotoCategoriaMoto';
+import { SchedaMotoLettura } from '@/components/EditorSchedaMoto';
+import { etichettaCategoriaMoto } from '@/lib/foto-categoria-moto';
+import { normalizzaScheda } from '@/lib/scheda-moto';
 
 interface ProfiloPubblico {
   id: string;
@@ -19,6 +21,13 @@ interface ProfiloPubblico {
   moto_colore_secondario: string | null;
   moto_accessori: string[] | null;
   is_pro: boolean;
+}
+
+interface MotoPubblica {
+  marca: string;
+  modello: string;
+  categoria: string | null;
+  scheda_modifiche: Record<string, string> | null;
 }
 
 interface GiroPubblico {
@@ -38,6 +47,7 @@ export default function PaginaProfilo() {
   const username = typeof params.username === 'string' ? params.username : '';
   const [profilo, setProfilo] = useState<ProfiloPubblico | null>(null);
   const [giri, setGiri] = useState<GiroPubblico[]>([]);
+  const [motoGarage, setMotoGarage] = useState<MotoPubblica | null>(null);
   const [caricato, setCaricato] = useState(false);
 
   useEffect(() => {
@@ -46,7 +56,7 @@ export default function PaginaProfilo() {
       if (!supabase || !username) return;
       const { data: p } = await supabase
         .from('profiles')
-        .select('id, username, bio, avatar_url, moto, categoria_moto, moto_tipo, moto_colore_primario, moto_colore_secondario, moto_accessori, is_pro')
+        .select('id, username, bio, avatar_url, moto, categoria_moto, is_pro')
         .eq('username', username)
         .single();
       if (!p) { setCaricato(true); return; }
@@ -60,6 +70,18 @@ export default function PaginaProfilo() {
         .order('created_at', { ascending: false })
         .limit(6);
       setGiri((g ?? []) as GiroPubblico[]);
+
+      const { data: m } = await supabase
+        .from('moto')
+        .select('marca, modello, categoria, scheda_modifiche')
+        .eq('utente_id', p.id)
+        .eq('is_public', true)
+        .eq('stato', 'pronto')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (m) setMotoGarage(m as MotoPubblica);
+
       setCaricato(true);
     }
     carica();
@@ -84,10 +106,11 @@ export default function PaginaProfilo() {
     );
   }
 
-  const motoTipo = (profilo.moto_tipo as TipoMoto) || 'naked';
-  const motorePrimario = profilo.moto_colore_primario || '#F2B705';
-  const motoreSecondario = profilo.moto_colore_secondario || '#15181A';
-  const motoAccessori = profilo.moto_accessori || [];
+  const testoMoto = profilo.moto ?? (motoGarage ? `${motoGarage.marca} ${motoGarage.modello}`.trim() : null);
+  const categoriaLabel = etichettaCategoriaMoto(
+    profilo.categoria_moto ?? motoGarage?.categoria,
+    testoMoto,
+  );
   const kmTotali = giri.reduce((s, g) => s + (Number(g.km) || 0), 0);
 
   return (
@@ -122,9 +145,9 @@ export default function PaginaProfilo() {
         {profilo.bio && (
           <p className="mt-2 max-w-sm text-asfalto/70 leading-relaxed">{profilo.bio}</p>
         )}
-        {(profilo.moto || profilo.categoria_moto) && (
+        {(testoMoto || profilo.categoria_moto) && (
           <p className="mt-1 font-mono text-sm text-asfalto/55 uppercase tracking-wide">
-            {[profilo.categoria_moto, profilo.moto].filter(Boolean).join(' · ')}
+            {categoriaLabel}{testoMoto ? ` · ${testoMoto}` : ''}
           </p>
         )}
 
@@ -158,24 +181,29 @@ export default function PaginaProfilo() {
         )}
       </div>
 
-      {/* La mia moto (display) */}
-      <div className="mt-10">
-        <h2 className="font-display text-2xl font-bold uppercase tracking-tight border-b-2 border-asfalto pb-3">
-          La sua moto
-        </h2>
-        <div className="mt-4 rounded-app-lg bg-asfalto p-4 flex items-center justify-center">
-          <MotoSVG
-            tipo={motoTipo}
-            colorePrimario={motorePrimario}
-            coloreSecondario={motoreSecondario}
-            accessori={motoAccessori}
-            className="w-full max-w-sm"
-          />
+      {/* La sua moto */}
+      {testoMoto && (
+        <div className="mt-10">
+          <h2 className="font-display text-2xl font-bold uppercase tracking-tight border-b-2 border-asfalto pb-3">
+            La sua moto
+          </h2>
+          <div className="mt-4">
+            <FotoCategoriaMoto
+              categoriaEsplicita={profilo.categoria_moto ?? motoGarage?.categoria}
+              testoModello={testoMoto}
+              modello={testoMoto}
+            />
+          </div>
+          {motoGarage?.scheda_modifiche && (
+            <div className="mt-4 card-app p-4">
+              <h3 className="font-mono text-xs font-bold uppercase tracking-wide text-asfalto/50">Scheda tecnica</h3>
+              <div className="mt-3">
+                <SchedaMotoLettura scheda={normalizzaScheda(motoGarage.scheda_modifiche)} />
+              </div>
+            </div>
+          )}
         </div>
-        <p className="mt-2 text-center font-mono text-xs uppercase text-asfalto/50 capitalize tracking-wide">
-          {motoTipo} · {[...motoAccessori].join(', ') || 'standard'}
-        </p>
-      </div>
+      )}
 
       {/* Giri pubblici */}
       {giri.length > 0 && (

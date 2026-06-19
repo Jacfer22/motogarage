@@ -15,15 +15,15 @@ export default function LandingHero({ itinerariCount }: Props) {
       <div className="landing-tuning-content">
         <Reveal>
           <p className="font-mono text-xs uppercase tracking-[0.32em] text-amber-200/80">
-            American tuning · Moto only
+            Solo per veri bikers
           </p>
           <h1 className="mt-4 max-w-3xl font-display text-[2.6rem] font-black uppercase leading-[0.92] tracking-tight text-white sm:text-6xl lg:text-[4.5rem]">
             La casa digitale
             <span className="block text-cemento/90">della tua moto</span>
           </h1>
           <p className="mt-5 max-w-lg text-sm leading-relaxed text-cemento/75 sm:text-base">
-            Garage virtuale in stile tuning shop, gemello 3D fotorealistico, itinerari verificati
-            e tracciamento GPS con card social. Pensato per chi vive in sella.
+            Garage virtuale, gemello 3D fotorealistico, itinerari verificati in Italia
+            e tracciamento GPS con card social. Per chi vive in sella.
           </p>
         </Reveal>
 

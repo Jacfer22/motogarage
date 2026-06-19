@@ -6,7 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 const VANTAGGI = [
-  'Gemello digitale Gaussian Splat della tua moto da 1–2 foto',
+  'Gemello digitale 3D della tua moto da 1–2 foto',
   'Garage pubblico visitabile e modello PLY scaricabile',
   'Tracce GPX di tutti gli itinerari',
   'Varianti panoramiche e pacchetti weekend',

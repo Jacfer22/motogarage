@@ -85,7 +85,7 @@ export default async function HomePage() {
             <FeatureCard
               href="/garage"
               titolo="Il mio Garage"
-              desc="Gemello digitale 3D della tua moto in Gaussian Splat fotorealistico."
+              desc="Gemello digitale 3D della tua moto nel garage virtuale."
               delay={120}
             />
             <FeatureCard

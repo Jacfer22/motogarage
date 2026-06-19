@@ -128,8 +128,8 @@ export default function PaginaAccedi() {
       )}
       <p className="mt-3 text-asfalto/70">
         {modalita === 'accedi'
-          ? 'Per salvare i tuoi giri preferiti e, presto, commentare e caricare foto.'
-          : 'Username, email e password. Userai questo account per i contenuti Pro e per partecipare alla community.'}
+          ? 'Garage, giri GPS e community — tutto salvato nel cloud.'
+          : 'Un account per il garage digitale, i giri tracciati e la community di biker.'}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">

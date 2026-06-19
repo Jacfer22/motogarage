@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAuth } from './AuthProvider';
+import { risolviCategoriaMoto } from '@/lib/foto-categoria-moto';
 import Logo from './Logo';
 
 interface Props {
@@ -74,6 +75,7 @@ export default function CreaGemello({ onInviato }: Props) {
       if (!session?.access_token) throw new Error('Sessione scaduta. Accedi di nuovo.');
 
       const annoNumero = anno ? Number.parseInt(anno, 10) : null;
+      const categoria = risolviCategoriaMoto(null, `${marca} ${modello}`);
       const { data: moto, error: erroreMoto } = await supabase
         .from('moto')
         .insert({
@@ -81,6 +83,7 @@ export default function CreaGemello({ onInviato }: Props) {
           marca: marca.trim(),
           modello: modello.trim(),
           anno: annoNumero,
+          categoria,
           stato: 'in_attesa',
           progress: 0,
           colore_primario: '#d91414',
@@ -155,7 +158,7 @@ export default function CreaGemello({ onInviato }: Props) {
         <p className="mt-4 text-sm leading-6 text-cemento/65">
           {inApprovazione
             ? `Hai già usato la generazione automatica nell'ultima ora. La tua ${marca} ${modello} è in coda: verrà elaborata dopo la mia approvazione.`
-            : `Stiamo creando il gemello digitale della tua ${marca} ${modello} con TripoSplat AI.`}
+            : `Stiamo creando il gemello digitale della tua ${marca} ${modello}.`}
         </p>
       </section>
     );
@@ -165,9 +168,9 @@ export default function CreaGemello({ onInviato }: Props) {
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
       <section className="rounded-[30px] border border-asfalto/10 bg-white p-5 shadow-app-lg dark:bg-carbone sm:p-8">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-brand">Gemello digitale</p>
-        <h1 className="mt-3 font-display text-4xl font-black uppercase leading-none tracking-tight sm:text-6xl">La tua moto in Gaussian Splat</h1>
+        <h1 className="mt-3 font-display text-4xl font-black uppercase leading-none tracking-tight sm:text-6xl">Gemello digitale</h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-asfalto/60 dark:text-cemento/60">
-          Carica una foto laterale pulita: TripoSplat su Hugging Face genera automaticamente il modello 3D nel tuo garage. Una generazione automatica all&apos;ora; le successive richiedono approvazione.
+          Carica una foto laterale pulita: generiamo il modello 3D nel tuo garage. Una generazione automatica all&apos;ora; le successive richiedono approvazione.
         </p>
 
         <div className="mt-7 grid grid-cols-2 gap-2">
@@ -234,7 +237,7 @@ export default function CreaGemello({ onInviato }: Props) {
           <li>× Niente persone davanti</li>
         </ul>
         <p className="mt-6 text-xs leading-relaxed text-cemento/45">
-          La generazione usa TripoSplat su Hugging Face. Al primo utilizzo lo Space può impiegare 1–2 minuti per svegliarsi.
+          Al primo utilizzo la generazione può richiedere 1–2 minuti.
         </p>
       </aside>
     </div>
