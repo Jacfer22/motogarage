@@ -12,7 +12,6 @@ export default function Header() {
   const pathname = usePathname();
   const [menuAperto, setMenuAperto] = useState(false);
 
-  // evidenzia la voce di menu corrispondente alla pagina corrente
   const attivo = (prefisso: string) => pathname.startsWith(prefisso);
   const voce = (prefisso: string) =>
     `font-mono text-sm uppercase tracking-wide transition-colors ${
@@ -20,6 +19,7 @@ export default function Header() {
     }`;
 
   const isAdmin = !loading && profilo?.is_admin;
+  const isLoggedIn = !loading && !!user && !nonConfigurato;
   const mostraAuth = !nonConfigurato && !loading;
 
   function chiudi() {
@@ -57,6 +57,18 @@ export default function Header() {
           <Link href="/blog" className={voce('/blog')}>
             Blog
           </Link>
+          {isLoggedIn && (
+            <Link
+              href="/garage"
+              className={`tap rounded-app border px-3 py-1.5 font-mono text-sm font-medium uppercase tracking-wide transition-colors ${
+                attivo('/garage')
+                  ? 'border-segnale bg-segnale text-asfalto'
+                  : 'border-guardrail/30 text-cemento hover:border-segnale hover:text-segnale'
+              }`}
+            >
+              🏍 Garage
+            </Link>
+          )}
           {isAdmin && (
             <Link
               href="/admin"
@@ -128,6 +140,17 @@ export default function Header() {
           >
             Blog
           </Link>
+          {isLoggedIn && (
+            <Link
+              href="/garage"
+              onClick={chiudi}
+              className={`block border-b border-guardrail/10 py-3 font-mono text-sm uppercase tracking-wide ${
+                attivo('/garage') ? 'text-segnale' : 'hover:text-segnale'
+              }`}
+            >
+              🏍 Il mio garage
+            </Link>
+          )}
           <Link
             href="/pro"
             onClick={chiudi}

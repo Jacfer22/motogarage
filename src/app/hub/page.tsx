@@ -43,6 +43,12 @@ const AZIONI: AzioneHub[] = [
     sotto: 'Registra il percorso e le statistiche',
   },
   {
+    href: '/garage',
+    icona: 'garage',
+    titolo: 'Il mio garage',
+    sotto: 'La tua moto, i tuoi giri, il tuo profilo',
+  },
+  {
     href: '/community',
     icona: 'foto',
     titolo: 'Community',
@@ -110,6 +116,8 @@ function IconaHub({ nome }: { nome: string }) {
       return <svg {...props}><path d="m12 2 3 6 6 .9-4.5 4.2 1 6.4L12 16.8 6.5 19.5l1-6.4L3 8.9 9 8z" /></svg>;
     case 'admin':
       return <svg {...props}><path d="M12 2 4 6v6c0 4.5 3.5 8 8 10 4.5-2 8-5.5 8-10V6z" /><path d="m9 12 2 2 4-4" /></svg>;
+    case 'garage':
+      return <svg {...props}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M8 21V10c0-1 .5-2 2-2h4c1.5 0 2 1 2 2v11" /><circle cx="12" cy="15" r="1.5" /></svg>;
     default:
       return null;
   }

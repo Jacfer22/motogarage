@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -40,6 +40,7 @@ interface RigaListaAttesa {
 
 export default function PaginaAdmin() {
   const { user, profilo, loading, nonConfigurato } = useAuth();
+  const router = useRouter();
   const supabase = getSupabaseBrowser();
 
   const [avvisi, setAvvisi] = useState<RigaAvviso[] | null>(null);
@@ -152,17 +153,11 @@ export default function PaginaAdmin() {
   }
 
   if (!user || !autorizzato) {
+    // redirect immediato — nessuna parte del pannello admin è visibile
+    if (!loading) router.replace('/hub');
     return (
       <section className="mx-auto max-w-md px-4 py-14">
-        <h1 className="font-display text-4xl font-bold uppercase tracking-tight">
-          Pagina riservata
-        </h1>
-        <p className="mt-3 text-asfalto/70">
-          Questa pagina non è disponibile per il tuo account.
-        </p>
-        <Link href="/" className="mt-4 inline-block underline">
-          ← Torna alla home
-        </Link>
+        <p className="font-mono text-sm uppercase text-asfalto/50">Accesso non autorizzato…</p>
       </section>
     );
   }

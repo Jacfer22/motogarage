@@ -11,6 +11,11 @@ export interface Profilo {
   avatar_url: string | null;
   is_pro: boolean;
   is_admin: boolean;
+  bio: string | null;
+  moto_tipo: string | null;
+  moto_colore_primario: string | null;
+  moto_colore_secondario: string | null;
+  moto_accessori: string[] | null;
 }
 
 interface AuthState {
@@ -53,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const { data } = await supabase!
         .from('profiles')
-        .select('username, moto, categoria_moto, avatar_url, is_pro, is_admin')
+        .select('username, moto, categoria_moto, avatar_url, is_pro, is_admin, bio, moto_tipo, moto_colore_primario, moto_colore_secondario, moto_accessori')
         .eq('id', user.id)
         .single();
       setStato((s) => ({
@@ -64,6 +69,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         nonConfigurato: false,
       }));
     }
+
+    // Session timeout: se la tab è rimasta chiusa/nascosta > 10 minuti, fa il logout.
+    const TIMEOUT_MS = 10 * 60 * 1000;
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        localStorage.setItem('gs_tab_hidden', Date.now().toString());
+      } else {
+        const val = localStorage.getItem('gs_tab_hidden');
+        if (val && Date.now() - Number(val) > TIMEOUT_MS) {
+          supabase!.auth.signOut();
+        }
+        localStorage.removeItem('gs_tab_hidden');
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
 
     const ricaricaProfilo = () => {
       supabase.auth.getSession().then(({ data }) => {
@@ -81,7 +101,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       caricaProfilo(session?.user ?? null);
     });
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      listener.subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   return <AuthContext.Provider value={stato}>{children}</AuthContext.Provider>;
