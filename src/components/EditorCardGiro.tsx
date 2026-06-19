@@ -48,6 +48,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   const [tracciatoY, setTracciatoY] = useState(0.5);
   const [fotoSalvata, setFotoSalvata] = useState<string | null>(null);
   const [preferFoto, setPreferFoto] = useState(false);
+  const [fotoZoom, setFotoZoom] = useState(1);
+  const [fotoLuminosita, setFotoLuminosita] = useState(1);
   const [cardUrl, setCardUrl] = useState<string | null>(null);
   const [generandoCard, setGenerandoCard] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
@@ -95,6 +97,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
           curve: mostraCurve ? (stat.curve || giro.curve) : null,
           tracciatoOffsetX: tracciatoX,
           tracciatoOffsetY: tracciatoY,
+          fotoScala: preferFotoRef.current || foto !== undefined ? fotoZoom : undefined,
+          fotoLuminosita: preferFotoRef.current || foto !== undefined ? fotoLuminosita : undefined,
         });
         setCardUrl(url);
         rigeneraAbilitato.current = true;
@@ -116,6 +120,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       mostraCurve,
       tracciatoX,
       tracciatoY,
+      fotoZoom,
+      fotoLuminosita,
     ]
   );
 
@@ -135,6 +141,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     mostraDislivello,
     tracciatoX,
     tracciatoY,
+    fotoZoom,
+    fotoLuminosita,
     creaCard,
   ]);
 
@@ -298,6 +306,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
               const foto = await scegliFotoCard(f);
               setFotoSalvata(foto);
               setPreferFoto(true);
+              setFotoZoom(1);
+              setFotoLuminosita(1);
               rigeneraAbilitato.current = true;
               await creaCard(foto);
             }}
@@ -315,6 +325,64 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
           Senza foto
         </button>
       </div>
+
+      {fotoSalvata && preferFoto && (
+        <div className="space-y-3 rounded-app border border-asfalto/12 bg-asfalto/[0.03] p-4">
+          <p className="font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Regola foto</p>
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-mono text-xs text-asfalto/65">Dimensione</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={fotoZoom <= 0.6 || generandoCard}
+                onClick={() => setFotoZoom((z) => Math.max(0.6, Math.round((z - 0.1) * 10) / 10))}
+                className="tap flex h-9 w-9 items-center justify-center rounded-app border border-asfalto/20 font-mono text-lg font-bold hover:bg-asfalto hover:text-cemento disabled:opacity-35"
+                aria-label="Rimpicciolisci foto"
+              >
+                −
+              </button>
+              <span className="min-w-[3rem] text-center font-mono text-xs tabular-nums text-asfalto/55">
+                {Math.round(fotoZoom * 100)}%
+              </span>
+              <button
+                type="button"
+                disabled={fotoZoom >= 2 || generandoCard}
+                onClick={() => setFotoZoom((z) => Math.min(2, Math.round((z + 0.1) * 10) / 10))}
+                className="tap flex h-9 w-9 items-center justify-center rounded-app border border-asfalto/20 font-mono text-lg font-bold hover:bg-asfalto hover:text-cemento disabled:opacity-35"
+                aria-label="Ingrandisci foto"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-mono text-xs text-asfalto/65">Luminosità</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={fotoLuminosita <= 0.5 || generandoCard}
+                onClick={() => setFotoLuminosita((l) => Math.max(0.5, Math.round((l - 0.1) * 10) / 10))}
+                className="tap flex h-9 w-9 items-center justify-center rounded-app border border-asfalto/20 font-mono text-lg font-bold hover:bg-asfalto hover:text-cemento disabled:opacity-35"
+                aria-label="Riduci luminosità"
+              >
+                −
+              </button>
+              <span className="min-w-[3rem] text-center font-mono text-xs tabular-nums text-asfalto/55">
+                {Math.round(fotoLuminosita * 100)}%
+              </span>
+              <button
+                type="button"
+                disabled={fotoLuminosita >= 1.5 || generandoCard}
+                onClick={() => setFotoLuminosita((l) => Math.min(1.5, Math.round((l + 0.1) * 10) / 10))}
+                className="tap flex h-9 w-9 items-center justify-center rounded-app border border-asfalto/20 font-mono text-lg font-bold hover:bg-asfalto hover:text-cemento disabled:opacity-35"
+                aria-label="Aumenta luminosità"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {cardUrl && (
         <div className="flex flex-wrap gap-3">

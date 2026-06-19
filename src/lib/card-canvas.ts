@@ -45,6 +45,10 @@ interface DatiCard {
   // posizione del tracciato 3D nella card (0.0-1.0)
   tracciatoOffsetX?: number; // spostamento orizzontale relativo
   tracciatoOffsetY?: number; // spostamento verticale relativo
+  /** Zoom foto di sfondo: 1 = cover, >1 ingrandisce, <1 rimpicciolisce */
+  fotoScala?: number;
+  /** Luminosità foto di sfondo: 1 = normale */
+  fotoLuminosita?: number;
 }
 
 function caricaImmagine(src: string): Promise<HTMLImageElement> {
@@ -282,10 +286,16 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
   if (dati.fotoDataUrl) {
     try {
       const foto = await caricaImmagine(dati.fotoDataUrl);
-      const scala = Math.max(LARGHEZZA / foto.width, ALTEZZA / foto.height);
-      const w = foto.width * scala;
-      const h = foto.height * scala;
+      const zoom = Math.min(2, Math.max(0.6, dati.fotoScala ?? 1));
+      const luminosita = Math.min(1.5, Math.max(0.5, dati.fotoLuminosita ?? 1));
+      const scalaBase = Math.max(LARGHEZZA / foto.width, ALTEZZA / foto.height);
+      const w = foto.width * scalaBase * zoom;
+      const h = foto.height * scalaBase * zoom;
+
+      ctx.save();
+      ctx.filter = `brightness(${luminosita})`;
       ctx.drawImage(foto, (LARGHEZZA - w) / 2, (ALTEZZA - h) / 2, w, h);
+      ctx.restore();
 
       const velo = ctx.createLinearGradient(0, 0, 0, ALTEZZA);
       velo.addColorStop(0, 'rgba(14,16,18,0.55)');
