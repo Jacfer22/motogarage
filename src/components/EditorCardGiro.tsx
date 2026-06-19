@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { formattaDurata, formattaKm, statisticheGiro } from '@/lib/geo';
 import { generaCardGiro } from '@/lib/card-canvas';
 import type { GiroUtente } from '@/lib/giri-store';
@@ -46,46 +46,97 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   const [mostraDislivello, setMostraDislivello] = useState(true);
   const [tracciatoX, setTracciatoX] = useState(0.5);
   const [tracciatoY, setTracciatoY] = useState(0.5);
+  const [fotoSalvata, setFotoSalvata] = useState<string | null>(null);
+  const [preferFoto, setPreferFoto] = useState(false);
   const [cardUrl, setCardUrl] = useState<string | null>(null);
   const [generandoCard, setGenerandoCard] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
+  const rigeneraAbilitato = useRef(false);
+  const fotoSalvataRef = useRef(fotoSalvata);
+  const preferFotoRef = useRef(preferFoto);
 
-  async function creaCard(foto?: string | null) {
-    if (giro.punti.length < 2) {
-      setErrore('Tracciato GPS insufficiente per generare la card.');
-      return;
-    }
-    setGenerandoCard(true);
-    setErrore(null);
-    try {
-      const stat = statisticheGiro(giro.punti, giro.durataSec, giro.km);
-      const titolo = luogoCard.trim() || giro.nome;
-      if (onNomeChange && titolo !== giro.nome) onNomeChange(titolo);
+  useEffect(() => {
+    fotoSalvataRef.current = fotoSalvata;
+  }, [fotoSalvata]);
 
-      const url = await generaCardGiro({
-        titolo,
-        km: formattaKm(giro.km),
-        durata: formattaDurata(giro.durataSec),
-        data: formattaDataBreve(giro.data),
-        punti: giro.punti,
-        tema: temaCard,
-        palette: paletteCard,
-        luogo: luogoCard.trim() || null,
-        fotoDataUrl: foto ?? null,
-        dislivelloM: mostraDislivello ? (stat.dislivelloPositivoM || giro.dislivelloM) : null,
-        velMediaKmh: mostraMedia ? (stat.velMediaKmh || giro.velMediaKmh) : null,
-        velMaxKmh: mostraMax ? (stat.velMaxKmh || giro.velMaxKmh) : null,
-        curve: mostraCurve ? (stat.curve || giro.curve) : null,
-        tracciatoOffsetX: tracciatoX,
-        tracciatoOffsetY: tracciatoY,
-      });
-      setCardUrl(url);
-    } catch {
-      setErrore('Non sono riuscito a generare la card. Riprova.');
-    } finally {
-      setGenerandoCard(false);
-    }
-  }
+  useEffect(() => {
+    preferFotoRef.current = preferFoto;
+  }, [preferFoto]);
+
+  const creaCard = useCallback(
+    async (foto?: string | null) => {
+      if (giro.punti.length < 2) {
+        setErrore('Tracciato GPS insufficiente per generare la card.');
+        return;
+      }
+      setGenerandoCard(true);
+      setErrore(null);
+      try {
+        const stat = statisticheGiro(giro.punti, giro.durataSec, giro.km);
+        const titolo = luogoCard.trim() || giro.nome;
+        if (onNomeChange && titolo !== giro.nome) onNomeChange(titolo);
+
+        const fotoDataUrl =
+          foto !== undefined ? foto : preferFotoRef.current ? fotoSalvataRef.current : null;
+
+        const url = await generaCardGiro({
+          titolo,
+          km: formattaKm(giro.km),
+          durata: formattaDurata(giro.durataSec),
+          data: formattaDataBreve(giro.data),
+          punti: giro.punti,
+          tema: temaCard,
+          palette: paletteCard,
+          luogo: luogoCard.trim() || null,
+          fotoDataUrl,
+          dislivelloM: mostraDislivello ? (stat.dislivelloPositivoM || giro.dislivelloM) : null,
+          velMediaKmh: mostraMedia ? (stat.velMediaKmh || giro.velMediaKmh) : null,
+          velMaxKmh: mostraMax ? (stat.velMaxKmh || giro.velMaxKmh) : null,
+          curve: mostraCurve ? (stat.curve || giro.curve) : null,
+          tracciatoOffsetX: tracciatoX,
+          tracciatoOffsetY: tracciatoY,
+        });
+        setCardUrl(url);
+        rigeneraAbilitato.current = true;
+      } catch {
+        setErrore('Non sono riuscito a generare la card. Riprova.');
+      } finally {
+        setGenerandoCard(false);
+      }
+    },
+    [
+      giro,
+      luogoCard,
+      onNomeChange,
+      temaCard,
+      paletteCard,
+      mostraDislivello,
+      mostraMedia,
+      mostraMax,
+      mostraCurve,
+      tracciatoX,
+      tracciatoY,
+    ]
+  );
+
+  useEffect(() => {
+    if (!rigeneraAbilitato.current && !fotoSalvata) return;
+    const timer = setTimeout(() => {
+      void creaCard();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [
+    temaCard,
+    paletteCard,
+    luogoCard,
+    mostraMedia,
+    mostraMax,
+    mostraCurve,
+    mostraDislivello,
+    tracciatoX,
+    tracciatoY,
+    creaCard,
+  ]);
 
   function scaricaCard() {
     if (!cardUrl) return;
@@ -101,7 +152,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     const testo =
       `${titolo !== 'Giro libero' ? `${titolo} · ` : ''}` +
       `${formattaKm(giro.km)} km in moto 🏍️\n` +
-      `Il mio giro su MotoGarage — itinerari moto in Italia`;
+      `Il mio giro su MotoGarage`;
     try {
       const res = await fetch(cardUrl);
       const blob = await res.blob();
@@ -160,7 +211,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
             <button
               key={p}
               type="button"
-              onClick={() => { setPaletteCard(p); setCardUrl(null); }}
+              onClick={() => setPaletteCard(p)}
               className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
                 paletteCard === p ? 'border-segnale bg-segnale/10' : 'border-asfalto/15 text-asfalto/60'
               }`}
@@ -178,7 +229,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
             <button
               key={t}
               type="button"
-              onClick={() => { setTemaCard(t); setCardUrl(null); }}
+              onClick={() => setTemaCard(t)}
               className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
                 temaCard === t ? 'border-segnale bg-segnale/10' : 'border-asfalto/15 text-asfalto/60'
               }`}
@@ -194,7 +245,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
         <input
           type="text"
           value={luogoCard}
-          onChange={(e) => { setLuogoCard(e.target.value); setCardUrl(null); }}
+          onChange={(e) => setLuogoCard(e.target.value)}
           placeholder="Es. Passo dello Stelvio"
           maxLength={40}
           className="input-app w-full"
@@ -213,7 +264,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
             <button
               key={label}
               type="button"
-              onClick={() => { set(!attivo); setCardUrl(null); }}
+              onClick={() => set(!attivo)}
               className={`tap flex items-center gap-2 rounded-app border px-3 py-2 font-mono text-xs font-medium ${
                 attivo ? 'border-bosco bg-bosco/10 text-bosco' : 'border-asfalto/15 text-asfalto/40'
               }`}
@@ -245,13 +296,19 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
               const f = e.target.files?.[0];
               if (!f) return;
               const foto = await scegliFotoCard(f);
+              setFotoSalvata(foto);
+              setPreferFoto(true);
+              rigeneraAbilitato.current = true;
               await creaCard(foto);
             }}
           />
         </label>
         <button
           type="button"
-          onClick={() => creaCard()}
+          onClick={() => {
+            setPreferFoto(false);
+            void creaCard(null);
+          }}
           disabled={generandoCard}
           className="tap rounded-app border border-asfalto/20 px-5 py-2.5 font-mono text-sm font-medium uppercase hover:bg-asfalto hover:text-cemento disabled:opacity-60"
         >

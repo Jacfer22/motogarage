@@ -317,17 +317,7 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     ctx.fillRect(0, 0, LARGHEZZA, ALTEZZA);
   }
 
-  // Logo in alto a sinistra
   ctx.textBaseline = 'alphabetic';
-  ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
-  ctx.shadowBlur = conFoto ? 8 : 0;
-  ctx.font = `700 48px ${fontDisplay}`;
-  ctx.fillStyle = TESTO_PRIMARIO;
-  ctx.fillText('GIRO', 64, 90);
-  const wGiro = ctx.measureText('GIRO').width;
-  ctx.fillStyle = SEGNALE_CARD;
-  ctx.fillText('SECCO', 64 + wGiro, 90);
-  ctx.shadowBlur = 0;
 
   // ===== TEMA "FOTO" (stile Strava): tracciato piccolo + stats in colonna =====
   if (tema === 'foto') {
@@ -472,24 +462,31 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     ctx.fillText(dati.data, 64, ALTEZZA - 150);
   }
 
-  // Marchio + tagline
-  ctx.fillStyle = SEGNALE_CARD;
-  ctx.font = `600 76px ${fontHand}`;
+  // Marchio in basso a destra: logo + MOTO GARAGE
+  const margine = 64;
+  const baseY = ALTEZZA - 64;
+  const testoMarchio = 'MOTO GARAGE';
+  ctx.font = `700 44px ${fontDisplay}`;
+  const testoW = ctx.measureText(testoMarchio).width;
+  const logoH = 56;
+  const gap = 16;
   ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
   ctx.shadowBlur = conFoto ? 8 : 0;
-  ctx.textAlign = 'right';
-  ctx.fillText('MotoGarage', LARGHEZZA - 64, ALTEZZA - 70);
+  try {
+    const logo = await caricaImmagine('/logo-motogarage.png');
+    const logoW = (logo.width / logo.height) * logoH;
+    const startX = LARGHEZZA - margine - logoW - gap - testoW;
+    ctx.drawImage(logo, startX, baseY - logoH, logoW, logoH);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = TESTO_PRIMARIO;
+    ctx.fillText(testoMarchio, startX + logoW + gap, baseY - 10);
+  } catch {
+    ctx.textAlign = 'right';
+    ctx.fillStyle = TESTO_PRIMARIO;
+    ctx.fillText(testoMarchio, LARGHEZZA - margine, baseY);
+  }
   ctx.shadowBlur = 0;
   ctx.textAlign = 'left';
-  ctx.fillStyle = chiaro ? 'rgba(21,24,26,0.5)' : 'rgba(240,241,242,0.55)';
-  ctx.font = `500 30px ${fontMono}`;
-  ctx.fillText('ITINERARI MOTO · ITALIA', 64, ALTEZZA - 70);
-  ctx.textAlign = 'left';
-
-  // Tagline in mono a sinistra
-  ctx.fillStyle = conFoto ? 'rgba(240,241,242,0.85)' : 'rgba(240,241,242,0.65)';
-  ctx.font = `500 30px ${fontMono}`;
-  ctx.fillText('ITINERARI MOTO · ITALIA', 64, ALTEZZA - 70);
 
   return canvas.toDataURL('image/png');
 }
