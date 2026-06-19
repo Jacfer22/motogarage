@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAuth } from './AuthProvider';
+import MotoSVG from './MotoSVG';
 
 interface Props {
   onAvviato: (motoId: string, marca: string, modello: string, anno?: number) => void;
 }
 
-const MARCHE = ['Aprilia','Benelli','BMW','Ducati','Honda','Husqvarna','Indian','Kawasaki','KTM','Moto Guzzi','Royal Enfield','Suzuki','Triumph','Yamaha','Altro'];
+const MARCHE = ['Aprilia', 'Benelli', 'BMW', 'Ducati', 'Honda', 'Husqvarna', 'Indian', 'Kawasaki', 'KTM', 'Moto Guzzi', 'Royal Enfield', 'Suzuki', 'Triumph', 'Yamaha', 'Altro'];
+
+type Step = 'dati' | 'foto';
 
 export default function CreaGemello({ onAvviato }: Props) {
   const { user } = useAuth();
-  const [step, setStep] = useState<'dati' | 'foto' | 'invio'>('dati');
+  const [step, setStep] = useState<Step>('dati');
   const [marca, setMarca] = useState('');
   const [modello, setModello] = useState('');
   const [anno, setAnno] = useState('');
@@ -27,64 +30,72 @@ export default function CreaGemello({ onAvviato }: Props) {
 
   function onFile(file: File, lato: 'sx' | 'dx') {
     const url = URL.createObjectURL(file);
-    if (lato === 'sx') { setFotoSx(file); setPrevSx(url); }
-    else { setFotoDx(file); setPrevDx(url); }
+    if (lato === 'sx') {
+      setFotoSx(file);
+      setPrevSx(url);
+    } else {
+      setFotoDx(file);
+      setPrevDx(url);
+    }
   }
 
   async function avvia() {
-    if (!user || !fotoSx) return;
+    if (!user || !fotoSx || !fotoDx) return;
+
     setCaricando(true);
     setErrore('');
+
     const sb = getSupabaseBrowser();
-    if (!sb) { setErrore('Supabase non disponibile'); setCaricando(false); return; }
+    if (!sb) {
+      setErrore('Supabase non disponibile');
+      setCaricando(false);
+      return;
+    }
 
     try {
-      // 1. Crea record moto nel DB
-      const { data: moto, error: mErr } = await sb.from('moto').insert({
-        utente_id: user.id,
-        marca: marca.trim(),
-        modello: modello.trim(),
-        anno: anno ? parseInt(anno) : null,
-        stato: 'bozza',
-      }).select('id').single();
-      if (mErr || !moto) throw new Error(mErr?.message ?? 'Errore creazione moto');
+      const { data: moto, error: erroreMoto } = await sb
+        .from('moto')
+        .insert({
+          utente_id: user.id,
+          marca: marca.trim(),
+          modello: modello.trim(),
+          anno: anno ? parseInt(anno, 10) : null,
+          stato: 'bozza',
+          colore_primario: '#d91414',
+          colore_secondario: '#15181a',
+        })
+        .select('id')
+        .single();
+
+      if (erroreMoto || !moto) throw new Error(erroreMoto?.message ?? 'Errore creazione moto');
 
       const motoId = moto.id;
-
-      // 2. Upload foto sinistra in Supabase Storage
       const extSx = fotoSx.name.split('.').pop() ?? 'jpg';
+      const extDx = fotoDx.name.split('.').pop() ?? 'jpg';
       const pathSx = `${user.id}/${motoId}/sx.${extSx}`;
+      const pathDx = `${user.id}/${motoId}/dx.${extDx}`;
+
       const { error: upSxErr } = await sb.storage.from('foto-moto').upload(pathSx, fotoSx, { upsert: true });
-      if (upSxErr) throw new Error(`Upload foto SX: ${upSxErr.message}`);
+      if (upSxErr) throw new Error(`Upload foto sinistra: ${upSxErr.message}`);
 
-      // URL firmato per 1h (foto privata)
+      const { error: upDxErr } = await sb.storage.from('foto-moto').upload(pathDx, fotoDx, { upsert: true });
+      if (upDxErr) throw new Error(`Upload foto destra: ${upDxErr.message}`);
+
       const { data: signedSx } = await sb.storage.from('foto-moto').createSignedUrl(pathSx, 3600);
-      const fotoSxUrl = signedSx?.signedUrl ?? '';
+      const { data: signedDx } = await sb.storage.from('foto-moto').createSignedUrl(pathDx, 3600);
 
-      // 3. Upload foto destra (opzionale)
-      let fotoDxUrl = '';
-      if (fotoDx) {
-        const extDx = fotoDx.name.split('.').pop() ?? 'jpg';
-        const pathDx = `${user.id}/${motoId}/dx.${extDx}`;
-        await sb.storage.from('foto-moto').upload(pathDx, fotoDx, { upsert: true });
-        const { data: signedDx } = await sb.storage.from('foto-moto').createSignedUrl(pathDx, 3600);
-        fotoDxUrl = signedDx?.signedUrl ?? '';
-      }
+      await sb.from('moto').update({ foto_sx_url: pathSx, foto_dx_url: pathDx }).eq('id', motoId);
 
-      // Salva URL foto nel record
-      await sb.from('moto').update({ foto_sx_url: pathSx, foto_dx_url: fotoDx ? `${user.id}/${motoId}/dx.${fotoDx.name.split('.').pop()}` : null }).eq('id', motoId);
-
-      // 4. Avvia generazione via API route
       const res = await fetch('/api/genera-moto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ motoId, fotoSxUrl, fotoDxUrl }),
+        body: JSON.stringify({ motoId, fotoSxUrl: signedSx?.signedUrl ?? '', fotoDxUrl: signedDx?.signedUrl ?? '' }),
       });
+
       const json = await res.json();
       if (!res.ok) throw new Error(json.errore ?? 'Errore avvio generazione');
 
-      onAvviato(motoId, marca.trim(), modello.trim(), anno ? parseInt(anno) : undefined);
-
+      onAvviato(motoId, marca.trim(), modello.trim(), anno ? parseInt(anno, 10) : undefined);
     } catch (e: unknown) {
       setErrore(e instanceof Error ? e.message : String(e));
       setCaricando(false);
@@ -92,117 +103,106 @@ export default function CreaGemello({ onAvviato }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
-      <div>
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-segnale">Nuovo gemello digitale</p>
-        <h2 className="mt-1 font-display text-3xl font-bold uppercase tracking-tight">Crea la tua moto in 3D</h2>
-        <p className="mt-2 text-sm text-asfalto/60">Servono solo 2 foto. L'AI ricostruisce il resto.</p>
-      </div>
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="rounded-[30px] border border-asfalto/10 bg-white p-5 shadow-app-lg dark:bg-carbone sm:p-7">
+        <p className="font-mono text-xs uppercase tracking-[0.28em] text-segnale">Nuovo gemello digitale</p>
+        <h1 className="mt-3 font-display text-4xl font-black uppercase leading-none tracking-tight sm:text-5xl">Crea la tua moto in 3D</h1>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-asfalto/55 dark:text-cemento/55">
+          Servono due foto laterali. MotoGarage userà l'AI per ricostruire fronte, retro e dettagli mancanti.
+        </p>
 
-      {/* Stepper */}
-      <div className="flex gap-2">
-        {(['dati','foto','invio'] as const).map((s, i) => (
-          <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${step === s || (i < ['dati','foto','invio'].indexOf(step)) ? 'bg-segnale' : 'bg-asfalto/20'}`}/>
-        ))}
-      </div>
-
-      {step === 'dati' && (
-        <div className="space-y-4">
-          <div>
-            <label className="label-app">Marca</label>
-            <select value={marca} onChange={e => setMarca(e.target.value)} className="input-app">
-              <option value="">Seleziona marca…</option>
-              {MARCHE.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="label-app">Modello</label>
-            <input value={modello} onChange={e => setModello(e.target.value)} placeholder="es. TRK 502X, R1250GS, MT-07…"
-              className="input-app" maxLength={60}/>
-          </div>
-          <div>
-            <label className="label-app">Anno (opzionale)</label>
-            <input type="number" value={anno} onChange={e => setAnno(e.target.value)} placeholder="es. 2022"
-              className="input-app" min={1950} max={2030}/>
-          </div>
-          <button type="button" disabled={!marca || !modello}
-            onClick={() => setStep('foto')}
-            className="tap w-full rounded-app bg-segnale py-3 font-mono font-medium uppercase text-asfalto disabled:opacity-40">
-            Avanti →
-          </button>
+        <div className="mt-6 flex gap-2">
+          <span className={`h-2 flex-1 rounded-full ${step === 'dati' || step === 'foto' ? 'bg-segnale' : 'bg-asfalto/15'}`} />
+          <span className={`h-2 flex-1 rounded-full ${step === 'foto' ? 'bg-segnale' : 'bg-asfalto/15'}`} />
         </div>
-      )}
 
-      {step === 'foto' && (
-        <div className="space-y-5">
-          <div className="rounded-app border border-dashed border-bosco/40 bg-bosco/5 p-4">
-            <p className="font-mono text-xs uppercase text-bosco mb-2">📸 Guida fotografica</p>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="font-medium text-bosco mb-1">✅ Corretto</p>
-                <ul className="text-asfalto/60 space-y-0.5 text-xs">
-                  <li>• Moto completa nel frame</li>
-                  <li>• Luce naturale diffusa</li>
-                  <li>• Sfondo semplice/neutro</li>
-                  <li>• Inquadratura laterale</li>
-                </ul>
-              </div>
-              <div>
-                <p className="font-medium text-red-400 mb-1">❌ Da evitare</p>
-                <ul className="text-asfalto/60 space-y-0.5 text-xs">
-                  <li>• Moto tagliata</li>
-                  <li>• Controluce</li>
-                  <li>• Oggetti davanti</li>
-                  <li>• Foto troppo vicina</li>
-                </ul>
-              </div>
+        {step === 'dati' && (
+          <div className="mt-7 space-y-4">
+            <div>
+              <label className="label-app">Marca</label>
+              <select value={marca} onChange={(e) => setMarca(e.target.value)} className="input-app">
+                <option value="">Seleziona marca…</option>
+                {MARCHE.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
             </div>
-          </div>
-
-          {/* Upload lato sinistro */}
-          <div>
-            <p className="label-app">Foto lato sinistro <span className="text-red-400">*</span></p>
-            <div onClick={() => refSx.current?.click()}
-              className={`tap relative flex cursor-pointer items-center justify-center rounded-app border-2 border-dashed transition-colors ${fotoSx ? 'border-bosco' : 'border-guardrail/30 hover:border-segnale'}`}
-              style={{ height: 140 }}>
-              {prevSx
-                ? <img src={prevSx} alt="" className="h-full w-full object-contain rounded-app p-1"/>
-                : <div className="text-center"><p className="text-3xl">📷</p><p className="mt-1 font-mono text-xs uppercase text-asfalto/50">Lato sinistro</p></div>
-              }
-              <input ref={refSx} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
-                onChange={e => e.target.files?.[0] && onFile(e.target.files[0], 'sx')}/>
+            <div>
+              <label className="label-app">Modello</label>
+              <input value={modello} onChange={(e) => setModello(e.target.value)} placeholder="es. TRK 502X, MT-07, R1250GS…" className="input-app" maxLength={60} />
             </div>
-          </div>
-
-          {/* Upload lato destro */}
-          <div>
-            <p className="label-app">Foto lato destro <span className="text-asfalto/40">(consigliato)</span></p>
-            <div onClick={() => refDx.current?.click()}
-              className={`tap relative flex cursor-pointer items-center justify-center rounded-app border-2 border-dashed transition-colors ${fotoDx ? 'border-bosco' : 'border-guardrail/30 hover:border-segnale'}`}
-              style={{ height: 140 }}>
-              {prevDx
-                ? <img src={prevDx} alt="" className="h-full w-full object-contain rounded-app p-1"/>
-                : <div className="text-center"><p className="text-3xl">📷</p><p className="mt-1 font-mono text-xs uppercase text-asfalto/50">Lato destro</p></div>
-              }
-              <input ref={refDx} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
-                onChange={e => e.target.files?.[0] && onFile(e.target.files[0], 'dx')}/>
+            <div>
+              <label className="label-app">Anno</label>
+              <input type="number" value={anno} onChange={(e) => setAnno(e.target.value)} placeholder="es. 2022" className="input-app" min={1950} max={2030} />
             </div>
-          </div>
-
-          {errore && <p className="font-mono text-xs text-red-400">{errore}</p>}
-
-          <div className="flex gap-3">
-            <button type="button" onClick={() => setStep('dati')}
-              className="tap flex-1 rounded-app border border-guardrail/30 py-3 font-mono text-sm uppercase text-asfalto/60">
-              ← Indietro
-            </button>
-            <button type="button" disabled={!fotoSx || caricando} onClick={avvia}
-              className="tap flex-[2] rounded-app bg-segnale py-3 font-mono font-medium uppercase text-asfalto disabled:opacity-40">
-              {caricando ? 'Caricamento…' : 'Genera il gemello 🏍'}
+            <button type="button" disabled={!marca || !modello} onClick={() => setStep('foto')} className="tap w-full rounded-app bg-segnale py-4 font-mono text-sm font-bold uppercase text-asfalto shadow-segnale disabled:opacity-40">
+              Continua con le foto →
             </button>
           </div>
+        )}
+
+        {step === 'foto' && (
+          <div className="mt-7 space-y-5">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <UploadBox titolo="Lato sinistro" anteprima={prevSx} obbligatorio onClick={() => refSx.current?.click()} />
+              <UploadBox titolo="Lato destro" anteprima={prevDx} obbligatorio onClick={() => refDx.current?.click()} />
+              <input ref={refSx} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0], 'sx')} />
+              <input ref={refDx} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0], 'dx')} />
+            </div>
+
+            {errore && <p className="rounded-app bg-red-500/10 px-4 py-3 font-mono text-xs text-red-500">{errore}</p>}
+
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setStep('dati')} className="tap flex-1 rounded-app border border-asfalto/10 py-4 font-mono text-xs font-bold uppercase text-asfalto/55">
+                ← Indietro
+              </button>
+              <button type="button" disabled={!fotoSx || !fotoDx || caricando} onClick={avvia} className="tap flex-[2] rounded-app bg-segnale py-4 font-mono text-xs font-bold uppercase text-asfalto shadow-segnale disabled:opacity-40">
+                {caricando ? 'Caricamento…' : 'Genera il gemello'}
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <aside className="space-y-4">
+        <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[#08090d] p-5 text-cemento shadow-app-lg">
+          <p className="font-mono text-xs uppercase tracking-[0.24em] text-segnale">Guida foto</p>
+          <div className="mt-4 grid gap-3">
+            <div className="rounded-[22px] border border-bosco/30 bg-bosco/10 p-4">
+              <p className="font-mono text-xs font-bold uppercase text-bosco">Foto corretta</p>
+              <div className="mt-3 aspect-[16/9] rounded-app bg-white/5 p-3">
+                <MotoSVG tipo="adventure" colorePrimario="#d91414" coloreSecondario="#15181a" className="h-full w-full" />
+              </div>
+              <p className="mt-3 text-xs text-cemento/55">Moto intera, laterale, sfondo pulito, luce naturale.</p>
+            </div>
+            <div className="rounded-[22px] border border-red-500/25 bg-red-500/10 p-4 opacity-80">
+              <p className="font-mono text-xs font-bold uppercase text-red-400">Da evitare</p>
+              <div className="mt-3 aspect-[16/9] overflow-hidden rounded-app bg-white/5 p-3">
+                <div className="translate-x-10 scale-125 opacity-60">
+                  <MotoSVG tipo="adventure" colorePrimario="#d91414" coloreSecondario="#15181a" className="h-full w-full" />
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-cemento/55">Moto tagliata, troppo vicina, controluce o con oggetti davanti.</p>
+            </div>
+          </div>
         </div>
-      )}
+      </aside>
     </div>
+  );
+}
+
+function UploadBox({ titolo, anteprima, obbligatorio, onClick }: { titolo: string; anteprima: string; obbligatorio?: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className={`tap min-h-44 overflow-hidden rounded-[22px] border-2 border-dashed text-left transition-colors ${anteprima ? 'border-bosco bg-bosco/5' : 'border-asfalto/15 bg-asfalto/[0.03] hover:border-segnale'}`}>
+      {anteprima ? (
+        <img src={anteprima} alt="" className="h-44 w-full object-contain p-2" />
+      ) : (
+        <div className="grid h-44 place-items-center p-4 text-center">
+          <div>
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-asfalto text-2xl text-cemento">📷</div>
+            <p className="mt-3 font-mono text-xs font-bold uppercase text-asfalto/70 dark:text-cemento/70">{titolo}</p>
+            {obbligatorio && <p className="mt-1 font-mono text-[10px] uppercase text-segnale">obbligatoria</p>}
+          </div>
+        </div>
+      )}
+    </button>
   );
 }

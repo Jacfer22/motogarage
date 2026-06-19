@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import GenerazioneProgress from '@/components/GenerazioneProgress';
 import CreaGemello from '@/components/CreaGemello';
 import MotoSVG from '@/components/MotoSVG';
-import type { TipoMoto } from '@/components/MotoSVG';
 
 interface Moto {
   id: string;
@@ -17,23 +16,44 @@ interface Moto {
   stato: string;
   glb_url: string | null;
   foto_sx_url: string | null;
-  colore_primario: string;
-  colore_secondario: string;
+  foto_dx_url?: string | null;
+  colore_primario: string | null;
+  colore_secondario: string | null;
   task_id: string | null;
+  created_at?: string;
+}
+
+type Vista = 'garage' | 'crea' | 'genera';
+
+function nomeMoto(moto: Moto) {
+  return `${moto.marca} ${moto.modello}`.trim();
+}
+
+function colorePrimario(moto: Moto) {
+  return moto.colore_primario || '#d91414';
+}
+
+function coloreSecondario(moto: Moto) {
+  return moto.colore_secondario || '#111827';
+}
+
+function statoLabel(stato: string) {
+  if (stato === 'pronto') return '3D pronto';
+  if (stato === 'elaborazione') return 'In creazione';
+  if (stato === 'errore') return 'Da riprovare';
+  return 'Bozza';
 }
 
 export default function PaginaGarage() {
   const { user, profilo, loading } = useAuth();
   const router = useRouter();
   const [moto, setMoto] = useState<Moto[]>([]);
-  const [vista, setVista] = useState<'garage' | 'crea' | 'genera'>('garage');
+  const [vista, setVista] = useState<Vista>('garage');
   const [motoInElaborazione, setMotoInElaborazione] = useState<{ id: string; marca: string; modello: string; anno?: number } | null>(null);
   const [pctReale, setPctReale] = useState<number | null>(null);
   const [completato, setCompletato] = useState(false);
   const [motoSelezionata, setMotoSelezionata] = useState<string | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
-  const garageRef = useRef<ReturnType<typeof avviaGarage3D> | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.push('/accedi');
@@ -42,42 +62,63 @@ export default function PaginaGarage() {
   const caricaMoto = useCallback(async () => {
     const sb = getSupabaseBrowser();
     if (!sb || !user) return;
-    const { data } = await sb.from('moto').select('*').eq('utente_id', user.id).order('created_at', { ascending: false });
-    setMoto((data ?? []) as Moto[]);
+
+    const { data } = await sb
+      .from('moto')
+      .select('*')
+      .eq('utente_id', user.id)
+      .order('created_at', { ascending: false });
+
+    const elenco = (data ?? []) as Moto[];
+    setMoto(elenco);
+    setMotoSelezionata((attuale) => attuale ?? elenco[0]?.id ?? null);
   }, [user]);
 
-  useEffect(() => { caricaMoto(); }, [caricaMoto]);
+  useEffect(() => {
+    caricaMoto();
+  }, [caricaMoto]);
 
-  // Polling stato generazione
   useEffect(() => {
     if (!motoInElaborazione) return;
+
     pollingRef.current = setInterval(async () => {
       const res = await fetch(`/api/genera-moto?motoId=${motoInElaborazione.id}`);
       const json = await res.json();
-      if (json.percentuale) setPctReale(json.percentuale);
+
+      if (typeof json.percentuale === 'number') setPctReale(json.percentuale);
+
       if (json.stato === 'pronto') {
         setCompletato(true);
         setPctReale(100);
-        clearInterval(pollingRef.current!);
+        if (pollingRef.current) clearInterval(pollingRef.current);
         caricaMoto();
-      } else if (json.stato === 'errore') {
-        clearInterval(pollingRef.current!);
+      }
+
+      if (json.stato === 'errore') {
+        if (pollingRef.current) clearInterval(pollingRef.current);
         caricaMoto();
       }
     }, 8000);
-    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
   }, [motoInElaborazione, caricaMoto]);
 
-  // Garage 3D Three.js
-  useEffect(() => {
-    if (vista !== 'garage' || !canvasRef.current) return;
-    const cleanup = avviaGarage3D(canvasRef.current, moto, motoSelezionata, (id) => setMotoSelezionata(id));
-    return cleanup;
-  }, [vista, moto, motoSelezionata]);
+  const motoSelObj = useMemo(() => {
+    if (!moto.length) return null;
+    return moto.find((m) => m.id === motoSelezionata) ?? moto[0];
+  }, [moto, motoSelezionata]);
 
-  if (loading) return <div className="mx-auto max-w-3xl px-4 py-14"><div className="skeleton h-8 w-48 rounded-app"/></div>;
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-12">
+        <div className="skeleton h-10 w-60 rounded-app" />
+        <div className="skeleton mt-6 h-96 rounded-app-lg" />
+      </div>
+    );
+  }
 
-  // Vista generazione in corso
   if (vista === 'genera' && motoInElaborazione) {
     return (
       <GenerazioneProgress
@@ -86,257 +127,186 @@ export default function PaginaGarage() {
         anno={motoInElaborazione.anno}
         percentualeReale={pctReale}
         completato={completato}
-        onApriGarage={() => { setVista('garage'); setMotoInElaborazione(null); setCompletato(false); setPctReale(null); }}
+        onApriGarage={() => {
+          setVista('garage');
+          setMotoSelezionata(motoInElaborazione.id);
+          setMotoInElaborazione(null);
+          setCompletato(false);
+          setPctReale(null);
+        }}
       />
     );
   }
 
-  // Vista crea gemello
   if (vista === 'crea') {
     return (
-      <div className="mx-auto max-w-lg px-4 py-10">
-        <button type="button" onClick={() => setVista('garage')}
-          className="mb-6 font-mono text-sm uppercase text-asfalto/50 hover:text-asfalto">← Garage</button>
-        <CreaGemello onAvviato={(id, marca, modello, anno) => {
-          setMotoInElaborazione({ id, marca, modello, anno });
-          setVista('genera');
-        }}/>
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-12">
+        <button
+          type="button"
+          onClick={() => setVista('garage')}
+          className="tap mb-5 rounded-full border border-asfalto/10 bg-white px-4 py-2 font-mono text-xs uppercase tracking-wide text-asfalto/60 shadow-app-sm hover:border-segnale hover:text-asfalto dark:bg-carbone"
+        >
+          ← Torna al garage
+        </button>
+        <CreaGemello
+          onAvviato={(id, marca, modello, anno) => {
+            setMotoInElaborazione({ id, marca, modello, anno });
+            setVista('genera');
+          }}
+        />
       </div>
     );
   }
 
-  // Vista garage principale
-  const motoSelObj = moto.find(m => m.id === motoSelezionata);
-
   return (
-    <div className="flex flex-col" style={{ minHeight: '100dvh' }}>
-      {/* Header garage */}
-      <div className="mx-auto w-full max-w-6xl px-4 pt-8 pb-4 flex items-end justify-between gap-3">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-segnale">{profilo?.username ?? 'Rider'}</p>
-          <h1 className="font-display text-5xl font-bold uppercase leading-none tracking-tight sm:text-6xl">
-            Il mio Garage
-          </h1>
-        </div>
-        <button type="button" onClick={() => setVista('crea')}
-          className="tap shrink-0 rounded-app bg-segnale px-5 py-3 font-mono text-sm font-medium uppercase text-asfalto shadow-segnale hover:bg-white">
-          ➕ Gemello digitale
-        </button>
-      </div>
-
-      {/* Canvas 3D garage */}
-      <div className="relative mx-4 rounded-app-lg overflow-hidden" style={{ height: 360, background: '#07070e' }}>
-        <canvas ref={canvasRef} className="w-full h-full" style={{ display: 'block' }}/>
-        {moto.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-            <p className="font-display text-3xl font-bold uppercase text-cemento/20">Garage vuoto</p>
-            <p className="mt-2 font-mono text-sm text-cemento/20">Aggiungi la tua prima moto</p>
+    <main className="min-h-[100dvh] overflow-hidden pb-24 sm:pb-10">
+      <section className="relative border-b border-asfalto/10 bg-[radial-gradient(circle_at_top_left,rgba(242,183,5,0.22),transparent_28%),linear-gradient(135deg,#0a0c0f,#171a20_55%,#050506)] text-cemento">
+        <div className="absolute inset-x-0 bottom-0 h-12 bg-[linear-gradient(90deg,transparent_0_10%,rgba(255,255,255,0.18)_10%_19%,transparent_19%_32%)] bg-[length:140px_8px] bg-repeat-x opacity-70" />
+        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8 sm:flex-row sm:items-end sm:justify-between sm:py-10">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.28em] text-segnale">{profilo?.username ?? 'Rider'} / MotoGarage</p>
+            <h1 className="mt-2 font-display text-5xl font-black uppercase leading-none tracking-tight sm:text-7xl">
+              Il mio<br className="sm:hidden" /> Garage
+            </h1>
+            <p className="mt-3 max-w-xl text-sm text-cemento/70 sm:text-base">
+              La casa digitale della tua moto: crea il gemello 3D, personalizzalo e mostrala alla community.
+            </p>
           </div>
-        )}
-        {/* Neon MotoGarage */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none">
-          <span className="font-display text-base font-bold uppercase tracking-widest"
-            style={{ color: '#ff2222', textShadow: '0 0 10px #ff2222, 0 0 20px #ff0000, 0 0 40px #ff0000' }}>
-            MOTOGARAGE
-          </span>
+          <button
+            type="button"
+            onClick={() => setVista('crea')}
+            className="tap inline-flex items-center justify-center rounded-app bg-segnale px-5 py-4 font-mono text-sm font-bold uppercase tracking-wide text-asfalto shadow-segnale hover:bg-white"
+          >
+            + Gemello digitale
+          </button>
         </div>
-      </div>
+      </section>
 
-      {/* Lista moto */}
-      <div className="mx-auto w-full max-w-6xl px-4 py-6">
-        {moto.length === 0 ? (
-          <div className="rounded-app border border-dashed border-asfalto/20 p-10 text-center">
-            <p className="font-display text-2xl uppercase tracking-tight text-asfalto/30">Nessuna moto ancora</p>
-            <button type="button" onClick={() => setVista('crea')}
-              className="tap mt-4 inline-block rounded-app bg-segnale px-6 py-3 font-mono text-sm font-medium uppercase text-asfalto">
-              Crea il primo gemello
-            </button>
+      <section className="mx-auto grid max-w-6xl gap-5 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#07080c] shadow-app-lg">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_8%,rgba(242,183,5,0.20),transparent_20%),radial-gradient(circle_at_78%_45%,rgba(220,38,38,0.20),transparent_22%)]" />
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/10 to-transparent" />
+          <div className="absolute left-1/2 top-6 z-10 -translate-x-1/2 rounded-full border border-red-500/40 bg-red-500/10 px-5 py-2 text-center font-display text-sm font-black uppercase tracking-[0.35em] text-red-400 shadow-[0_0_32px_rgba(239,68,68,0.45)]">
+            MotoGarage
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {moto.map(m => (
-              <div key={m.id}
-                onClick={() => setMotoSelezionata(motoSelezionata === m.id ? null : m.id)}
-                className={`tap card-app cursor-pointer p-3 transition-all ${motoSelezionata === m.id ? 'border-segnale ring-1 ring-segnale' : ''}`}>
-                {/* Preview moto */}
-                <div className="rounded-app bg-asfalto p-2 mb-2" style={{ height: 80 }}>
-                  {m.glb_url ? (
-                    <div className="flex h-full items-center justify-center text-4xl">🏍️</div>
-                  ) : (
-                    <MotoSVG tipo="naked" colorePrimario={m.colore_primario} coloreSecondario={m.colore_secondario} className="h-full w-full"/>
-                  )}
+
+          <div className="relative min-h-[460px] px-5 pb-8 pt-24 sm:min-h-[560px] sm:px-10">
+            <div className="absolute inset-x-0 bottom-0 h-[58%] origin-bottom bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.01)),repeating-linear-gradient(90deg,rgba(255,255,255,0.08)_0_1px,transparent_1px_72px),repeating-linear-gradient(0deg,rgba(255,255,255,0.08)_0_1px,transparent_1px_56px)] [transform:perspective(650px)_rotateX(58deg)]" />
+            <div className="absolute inset-x-10 bottom-14 h-1 rounded-full bg-white/15 blur-sm" />
+            <div className="absolute left-7 top-20 hidden h-48 w-20 rounded-full bg-red-500/10 blur-3xl sm:block" />
+            <div className="absolute right-8 top-28 hidden h-56 w-24 rounded-full bg-segnale/10 blur-3xl sm:block" />
+
+            {moto.length === 0 ? (
+              <div className="relative z-10 flex min-h-[360px] flex-col items-center justify-center text-center">
+                <div className="mb-5 grid h-24 w-24 place-items-center rounded-[28px] border border-white/10 bg-white/5 text-5xl shadow-app">
+                  🏍️
                 </div>
-                <p className="font-mono text-xs font-medium uppercase truncate">{m.marca} {m.modello}</p>
-                {m.anno && <p className="font-mono text-[10px] text-asfalto/50">{m.anno}</p>}
-                {/* Badge stato */}
-                {m.stato === 'elaborazione' && (
-                  <span className="mt-1 inline-block rounded bg-segnale/15 px-1.5 py-0.5 font-mono text-[10px] uppercase text-segnale">⏳ In creazione</span>
-                )}
-                {m.stato === 'pronto' && m.glb_url && (
-                  <span className="mt-1 inline-block rounded bg-bosco/15 px-1.5 py-0.5 font-mono text-[10px] uppercase text-bosco">✓ 3D pronto</span>
-                )}
-                {m.stato === 'errore' && (
-                  <span className="mt-1 inline-block rounded bg-red-500/15 px-1.5 py-0.5 font-mono text-[10px] uppercase text-red-400">⚠ Errore</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Dettaglio moto selezionata */}
-        {motoSelObj && (
-          <div className="mt-4 card-app p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="font-display text-2xl font-bold uppercase">{motoSelObj.marca} {motoSelObj.modello}</h3>
-                {motoSelObj.anno && <p className="font-mono text-sm text-asfalto/50">{motoSelObj.anno}</p>}
-              </div>
-              {motoSelObj.stato === 'elaborazione' && motoInElaborazione?.id === motoSelObj.id && (
-                <button type="button" onClick={() => setVista('genera')}
-                  className="tap rounded-app bg-segnale/20 px-3 py-2 font-mono text-xs uppercase text-segnale hover:bg-segnale hover:text-asfalto">
-                  Vedi progresso
+                <h2 className="font-display text-4xl font-black uppercase tracking-tight text-white">Garage vuoto</h2>
+                <p className="mt-3 max-w-sm text-sm text-cemento/60">Aggiungi la tua prima moto e trasformala nel tuo gemello digitale.</p>
+                <button
+                  type="button"
+                  onClick={() => setVista('crea')}
+                  className="tap mt-6 rounded-app bg-segnale px-6 py-3 font-mono text-sm font-bold uppercase text-asfalto shadow-segnale"
+                >
+                  Crea il primo gemello
                 </button>
-              )}
-              {motoSelObj.glb_url && (
-                <a href={motoSelObj.glb_url} download className="tap rounded-app border border-guardrail/30 px-3 py-2 font-mono text-xs uppercase text-asfalto/60 hover:border-segnale hover:text-segnale">
-                  Scarica GLB
-                </a>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="relative z-10 grid min-h-[370px] place-items-center">
+                <div className="flex w-full items-end justify-center gap-4 sm:gap-8">
+                  {moto.slice(0, 3).map((m, index) => {
+                    const selected = motoSelObj?.id === m.id;
+                    const size = selected ? 'w-[72%] max-w-[460px]' : 'w-[34%] max-w-[230px] opacity-60 blur-[0.2px]';
+                    const orderClass = index === 0 ? 'order-2' : index === 1 ? 'order-1' : 'order-3';
+                    const translate = selected ? 'translate-y-0 scale-100' : 'translate-y-8 scale-90';
+
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setMotoSelezionata(m.id)}
+                        className={`tap ${orderClass} ${size} ${translate} transition-all duration-500 ease-app`}
+                        aria-label={`Seleziona ${nomeMoto(m)}`}
+                      >
+                        <div className={`relative rounded-[26px] border p-4 shadow-[0_28px_80px_rgba(0,0,0,0.45)] ${selected ? 'border-segnale/70 bg-white/10' : 'border-white/10 bg-white/5'}`}>
+                          <div className="absolute inset-x-6 -top-5 h-10 rounded-full bg-segnale/20 blur-2xl" />
+                          {m.glb_url ? (
+                            <div className="grid aspect-[16/9] place-items-center rounded-[20px] bg-black/35 text-7xl">🏍️</div>
+                          ) : (
+                            <div className="aspect-[16/9] rounded-[20px] bg-black/35 p-4">
+                              <MotoSVG tipo="adventure" colorePrimario={colorePrimario(m)} coloreSecondario={coloreSecondario(m)} className="h-full w-full" />
+                            </div>
+                          )}
+                          <div className="mt-3 text-left">
+                            <p className="truncate font-display text-xl font-black uppercase tracking-tight text-white">{nomeMoto(m)}</p>
+                            <p className="font-mono text-xs uppercase text-cemento/45">{m.anno ?? 'Anno non indicato'} · {statoLabel(m.stato)}</p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+
+        <aside className="space-y-4">
+          <div className="rounded-[24px] border border-asfalto/10 bg-white p-5 shadow-app dark:bg-carbone">
+            <p className="font-mono text-xs uppercase tracking-[0.22em] text-segnale">Moto selezionata</p>
+            {motoSelObj ? (
+              <>
+                <h2 className="mt-2 font-display text-3xl font-black uppercase leading-none tracking-tight">{nomeMoto(motoSelObj)}</h2>
+                <p className="mt-1 font-mono text-sm text-asfalto/50">{motoSelObj.anno ?? 'Anno non indicato'}</p>
+                <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-app bg-asfalto/5 p-3">
+                    <p className="font-display text-xl font-black">{moto.length}</p>
+                    <p className="font-mono text-[10px] uppercase text-asfalto/45">Moto</p>
+                  </div>
+                  <div className="rounded-app bg-asfalto/5 p-3">
+                    <p className="font-display text-xl font-black">{motoSelObj.glb_url ? '3D' : 'SVG'}</p>
+                    <p className="font-mono text-[10px] uppercase text-asfalto/45">Preview</p>
+                  </div>
+                  <div className="rounded-app bg-asfalto/5 p-3">
+                    <p className="font-display text-xl font-black">{motoSelObj.stato === 'pronto' ? 'OK' : '...'}</p>
+                    <p className="font-mono text-[10px] uppercase text-asfalto/45">Stato</p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-col gap-2">
+                  {motoSelObj.stato === 'elaborazione' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMotoInElaborazione({ id: motoSelObj.id, marca: motoSelObj.marca, modello: motoSelObj.modello, anno: motoSelObj.anno ?? undefined });
+                        setVista('genera');
+                      }}
+                      className="tap rounded-app bg-segnale px-4 py-3 font-mono text-xs font-bold uppercase text-asfalto"
+                    >
+                      Vedi progresso
+                    </button>
+                  )}
+                  {motoSelObj.glb_url && (
+                    <a href={motoSelObj.glb_url} download className="tap rounded-app border border-asfalto/10 px-4 py-3 text-center font-mono text-xs font-bold uppercase text-asfalto/70 hover:border-segnale hover:text-asfalto">
+                      Scarica GLB
+                    </a>
+                  )}
+                  <button type="button" className="tap rounded-app border border-asfalto/10 px-4 py-3 font-mono text-xs font-bold uppercase text-asfalto/45" disabled>
+                    Modifica colori · in arrivo
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="mt-3 text-sm text-asfalto/55">Non hai ancora moto nel garage.</p>
+            )}
+          </div>
+
+          <div className="rounded-[24px] border border-asfalto/10 bg-asfalto p-5 text-cemento shadow-app dark:bg-black">
+            <p className="font-display text-2xl font-black uppercase tracking-tight">Garage videogame</p>
+            <p className="mt-2 text-sm text-cemento/60">Questa prima versione usa una scena leggera e pulita. Il vero viewer GLB/Three.js va inserito solo quando il modello AI è pronto, non come canvas nero vuoto.</p>
+          </div>
+        </aside>
+      </section>
+    </main>
   );
-}
-
-// ── Three.js Garage 3D ──────────────────────────────────────────────────────
-function avviaGarage3D(canvas: HTMLCanvasElement, moto: Moto[], selezionata: string | null, onSelezione: (id: string) => void) {
-  let animId: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const T = (window as any).THREE;
-  if (!T) {
-    // Carica Three.js dinamicamente
-    const s = document.createElement('script');
-    s.src = 'https://unpkg.com/three@0.155.0/build/three.min.js';
-    s.onload = () => { /* re-trigger via effect */ };
-    document.head.appendChild(s);
-    return () => {};
-  }
-
-  const W = canvas.clientWidth, H = canvas.clientHeight || 360;
-  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
-
-  const renderer = new T.WebGLRenderer({ canvas, antialias: true });
-  renderer.setSize(W, H, false);
-  renderer.setPixelRatio(devicePixelRatio);
-  renderer.shadowMap.enabled = true;
-  renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
-
-  const scene = new T.Scene();
-  scene.background = new T.Color(0x07070e);
-  scene.fog = new T.FogExp2(0x07070e, 0.08);
-
-  const camera = new T.PerspectiveCamera(45, W / H, 0.1, 60);
-  camera.position.set(0, 2.8, 5.5);
-  camera.lookAt(0, 0.5, 0);
-
-  // Luci garage
-  scene.add(new T.AmbientLight(0x223355, 0.5));
-  const key = new T.SpotLight(0xfff0dd, 3.5, 14, 0.4, 0.5);
-  key.position.set(0, 6, 2); key.castShadow = true;
-  scene.add(key);
-  const rimL = new T.PointLight(0xff2200, 1.5, 10);
-  rimL.position.set(-4, 2, -2); scene.add(rimL);
-  const rimR = new T.PointLight(0x0033ff, 1.0, 10);
-  rimR.position.set(4, 1.5, -1); scene.add(rimR);
-
-  // Pavimento industriale lucido
-  const floor = new T.Mesh(new T.PlaneGeometry(18, 14),
-    new T.MeshStandardMaterial({ color: 0x080810, roughness: 0.06, metalness: 0.85 }));
-  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
-  scene.add(floor);
-
-  // Griglia pavimento
-  scene.add(new T.GridHelper(18, 28, 0x1a1a33, 0x0e0e1a));
-
-  // Pareti laterali (dark)
-  const wallMat = new T.MeshStandardMaterial({ color: 0x0a0a12, roughness: 0.9 });
-  [-6, 6].forEach(x => {
-    const w = new T.Mesh(new T.PlaneGeometry(14, 5), wallMat);
-    w.position.set(x, 2.5, -4); w.rotation.y = x > 0 ? -Math.PI / 2 : Math.PI / 2;
-    scene.add(w);
-  });
-  // Parete posteriore
-  const wb = new T.Mesh(new T.PlaneGeometry(18, 5), wallMat);
-  wb.position.set(0, 2.5, -7); scene.add(wb);
-
-  // Striscia LED neon rossa (sopra, posteriore)
-  const ledMat = new T.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 2 });
-  const led = new T.Mesh(new T.BoxGeometry(12, 0.08, 0.08), ledMat);
-  led.position.set(0, 4.8, -6.8); scene.add(led);
-
-  // Moto placeholder (SVG → canvas texture o geometria semplice)
-  // Per ogni moto, crea un gruppo a posizioni calcolate
-  const posizioni = moto.length === 1 ? [[0]] :
-    moto.length === 2 ? [[-1.5], [1.5]] :
-    moto.length >= 3 ? moto.map((_, i) => [(i - (moto.length - 1) / 2) * 2.0]) : [];
-
-  moto.forEach((m, i) => {
-    const g = new T.Group();
-    const bodyMat = new T.MeshPhysicalMaterial({
-      color: parseInt((m.colore_primario ?? '#CC0000').replace('#', ''), 16),
-      clearcoat: 1.0, clearcoatRoughness: 0.05, metalness: 0, roughness: 0.08,
-    });
-    const darkMat = new T.MeshStandardMaterial({ color: 0x111111, metalness: 0.5, roughness: 0.4 });
-    const chromeMat = new T.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 1.0, roughness: 0.05 });
-
-    // Sagoma moto semplice
-    const body = new T.Mesh(new T.BoxGeometry(0.22, 0.16, 0.5), bodyMat);
-    body.position.set(0, 0.58, 0); body.castShadow = true; g.add(body);
-
-    // Ruote
-    [0.55, -0.55].forEach(z => {
-      const wg = new T.Group();
-      wg.add(new T.Mesh(new T.TorusGeometry(0.28, 0.08, 8, 24), new T.MeshStandardMaterial({ color: 0x111, roughness: 0.9 })));
-      wg.add(new T.Mesh(new T.CylinderGeometry(0.22, 0.22, 0.055, 20), chromeMat));
-      wg.rotation.y = Math.PI / 2; wg.position.set(0, 0.28, z); g.add(wg);
-    });
-
-    const px = posizioni[i]?.[0] ?? 0;
-    g.position.set(px, 0, 0);
-
-    // Highlight se selezionata
-    if (m.id === selezionata) {
-      const halo = new T.SpotLight(0xffaa00, 4, 6, 0.3, 0.5);
-      halo.position.set(px, 4, 1);
-      halo.target.position.set(px, 0, 0);
-      scene.add(halo); scene.add(halo.target);
-    }
-
-    scene.add(g);
-  });
-
-  // Auto-rotate camera
-  let angle = 0;
-  let drag = false, prevX = 0;
-  canvas.addEventListener('mousedown', e => { drag = true; prevX = e.clientX; });
-  canvas.addEventListener('mouseup', () => { drag = false; });
-  canvas.addEventListener('mousemove', e => { if (drag) { angle += (e.clientX - prevX) * 0.005; prevX = e.clientX; } });
-
-  function animate() {
-    animId = requestAnimationFrame(animate);
-    if (!drag) angle += 0.003;
-    camera.position.x = Math.sin(angle) * 5.5;
-    camera.position.z = Math.cos(angle) * 5.5;
-    camera.lookAt(0, 0.5, 0);
-    renderer.render(scene, camera);
-  }
-  animate();
-
-  return () => {
-    cancelAnimationFrame(animId);
-    renderer.dispose();
-  };
 }
