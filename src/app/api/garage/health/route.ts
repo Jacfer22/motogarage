@@ -12,6 +12,6 @@ export async function GET() {
     ...stato,
     messaggio: ok
       ? 'Server configurato per la generazione gemelli.'
-      : 'Mancano variabili su Vercel o in .env.local. Servono: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, HUGGINGFACE_TOKEN.',
+      : `Mancano variabili server (${stato.ambiente}). Su Vercel aggiungi SUPABASE_SERVICE_ROLE_KEY (service_role da Supabase, non anon) e HUGGINGFACE_TOKEN, poi Redeploy. In locale riavvia npm run dev dopo aver modificato .env.local.`,
   });
 }
