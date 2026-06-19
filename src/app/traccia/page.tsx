@@ -11,9 +11,12 @@ import {
   salvaGiroCloud,
   salvaGiroLocale,
   aggiornaGiroCloud,
+  eliminaGiroUtente,
   type GiroUtente,
 } from '@/lib/giri-store';
 import EditorCardGiro from '@/components/EditorCardGiro';
+import PannelloNavigazione from '@/components/PannelloNavigazione';
+import type { DestinazioneNav, RottaCalcolata } from '@/lib/navigazione-osrm';
 
 const MappaTraccia = dynamic(() => import('@/components/MappaTraccia'), { ssr: false });
 
@@ -34,6 +37,8 @@ export default function PaginaTraccia() {
   const [giroConcluso, setGiroConcluso] = useState<GiroUtente | null>(null);
   const [salvataggioCloud, setSalvataggioCloud] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
+  const [percorsoNav, setPercorsoNav] = useState<RottaCalcolata['percorso']>([]);
+  const [destinazioneNav, setDestinazioneNav] = useState<DestinazioneNav | null>(null);
 
   const watchIdRef = useRef<number | null>(null);
   const inizioRef = useRef<number | null>(null);
@@ -188,10 +193,7 @@ export default function PaginaTraccia() {
   }
 
   async function terminaGiro() {
-    if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
-    if (timerRef.current) clearInterval(timerRef.current);
-    rilasciaWakeLock();
-    rilasciaAudioSilenzioso();
+    fermaGps();
     aggiornaDurata();
     setStato('concluso');
 
@@ -272,7 +274,38 @@ export default function PaginaTraccia() {
     }
   }
 
+  function fermaGps() {
+    if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+    watchIdRef.current = null;
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = null;
+    rilasciaWakeLock();
+    rilasciaAudioSilenzioso();
+  }
+
+  function annullaPercorso() {
+    if (!window.confirm('Annullare il giro in corso? Non verrà salvato.')) return;
+    fermaGps();
+    nuovoGiro();
+  }
+
+  async function eliminaGiroConcluso() {
+    if (!giroConcluso) return;
+    if (!window.confirm('Eliminare questo giro salvato? Sparirà anche da I miei giri.')) return;
+    const supabase = getSupabaseBrowser();
+    setSalvataggioCloud(true);
+    try {
+      await eliminaGiroUtente(supabase, giroConcluso);
+      nuovoGiro();
+    } catch {
+      setErrore('Non riesco a eliminare il giro. Riprova da I miei giri.');
+    } finally {
+      setSalvataggioCloud(false);
+    }
+  }
+
   function nuovoGiro() {
+    fermaGps();
     setStato('pronto');
     setPunti([]);
     setDistanzaM(0);
@@ -280,12 +313,13 @@ export default function PaginaTraccia() {
     setVelCorrenteKmh(0);
     setGiroConcluso(null);
     setLuogoCard('');
-    rilasciaWakeLock();
-    rilasciaAudioSilenzioso();
+    setPercorsoNav([]);
+    setDestinazioneNav(null);
+    inizioRef.current = null;
+    pausaAccumulataRef.current = 0;
+    pausaInizioRef.current = null;
     puntiRef.current = [];
   }
-
-  // --- Render: stati account ---
 
   if (loading) {
     return (
@@ -334,6 +368,18 @@ export default function PaginaTraccia() {
         <p className="mt-4 border-2 border-red-700 bg-red-50 p-3 text-sm text-red-900">{errore}</p>
       )}
 
+      {stato !== 'concluso' && (
+        <div className="mt-6">
+          <PannelloNavigazione
+            posizione={punti.length > 0 ? punti[punti.length - 1] : null}
+            attiva={stato === 'in_corso' || stato === 'in_pausa'}
+            onDestinazioneChange={setDestinazioneNav}
+            onRottaChange={(r) => setPercorsoNav(r?.percorso ?? [])}
+            onPassoChange={() => {}}
+          />
+        </div>
+      )}
+
       {/* Stats live */}
       {stato !== 'pronto' && (
         <div className="mt-6 grid grid-cols-3 gap-3">
@@ -364,10 +410,22 @@ export default function PaginaTraccia() {
         </div>
       )}
 
-      {/* Mappa live */}
-      {punti.length > 0 && (
+      {/* Mappa: percorso nav + tracciato GPS */}
+      {(punti.length > 0 || percorsoNav.length > 0) && (
         <div className="mt-6">
-          <MappaTraccia punti={punti} inCorso={stato === 'in_corso'} />
+          <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-asfalto/45">
+            {percorsoNav.length > 0 && punti.length > 0
+              ? 'Blu = percorso stradale · Giallo = il tuo giro GPS'
+              : percorsoNav.length > 0
+                ? 'Percorso stradale verso destinazione'
+                : 'Tracciato GPS in tempo reale'}
+          </p>
+          <MappaTraccia
+            punti={punti}
+            inCorso={stato === 'in_corso'}
+            percorsoNav={percorsoNav}
+            destinazione={destinazioneNav}
+          />
         </div>
       )}
 
@@ -398,6 +456,13 @@ export default function PaginaTraccia() {
             >
               Termina giro
             </button>
+            <button
+              type="button"
+              onClick={annullaPercorso}
+              className="border-2 border-red-600/40 px-6 py-3 font-mono text-xs font-medium uppercase text-red-700 hover:bg-red-50"
+            >
+              Annulla
+            </button>
           </>
         )}
         {stato === 'in_pausa' && (
@@ -415,6 +480,13 @@ export default function PaginaTraccia() {
               className="bg-asfalto px-6 py-3 font-mono font-medium uppercase text-cemento hover:bg-cartello"
             >
               Termina giro
+            </button>
+            <button
+              type="button"
+              onClick={annullaPercorso}
+              className="border-2 border-red-600/40 px-6 py-3 font-mono text-xs font-medium uppercase text-red-700 hover:bg-red-50"
+            >
+              Annulla
             </button>
           </>
         )}
@@ -486,8 +558,16 @@ export default function PaginaTraccia() {
               href="/giri"
               className="rounded-app border border-asfalto/15 px-4 py-2.5 font-mono text-xs font-bold uppercase hover:border-brand hover:text-brand"
             >
-              I miei giri — card più tardi
+              I miei giri
             </Link>
+            <button
+              type="button"
+              onClick={eliminaGiroConcluso}
+              disabled={salvataggioCloud}
+              className="rounded-app border border-red-500/35 bg-red-500/10 px-4 py-2.5 font-mono text-xs font-bold uppercase text-red-600 hover:bg-red-500/15 disabled:opacity-40"
+            >
+              Elimina giro
+            </button>
             <button
               type="button"
               onClick={nuovoGiro}

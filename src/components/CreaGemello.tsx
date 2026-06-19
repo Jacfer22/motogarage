@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAuth } from './AuthProvider';
-import { risolviCategoriaMoto } from '@/lib/foto-categoria-moto';
 import Logo from './Logo';
 
 interface Props {
@@ -13,7 +12,7 @@ interface Props {
 const MARCHE = [
   'Aprilia', 'Benelli', 'BMW', 'Ducati', 'Harley-Davidson', 'Honda',
   'Husqvarna', 'Indian', 'Kawasaki', 'KTM', 'Moto Guzzi', 'MV Agusta',
-  'Royal Enfield', 'Suzuki', 'Triumph', 'Yamaha', 'Altro',
+  'Piaggio', 'Royal Enfield', 'Suzuki', 'Triumph', 'Yamaha', 'Altro',
 ];
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 type Step = 'dati' | 'foto' | 'conferma';
@@ -75,7 +74,6 @@ export default function CreaGemello({ onInviato }: Props) {
       if (!session?.access_token) throw new Error('Sessione scaduta. Accedi di nuovo.');
 
       const annoNumero = anno ? Number.parseInt(anno, 10) : null;
-      const categoria = risolviCategoriaMoto(null, `${marca} ${modello}`);
       const { data: moto, error: erroreMoto } = await supabase
         .from('moto')
         .insert({
@@ -83,7 +81,6 @@ export default function CreaGemello({ onInviato }: Props) {
           marca: marca.trim(),
           modello: modello.trim(),
           anno: annoNumero,
-          categoria,
           stato: 'in_attesa',
           progress: 0,
           colore_primario: '#d91414',
@@ -93,7 +90,14 @@ export default function CreaGemello({ onInviato }: Props) {
         })
         .select('id')
         .single();
-      if (erroreMoto || !moto) throw new Error(erroreMoto?.message ?? 'Non riesco a creare la richiesta.');
+      if (erroreMoto || !moto) {
+        const msg = erroreMoto?.message ?? 'Non riesco a creare la richiesta.';
+        throw new Error(
+          msg.includes('categoria') || msg.includes('scheda_modifiche')
+            ? 'Aggiorna il database: esegui supabase/migration_moto_scheda.sql nel SQL Editor di Supabase, poi riprova.'
+            : msg,
+        );
+      }
 
       const estensione = (file: File) => file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
       const pathPrincipale = `${user.id}/${moto.id}/principale.${estensione(fotoPrincipale)}`;

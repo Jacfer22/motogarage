@@ -9,7 +9,7 @@ import { formattaDurata, formattaKm } from '@/lib/geo';
 import {
   aggiornaGiroCloud,
   caricaGiriUtente,
-  eliminaGiroCloud,
+  eliminaGiroUtente,
   type GiroUtente,
 } from '@/lib/giri-store';
 import EditorCardGiro from '@/components/EditorCardGiro';
@@ -78,17 +78,16 @@ export default function PaginaMieiGiri() {
   }
 
   async function eliminaGiro(giro: GiroUtente) {
-    if (!window.confirm(`Eliminare il giro del ${formattaDataBreve(giro.data)}?`)) return;
-    if (!giro.cloudId) {
-      setGiri((elenco) => elenco?.filter((g) => g.id !== giro.id) ?? null);
-      if (selezionatoId === giro.id) setSelezionatoId(null);
-      return;
-    }
+    const msg = giro.km < 50
+      ? 'Eliminare questo giro? Sembra avviato per errore — nessun problema.'
+      : `Eliminare il giro del ${formattaDataBreve(giro.data)} (${formattaKm(giro.km)} km)? Non si può annullare.`;
+    if (!window.confirm(msg)) return;
+
     const supabase = getSupabaseBrowser();
-    if (!supabase) return;
     setSalvando(true);
+    setErrore(null);
     try {
-      await eliminaGiroCloud(supabase, giro.cloudId);
+      await eliminaGiroUtente(supabase, giro);
       setGiri((elenco) => {
         const nuovo = elenco?.filter((g) => g.id !== giro.id) ?? [];
         setSelezionatoId((attuale) => (attuale === giro.id ? nuovo[0]?.id ?? null : attuale));
@@ -186,6 +185,14 @@ export default function PaginaMieiGiri() {
                 onNomeChange={cambiaNome}
                 onPubblicoChange={selezionato.cloudId ? cambiaPubblico : undefined}
               />
+              <button
+                type="button"
+                disabled={salvando}
+                onClick={() => eliminaGiro(selezionato)}
+                className="w-full rounded-app border border-red-500/35 bg-red-500/10 px-4 py-3 font-mono text-xs font-bold uppercase text-red-600 hover:bg-red-500/15 disabled:opacity-40"
+              >
+                Elimina questo giro
+              </button>
             </div>
           )}
         </div>

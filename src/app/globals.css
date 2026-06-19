@@ -297,6 +297,16 @@ body {
   }
 }
 
+.marker-destinazione {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: #dc2626;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transform: rotate(45deg);
+}
+
 /* ============ APP-GRADE UI ============ */
 
 html {

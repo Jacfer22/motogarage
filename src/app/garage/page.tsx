@@ -121,13 +121,19 @@ export default function PaginaGarage() {
 
   async function aggiornaMoto(valori: Partial<GarageMoto>) {
     const supabase = getSupabaseBrowser();
-    if (!supabase || !selezionata) return;
+    if (!supabase || !selezionata) return false;
     setSalvando(true);
     const { error } = await supabase.from('moto').update(valori).eq('id', selezionata.id);
-    if (!error) {
-      setMoto((elenco) => elenco.map((item) => item.id === selezionata.id ? { ...item, ...valori } : item));
+    if (error) {
+      if (error.message.includes('categoria') || error.message.includes('scheda_modifiche')) {
+        setErrore('Esegui migration_moto_scheda.sql su Supabase (SQL Editor), poi riprova.');
+      }
+      setSalvando(false);
+      return false;
     }
+    setMoto((elenco) => elenco.map((item) => item.id === selezionata.id ? { ...item, ...valori } : item));
     setSalvando(false);
+    return true;
   }
 
   async function eliminaMoto(motoId?: string) {

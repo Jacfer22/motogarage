@@ -70,8 +70,9 @@ const PAROLE_CATEGORIA: { cat: CategoriaMoto; parole: string[] }[] = [
     'rm-z', 'te300', 'fe350', 'exc ', 'sx ', 'beta rr', 'gasgas', 'cross',
   ]},
   { cat: 'scooter', parole: [
-    'scooter', 'vespa', 'piaggio', 'liberty', 'beverly', 'xmax', 'tmax', 'forza',
-    'sh350', 'pcx', 'nmax', 'medley', 'sym ', 'maxiscooter',
+    'scooter', 'vespa', 'piaggio', 'liberty', 'beverly', 'medley', 'mp3', 'x9', 'x10',
+    'xmax', 'tmax', 'forza', 'sh350', 'pcx', 'nmax', 'sym', 'maxiscooter', 'aprilia sr',
+    'honda sh', 'kymco', 'askoll',
   ]},
   { cat: 'vintage', parole: [
     'vintage', 'classica', 'classico', 'anni 70', 'anni 80', 'anni 90', 'cb750',

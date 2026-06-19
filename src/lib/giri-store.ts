@@ -213,6 +213,29 @@ export async function eliminaGiroCloud(supabase: SupabaseClient, cloudId: string
   if (error) throw new Error(error.message);
 }
 
+/** Rimuove un giro da localStorage (id locale o iso pre-sync). */
+export function eliminaGiroLocale(id: string): void {
+  if (typeof window === 'undefined') return;
+  const esistenti = leggiLocale().filter((item) => item.id !== id);
+  try {
+    if (esistenti.length === 0) window.localStorage.removeItem(STORAGE_KEY);
+    else window.localStorage.setItem(STORAGE_KEY, JSON.stringify(esistenti));
+  } catch {
+    // ignora
+  }
+}
+
+/** Elimina cloud + eventuale copia locale. */
+export async function eliminaGiroUtente(
+  supabase: SupabaseClient | null,
+  giro: Pick<GiroUtente, 'id' | 'cloudId'>,
+): Promise<void> {
+  eliminaGiroLocale(giro.id);
+  if (giro.cloudId && supabase) {
+    await eliminaGiroCloud(supabase, giro.cloudId);
+  }
+}
+
 export function salvaGiroLocale(giro: GiroLocale) {
   const esistenti = leggiLocale();
   const aggiornato = [giro, ...esistenti.filter((item) => item.id !== giro.id)].slice(0, 20);
