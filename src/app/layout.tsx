@@ -1,5 +1,5 @@
-import type { Metadata } from 'next';
-import { Barlow_Condensed, Archivo, IBM_Plex_Mono, Caveat } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
+import { Archivo, Barlow_Condensed, Caveat, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -7,39 +7,91 @@ import BottomNav from '@/components/BottomNav';
 import { AuthProvider } from '@/components/AuthProvider';
 import { TemaProvider } from '@/components/TemaProvider';
 
-const display = Barlow_Condensed({ subsets: ['latin'], weight: ['600','700'], variable: '--font-display' });
-const body = Archivo({ subsets: ['latin'], weight: ['400','500','600'], variable: '--font-body' });
-const mono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400','500'], variable: '--font-mono' });
-const hand = Caveat({ subsets: ['latin'], weight: ['500','600'], variable: '--font-hand' });
+const display = Barlow_Condensed({ subsets: ['latin'], weight: ['600', '700'], variable: '--font-display' });
+const body = Archivo({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-body' });
+const mono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono' });
+const hand = Caveat({ subsets: ['latin'], weight: ['500', '600'], variable: '--font-hand' });
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://motogarage.vercel.app';
 
 export const metadata: Metadata = {
-  title: 'MotoGarage — La casa digitale della tua moto',
-  description: 'Crea il gemello digitale della tua moto, personalizza il tuo garage, scopri itinerari e connettiti con la community di motociclisti italiani.',
-  keywords: 'moto, garage digitale, gemello digitale, itinerari moto, motociclisti, personalizzazione moto, 3D',
+  metadataBase: new URL(siteUrl),
+  applicationName: 'MotoGarage',
+  title: {
+    default: 'MotoGarage — La casa digitale della tua moto',
+    template: '%s | MotoGarage',
+  },
+  description: 'Crea il gemello digitale 3D della tua moto, costruisci il tuo garage, traccia i giri e condividi itinerari con la community.',
+  keywords: ['moto', 'garage digitale', 'gemello digitale 3D', 'itinerari moto', 'GPS moto', 'community motociclisti'],
+  authors: [{ name: 'MotoGarage' }],
+  creator: 'MotoGarage',
+  publisher: 'MotoGarage',
+  category: 'motorcycles',
+  alternates: { canonical: '/' },
+  manifest: '/manifest.webmanifest',
   openGraph: {
-    title: 'MotoGarage',
-    description: 'La casa digitale della tua moto',
+    title: 'MotoGarage — La casa digitale della tua moto',
+    description: 'Il garage digitale per creare il gemello 3D della tua moto, tracciare giri e condividere esperienze.',
     siteName: 'MotoGarage',
+    url: '/',
     locale: 'it_IT',
     type: 'website',
+    images: [{
+      url: '/og-motogarage.png',
+      width: 1728,
+      height: 912,
+      alt: 'MotoGarage, la casa digitale della tua moto',
+    }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MotoGarage — La casa digitale della tua moto',
+    description: 'Garage digitale, gemello 3D, itinerari e community per motociclisti.',
+    images: ['/og-motogarage.png'],
   },
   icons: {
-    icon: '/favicon-32.png',
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logo-motogarage.svg', type: 'image/svg+xml' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
+  appleWebApp: {
+    capable: true,
+    title: 'MotoGarage',
+    statusBarStyle: 'black-translucent',
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f0f1f2' },
+    { media: '(prefers-color-scheme: dark)', color: '#08090b' },
+  ],
+  colorScheme: 'light dark',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="it" className={`${display.variable} ${body.variable} ${mono.variable} ${hand.variable}`}>
       <head>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossOrigin=""/>
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossOrigin=""
+        />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <script dangerouslySetInnerHTML={{
-          __html: `(function(){try{var t=localStorage.getItem('motogarage-tema');var s=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='scuro'||(!t&&s)){document.documentElement.classList.add('dark');}}catch(e){}})();`
-        }}/>
+          __html: `(function(){try{var t=localStorage.getItem('motogarage-tema');var s=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='scuro'||(!t&&s)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+        }} />
       </head>
-      <body className="font-body antialiased min-h-screen flex flex-col con-bottomnav">
+      <body className="con-bottomnav flex min-h-screen flex-col font-body antialiased">
         <TemaProvider>
           <AuthProvider>
             <Header />

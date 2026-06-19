@@ -1,4 +1,4 @@
--- GiroSecco — seed dei 10 itinerari di lancio + avvisi di esempio
+-- MotoGarage — seed dei 10 itinerari di lancio + avvisi di esempio
 -- Esegui DOPO schema.sql
 
 with ins as (

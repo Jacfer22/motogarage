@@ -18,7 +18,6 @@ interface AvvisoHub {
 
 interface AzioneHub {
   href: string;
-  ancora?: boolean;
   icona: string;
   titolo: string;
   sotto: string;
@@ -28,67 +27,16 @@ interface AzioneHub {
 }
 
 const AZIONI: AzioneHub[] = [
-  {
-    href: '/itinerari',
-    ancora: false,
-    icona: 'strada',
-    titolo: 'Itinerari',
-    sotto: 'Gli itinerari, regione per regione',
-    accento: true,
-  },
-  {
-    href: '/traccia',
-    icona: 'gps',
-    titolo: 'Traccia un giro',
-    sotto: 'Registra il percorso e le statistiche',
-  },
-  {
-    href: '/garage',
-    icona: 'garage',
-    titolo: 'Il mio garage',
-    sotto: 'La tua moto, i tuoi giri, il tuo profilo',
-  },
-  {
-    href: '/community',
-    icona: 'foto',
-    titolo: 'Community',
-    sotto: 'Foto, commenti e giri dei biker',
-  },
-  {
-    href: '/foto',
-    icona: 'foto',
-    titolo: 'Foto dei Bikers',
-    sotto: 'Le foto della community, e le tue',
-  },
-  {
-    href: '/blog',
-    icona: 'blog',
-    titolo: 'Blog',
-    sotto: 'Strade e storie da chi guida',
-  },
-  {
-    href: '/account',
-    icona: 'profilo',
-    titolo: 'Il tuo profilo',
-    sotto: 'Foto, username, tipo di moto',
-  },
-  {
-    href: '/pro',
-    icona: 'pro',
-    titolo: 'Piano Pro',
-    sotto: 'GPX, varianti e pacchetti weekend',
-    soloFree: true,
-  },
-  {
-    href: '/admin',
-    icona: 'admin',
-    titolo: 'Pannello admin',
-    sotto: 'Avvisi, utenti Pro, articoli del blog',
-    soloAdmin: true,
-  },
+  { href: '/garage', icona: 'garage', titolo: 'Il mio Garage', sotto: 'Gemelli digitali e richieste Pro', accento: true },
+  { href: '/itinerari', icona: 'strada', titolo: 'Itinerari', sotto: 'Gli itinerari, regione per regione' },
+  { href: '/traccia', icona: 'gps', titolo: 'Traccia un giro', sotto: 'Registra percorso e statistiche' },
+  { href: '/community', icona: 'foto', titolo: 'Community', sotto: 'Foto, commenti e giri dei biker' },
+  { href: '/blog', icona: 'blog', titolo: 'Blog', sotto: 'Strade e storie da chi guida' },
+  { href: '/account', icona: 'profilo', titolo: 'Il tuo profilo', sotto: 'Foto, username e moto' },
+  { href: '/pro', icona: 'pro', titolo: 'MotoGarage Pro', sotto: 'Gemello digitale, GPX e contenuti premium', soloFree: true },
+  { href: '/admin', icona: 'admin', titolo: 'Pannello admin', sotto: 'Gemelli, utenti e moderazione', soloAdmin: true },
 ];
 
-// Icone SVG inline per le card dell'hub.
 function IconaHub({ nome }: { nome: string }) {
   const props = {
     width: 26,
@@ -128,9 +76,7 @@ export default function PaginaHub() {
   const [avviso, setAvviso] = useState<AvvisoHub | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
-      window.location.href = '/accedi';
-    }
+    if (!loading && !user) window.location.href = '/accedi';
   }, [loading, user]);
 
   useEffect(() => {
@@ -149,200 +95,95 @@ export default function PaginaHub() {
   }, []);
 
   if (loading || !user) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="mezzeria w-32" />
-      </div>
-    );
+    return <div className="flex min-h-[60vh] items-center justify-center"><div className="mezzeria w-32" /></div>;
   }
 
-  const isPro = !!profilo?.is_pro || !!profilo?.is_admin;
-  const isAdmin = !!profilo?.is_admin;
+  const isPro = Boolean(profilo?.is_pro || profilo?.is_admin);
+  const isAdmin = Boolean(profilo?.is_admin);
   const categoria = etichettaCategoria(profilo?.categoria_moto ?? null);
-
-  const azioni = AZIONI.filter((a) => {
-    if (a.soloAdmin && !isAdmin) return false;
-    if (a.soloFree && isPro) return false;
+  const azioni = AZIONI.filter((azione) => {
+    if (azione.soloAdmin && !isAdmin) return false;
+    if (azione.soloFree && isPro) return false;
     return true;
   });
 
   return (
     <div className="min-h-[80vh]">
-      {/* Banner benvenuto */}
       <section className="bg-asfalto text-cemento">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between">
-          {/* Avatar + info */}
           <div className="flex items-center gap-5">
             <div className="relative shrink-0">
               {profilo?.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profilo.avatar_url}
-                  alt=""
-                  className="h-20 w-20 border-2 border-segnale object-cover sm:h-24 sm:w-24"
-                />
+                <img src={profilo.avatar_url} alt="" className="h-20 w-20 border-2 border-red-600 object-cover sm:h-24 sm:w-24" />
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center border-2 border-segnale bg-asfalto sm:h-24 sm:w-24">
-                  <Image src="/icon-bike.png" alt="" width={52} height={52} className="opacity-80" />
+                <div className="flex h-20 w-20 items-center justify-center border-2 border-red-600 bg-asfalto sm:h-24 sm:w-24">
+                  <Image src="/logo-motogarage.svg" alt="" width={52} height={52} />
                 </div>
               )}
-              {isAdmin && (
-                <span className="absolute -bottom-2 -right-2 bg-cartello px-1.5 py-0.5 font-mono text-[10px] uppercase text-cemento">
-                  admin
-                </span>
-              )}
-              {!isAdmin && isPro && (
-                <span className="absolute -bottom-2 -right-2 bg-segnale px-1.5 py-0.5 font-mono text-[10px] uppercase text-asfalto">
-                  pro
+              {(isAdmin || isPro) && (
+                <span className={`absolute -bottom-2 -right-2 px-2 py-0.5 font-mono text-[10px] uppercase ${isAdmin ? 'bg-cartello text-cemento' : 'bg-red-600 text-white'}`}>
+                  {isAdmin ? 'admin' : 'pro'}
                 </span>
               )}
             </div>
             <div>
-              <p className="font-mono text-xs uppercase tracking-widest text-guardrail">
-                Bentornato
-              </p>
+              <p className="font-mono text-xs uppercase tracking-widest text-guardrail">Bentornato</p>
               <h1 className="font-display text-4xl font-bold uppercase leading-none tracking-tight sm:text-5xl">
                 {profilo?.username ?? 'Motociclista'}
               </h1>
               {(categoria || profilo?.moto) && (
-                <p className="mt-1 font-mono text-sm text-guardrail">
-                  {[categoria, profilo?.moto].filter(Boolean).join(' · ')}
-                </p>
-              )}
-              {!profilo?.username && (
-                <Link
-                  href="/account"
-                  className="mt-2 inline-block font-mono text-xs uppercase text-segnale underline"
-                >
-                  Scegli un username →
-                </Link>
+                <p className="mt-1 font-mono text-sm text-guardrail">{[categoria, profilo?.moto].filter(Boolean).join(' · ')}</p>
               )}
             </div>
           </div>
 
-          {/* Stato abbonamento */}
-          <div className="shrink-0 rounded-app border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm sm:text-right">
+          <div className="rounded-app border border-white/10 bg-white/[0.04] p-4 sm:text-right">
             <p className="font-mono text-xs uppercase tracking-wide text-guardrail">Stato account</p>
-            {isAdmin ? (
-              <p className="mt-1 font-display text-xl font-bold uppercase text-cartello">
-                Admin · tutto sbloccato
-              </p>
-            ) : isPro ? (
-              <>
-                <p className="mt-1 font-display text-xl font-bold uppercase text-segnale">
-                  Pro attivo
-                </p>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const supabase = getSupabaseBrowser();
-                    const sess = await supabase?.auth.getSession();
-                    const accessToken = sess?.data?.session?.access_token;
-                    if (!accessToken) return;
-                    const res = await fetch('/api/stripe/portale', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ accessToken }),
-                    });
-                    const json = await res.json();
-                    if (json.url) window.location.href = json.url;
-                  }}
-                  className="tap mt-2 inline-block font-mono text-xs uppercase tracking-wide text-guardrail underline hover:text-cemento"
-                >
-                  Gestisci abbonamento
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="mt-1 font-display text-xl font-bold uppercase text-cemento">
-                  Account free
-                </p>
-                <Link
-                  href="/pro"
-                  className="tap mt-2 inline-block rounded-app bg-segnale px-3 py-1.5 font-mono text-xs font-medium uppercase text-asfalto hover:bg-white"
-                >
-                  Passa a Pro →
-                </Link>
-              </>
+            <p className={`mt-1 font-display text-xl font-bold uppercase ${isAdmin ? 'text-cartello' : isPro ? 'text-red-400' : 'text-cemento'}`}>
+              {isAdmin ? 'Admin · tutto sbloccato' : isPro ? 'Pro attivo' : 'Account free'}
+            </p>
+            {!isPro && (
+              <Link href="/pro" className="mt-2 inline-block rounded-app bg-red-600 px-3 py-1.5 font-mono text-xs font-medium uppercase text-white">
+                Scopri Pro →
+              </Link>
             )}
           </div>
         </div>
-
         <div className="mezzeria mezzeria-animata" aria-hidden="true" />
       </section>
 
-      {/* Livello / badge km */}
       <section className="mx-auto -mt-8 max-w-6xl px-4">
-        <div className="rounded-app-lg bg-asfalto p-1">
-          <BadgeUtente />
-        </div>
+        <div className="rounded-app-lg bg-asfalto p-1"><BadgeUtente /></div>
       </section>
 
-      {/* Griglia azioni */}
       <section className="mx-auto max-w-6xl px-4 py-10">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-asfalto/40">
-          Cosa vuoi fare?
-        </p>
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-asfalto/40">Cosa vuoi fare?</p>
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {azioni.map((a) => {
-            const accento = a.accento === true;
-            const cls = accento
-              ? 'card-app tap group flex flex-col p-5 bg-asfalto text-cemento border-asfalto'
-              : 'card-app tap group flex flex-col p-5';
-
-            const contenuto = (
-              <>
-                <span
-                  className={`flex h-11 w-11 items-center justify-center rounded-app ${
-                    accento ? 'bg-segnale text-asfalto' : 'bg-asfalto/[0.04] text-asfalto group-hover:bg-segnale group-hover:text-asfalto'
-                  } transition-colors`}
-                >
-                  <IconaHub nome={a.icona} />
-                </span>
-                <h2 className="mt-4 font-display text-2xl font-bold uppercase leading-tight tracking-tight sm:text-3xl">
-                  {a.titolo}
-                </h2>
-                <p className={`mt-1 text-sm ${accento ? 'text-guardrail' : 'text-asfalto/60'}`}>
-                  {a.sotto}
-                </p>
-                <span
-                  className={`mt-4 inline-flex items-center gap-1 font-mono text-xs uppercase tracking-wide ${
-                    accento ? 'text-segnale' : 'text-asfalto/50 group-hover:text-asfalto'
-                  } transition-colors`}
-                >
-                  Vai
-                  <span className="transition-transform group-hover:translate-x-0.5">→</span>
-                </span>
-              </>
-            );
-
-            return a.ancora ? (
-              <a key={a.titolo} href={a.href} className={cls}>
-                {contenuto}
-              </a>
-            ) : (
-              <Link key={a.titolo} href={a.href} className={cls}>
-                {contenuto}
-              </Link>
-            );
-          })}
+          {azioni.map((azione) => (
+            <Link
+              key={azione.titolo}
+              href={azione.href}
+              className={`card-app group flex flex-col p-5 ${azione.accento ? 'border-red-600 bg-asfalto text-cemento' : ''}`}
+            >
+              <span className={`flex h-11 w-11 items-center justify-center rounded-app ${azione.accento ? 'bg-red-600 text-white' : 'bg-asfalto/[0.04] text-asfalto group-hover:bg-red-600 group-hover:text-white'}`}>
+                <IconaHub nome={azione.icona} />
+              </span>
+              <h2 className="mt-4 font-display text-2xl font-bold uppercase leading-tight tracking-tight sm:text-3xl">{azione.titolo}</h2>
+              <p className={`mt-1 text-sm ${azione.accento ? 'text-guardrail' : 'text-asfalto/60'}`}>{azione.sotto}</p>
+              <span className={`mt-4 font-mono text-xs uppercase ${azione.accento ? 'text-red-400' : 'text-asfalto/50'}`}>Vai →</span>
+            </Link>
+          ))}
         </div>
       </section>
 
-      {/* Condizioni strada: avviso attivo dal database */}
       {avviso && (
         <section className="mx-auto max-w-6xl px-4 pb-10">
           <div className="border-2 border-cartello bg-cartello/10 p-5">
-            <p className="font-mono text-xs uppercase tracking-wide text-cartello">
-              Condizioni strada
-            </p>
+            <p className="font-mono text-xs uppercase tracking-wide text-cartello">Condizioni strada</p>
             <p className="mt-1 font-medium">{avviso.titolo}</p>
             <p className="mt-1 text-sm text-asfalto/70">{avviso.descrizione}</p>
             {avviso.itinerari && (
-              <Link
-                href={`/itinerari/${avviso.itinerari.slug}`}
-                className="mt-3 inline-block font-mono text-xs uppercase underline hover:text-cartello"
-              >
+              <Link href={`/itinerari/${avviso.itinerari.slug}`} className="mt-3 inline-block font-mono text-xs uppercase underline">
                 Vedi {avviso.itinerari.titolo} →
               </Link>
             )}

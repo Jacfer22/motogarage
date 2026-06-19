@@ -22,7 +22,6 @@ interface AuthState {
   user: User | null;
   profilo: Profilo | null;
   loading: boolean;
-  // true se le variabili NEXT_PUBLIC_SUPABASE_* non sono configurate
   nonConfigurato: boolean;
   ricaricaProfilo: () => void;
 }
@@ -34,6 +33,8 @@ const AuthContext = createContext<AuthState>({
   nonConfigurato: false,
   ricaricaProfilo: () => {},
 });
+
+const TAB_HIDDEN_KEY = 'motogarage_tab_hidden';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [stato, setStato] = useState<AuthState>({
@@ -47,13 +48,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = getSupabaseBrowser();
     if (!supabase) {
-      setStato((s) => ({ ...s, user: null, profilo: null, loading: false, nonConfigurato: true }));
+      setStato((attuale) => ({ ...attuale, user: null, profilo: null, loading: false, nonConfigurato: true }));
       return;
     }
 
     async function caricaProfilo(user: User | null) {
       if (!user) {
-        setStato((s) => ({ ...s, user: null, profilo: null, loading: false, nonConfigurato: false }));
+        setStato((attuale) => ({ ...attuale, user: null, profilo: null, loading: false, nonConfigurato: false }));
         return;
       }
       const { data } = await supabase!
@@ -61,8 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('username, moto, categoria_moto, avatar_url, is_pro, is_admin, bio, moto_tipo, moto_colore_primario, moto_colore_secondario, moto_accessori')
         .eq('id', user.id)
         .single();
-      setStato((s) => ({
-        ...s,
+      setStato((attuale) => ({
+        ...attuale,
         user,
         profilo: (data as Profilo) ?? null,
         loading: false,
@@ -70,35 +71,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }));
     }
 
-    // Session timeout: se la tab è rimasta chiusa/nascosta > 10 minuti, fa il logout.
-    const TIMEOUT_MS = 10 * 60 * 1000;
+    const timeoutMs = 10 * 60 * 1000;
     const handleVisibility = () => {
       if (document.visibilityState === 'hidden') {
-        localStorage.setItem('gs_tab_hidden', Date.now().toString());
-      } else {
-        const val = localStorage.getItem('gs_tab_hidden');
-        if (val && Date.now() - Number(val) > TIMEOUT_MS) {
-          supabase!.auth.signOut();
-        }
-        localStorage.removeItem('gs_tab_hidden');
+        localStorage.setItem(TAB_HIDDEN_KEY, Date.now().toString());
+        return;
       }
+      const nascostaDa = localStorage.getItem(TAB_HIDDEN_KEY);
+      if (nascostaDa && Date.now() - Number(nascostaDa) > timeoutMs) {
+        supabase.auth.signOut();
+      }
+      localStorage.removeItem(TAB_HIDDEN_KEY);
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
     const ricaricaProfilo = () => {
-      supabase.auth.getSession().then(({ data }) => {
-        caricaProfilo(data.session?.user ?? null);
-      });
+      supabase.auth.getSession().then(({ data }) => caricaProfilo(data.session?.user ?? null));
     };
+    setStato((attuale) => ({ ...attuale, ricaricaProfilo }));
 
-    setStato((s) => ({ ...s, ricaricaProfilo }));
-
-    supabase.auth.getSession().then(({ data }) => {
-      caricaProfilo(data.session?.user ?? null);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_evento, session) => {
-      caricaProfilo(session?.user ?? null);
+    supabase.auth.getSession().then(({ data }) => caricaProfilo(data.session?.user ?? null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_evento, sessione) => {
+      caricaProfilo(sessione?.user ?? null);
     });
 
     return () => {

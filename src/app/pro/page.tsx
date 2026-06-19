@@ -5,14 +5,21 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
+const VANTAGGI = [
+  'Gemello digitale Gaussian Splat della tua moto da 1–2 foto',
+  'Garage pubblico visitabile e modello PLY scaricabile',
+  'Tracce GPX di tutti gli itinerari',
+  'Varianti panoramiche e pacchetti weekend',
+  'Nuovi itinerari e funzioni in anteprima',
+];
+
 export default function PaginaPro() {
   const { user, profilo } = useAuth();
   const [email, setEmail] = useState('');
   const [piano, setPiano] = useState<'mensile' | 'annuale'>('annuale');
   const [stato, setStato] = useState<'idle' | 'invio' | 'fatto' | 'errore'>('idle');
   const [errore, setErrore] = useState<string | null>(null);
-
-  const giaPro = !!profilo?.is_pro;
+  const giaPro = Boolean(profilo?.is_pro || profilo?.is_admin);
 
   async function iscriviti() {
     setErrore(null);
@@ -21,12 +28,10 @@ export default function PaginaPro() {
       setErrore('Inserisci un indirizzo email valido.');
       return;
     }
-
     setStato('invio');
     try {
       const supabase = getSupabaseBrowser();
       if (!supabase) {
-        // nessun database in locale: simulo successo
         setStato('fatto');
         return;
       }
@@ -35,7 +40,6 @@ export default function PaginaPro() {
         piano_interesse: piano,
         utente_id: user?.id ?? null,
       });
-      // 23505 = email gia' presente: per l'utente e' comunque un successo
       if (error && error.code !== '23505') {
         setErrore('Non sono riuscito a registrare la tua email. Riprova.');
         setStato('errore');
@@ -49,41 +53,40 @@ export default function PaginaPro() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-14">
-      <p className="font-mono text-sm uppercase tracking-[0.2em] text-cartello">MotoGarage Pro</p>
+    <section className="mx-auto max-w-4xl px-4 py-14">
+      <p className="font-mono text-sm uppercase tracking-[0.2em] text-red-600">MotoGarage Pro</p>
       <h1 className="mt-2 font-display text-5xl font-bold uppercase leading-none tracking-tight sm:text-7xl">
-        Il giro completo,
-        <br />
-        <span className="text-bosco">senza pensieri.</span>
+        La tua moto ha finalmente una casa digitale.
       </h1>
 
-      <ul className="card-app mt-8 space-y-3 p-6">
-        {[
-          'Tracce GPX di tutti gli itinerari, pronte per il navigatore',
-          'Varianti del percorso: versione corta, versione panoramica',
-          'Pacchetto weekend: orari, soste, dove dormire',
-          'Nuovi itinerari ogni mese, provati su strada',
-        ].map((voce) => (
-          <li key={voce} className="flex gap-3">
-            <span className="font-mono font-medium text-bosco">✓</span>
-            <span>{voce}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <ul className="card-app space-y-3 p-6">
+          {VANTAGGI.map((voce) => (
+            <li key={voce} className="flex gap-3">
+              <span className="font-mono font-bold text-red-600">✓</span>
+              <span>{voce}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="overflow-hidden rounded-app-lg bg-[#08090d] text-cemento shadow-app">
+          <img src="/og-motogarage.png" alt="" className="aspect-video w-full object-cover object-[50%_68%]" />
+          <div className="p-5">
+            <p className="font-mono text-xs uppercase tracking-wide text-red-400">Gemello digitale incluso</p>
+            <p className="mt-2 text-sm text-cemento/60">Il team MotoGarage genera e controlla il modello prima di pubblicarlo nel tuo garage.</p>
+          </div>
+        </div>
+      </div>
 
-      {/* Anteprima prezzi (non ancora attivabili) */}
       <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-        <div className="flex-1 rounded-app border-2 border-segnale bg-asfalto p-6 text-cemento">
+        <div className="flex-1 rounded-app border-2 border-red-600 bg-asfalto p-6 text-cemento">
           <div className="flex items-center justify-between">
-            <p className="font-mono text-sm uppercase text-segnale">Annuale</p>
-            <span className="rounded-full bg-segnale px-2 py-0.5 font-mono text-[10px] font-medium uppercase text-asfalto">
-              Risparmi
-            </span>
+            <p className="font-mono text-sm uppercase text-red-400">Annuale</p>
+            <span className="rounded-full bg-red-600 px-2 py-0.5 font-mono text-[10px] uppercase text-white">Risparmi</span>
           </div>
           <p className="mt-1 font-display text-5xl font-bold">29€</p>
           <p className="font-mono text-xs text-guardrail">all&apos;anno · 2,42€/mese</p>
         </div>
-        <div className="flex-1 rounded-app border-2 border-asfalto bg-white p-6">
+        <div className="flex-1 rounded-app border-2 border-asfalto bg-white p-6 dark:bg-carbone">
           <p className="font-mono text-sm uppercase text-cartello">Mensile</p>
           <p className="mt-1 font-display text-5xl font-bold">3,99€</p>
           <p className="font-mono text-xs text-asfalto/50">al mese</p>
@@ -91,91 +94,41 @@ export default function PaginaPro() {
       </div>
 
       {giaPro ? (
-        <div className="mt-8 rounded-app border-2 border-segnale bg-segnale/10 p-6 text-center">
-          <p className="font-display text-2xl font-bold uppercase tracking-tight">Sei già Pro ✓</p>
-          <Link href="/hub" className="tap mt-3 inline-block rounded-app bg-asfalto px-5 py-2.5 font-mono text-sm uppercase text-cemento">
-            Vai al tuo hub
+        <div className="mt-8 rounded-app border-2 border-emerald-500 bg-emerald-500/10 p-6 text-center">
+          <p className="font-display text-2xl font-bold uppercase tracking-tight">Il tuo account Pro è attivo ✓</p>
+          <Link href="/garage" className="mt-3 inline-block rounded-app bg-red-600 px-5 py-2.5 font-mono text-sm uppercase text-white">
+            Crea il gemello digitale
           </Link>
         </div>
       ) : (
         <div className="mt-8 rounded-app-lg border-2 border-asfalto bg-cemento p-6">
           {stato === 'fatto' ? (
             <div className="text-center">
-              <p className="font-display text-2xl font-bold uppercase tracking-tight text-bosco">
-                Ci sei! Ti avvisiamo noi 🏍️
-              </p>
-              <p className="mt-2 text-asfalto/70">
-                Sei in lista. Appena il Pro sarà attivo ti scriviamo all&apos;email che
-                ci hai lasciato — sarai tra i primi a provarlo.
-              </p>
+              <p className="font-display text-2xl font-bold uppercase tracking-tight text-bosco">Ci sei! Ti avvisiamo noi 🏍️</p>
+              <p className="mt-2 text-asfalto/70">Sei in lista. Ti scriveremo quando apriremo ufficialmente MotoGarage Pro.</p>
             </div>
           ) : (
             <>
-              <p className="font-display text-2xl font-bold uppercase tracking-tight">
-                Pro · in arrivo
-              </p>
-              <p className="mt-1 text-sm text-asfalto/70">
-                Itinerari premium con GPX, varianti panoramiche e pacchetti
-                weekend. Lascia l&apos;email e non perderti il lancio: i primi
-                iscritti avranno un occhio di riguardo.
-              </p>
-
-              {/* Scelta piano d'interesse */}
+              <p className="font-display text-2xl font-bold uppercase tracking-tight">Pro · beta privata</p>
+              <p className="mt-1 text-sm text-asfalto/70">Durante la beta gli account Pro vengono attivati manualmente. Lascia la tua email per partecipare.</p>
               <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPiano('annuale')}
-                  className={`tap flex-1 rounded-app border-2 px-3 py-2 font-mono text-xs font-medium uppercase ${
-                    piano === 'annuale' ? 'border-segnale bg-segnale/10' : 'border-asfalto/15 text-asfalto/60'
-                  }`}
-                >
-                  Mi interessa l&apos;annuale
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPiano('mensile')}
-                  className={`tap flex-1 rounded-app border-2 px-3 py-2 font-mono text-xs font-medium uppercase ${
-                    piano === 'mensile' ? 'border-segnale bg-segnale/10' : 'border-asfalto/15 text-asfalto/60'
-                  }`}
-                >
-                  Mi interessa il mensile
-                </button>
+                {(['annuale', 'mensile'] as const).map((item) => (
+                  <button key={item} type="button" onClick={() => setPiano(item)} className={`flex-1 rounded-app border-2 px-3 py-2 font-mono text-xs font-medium uppercase ${piano === item ? 'border-red-600 bg-red-600/10' : 'border-asfalto/15 text-asfalto/60'}`}>
+                    {item}
+                  </button>
+                ))}
               </div>
-
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={user?.email || 'la-tua@email.it'}
-                  className="flex-1 rounded-app border border-asfalto/20 px-4 py-3 text-sm focus:border-segnale focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={iscriviti}
-                  disabled={stato === 'invio'}
-                  className="tap rounded-app bg-segnale px-6 py-3 font-mono text-sm font-medium uppercase text-asfalto hover:bg-asfalto hover:text-cemento disabled:opacity-60"
-                >
-                  {stato === 'invio' ? 'Invio…' : 'Avvisami'}
+                <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder={user?.email || 'la-tua@email.it'} className="flex-1 rounded-app border border-asfalto/20 px-4 py-3 text-sm focus:border-red-600 focus:outline-none" />
+                <button type="button" onClick={iscriviti} disabled={stato === 'invio'} className="rounded-app bg-red-600 px-6 py-3 font-mono text-sm font-medium uppercase text-white disabled:opacity-60">
+                  {stato === 'invio' ? 'Invio…' : 'Candidati'}
                 </button>
               </div>
-              {errore && <p className="mt-2 text-sm text-cartello">{errore}</p>}
-              <p className="mt-3 font-mono text-[11px] text-asfalto/45">
-                Useremo la tua email solo per avvisarti del lancio del Pro. Niente spam.
-              </p>
+              {errore && <p className="mt-2 text-sm text-red-700">{errore}</p>}
             </>
           )}
         </div>
       )}
-
-      <div className="mt-6 text-center">
-        <Link
-          href="/itinerari"
-          className="tap inline-block font-mono text-sm uppercase tracking-wide text-asfalto/60 hover:text-asfalto"
-        >
-          Intanto esplora gli itinerari →
-        </Link>
-      </div>
     </section>
   );
 }

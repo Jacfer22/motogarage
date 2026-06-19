@@ -1,93 +1,124 @@
-# GiroSecco
+# MotoGarage
 
-Itinerari moto curati nel Lazio. Next.js 15 + Supabase + Vercel.
+> La casa digitale della tua moto.
 
-## Vederlo SUBITO (senza Supabase)
+MotoGarage è una piattaforma Next.js per motociclisti: itinerari, community, tracking GPS, card condivisibili, profili, contenuti Pro e garage virtuali con gemelli digitali Gaussian Splat.
 
-Il sito ha dati di fallback integrati: funziona anche senza database
-(itinerari, avvisi). Login/registrazione mostrano un messaggio finché
-Supabase non è collegato.
+## Funzioni
+
+- Itinerari per regione, mappe, tappe, avvisi e GPX.
+- Login, profili, community, foto, commenti, like e blog moderato.
+- Tracking GPS, statistiche e card social.
+- Livelli free, Pro e admin gestiti da Supabase.
+- Garage virtuale responsive.
+- Viewer GLB legacy e Gaussian Splat per PLY, SPLAT e KSPLAT.
+- Richiesta del gemello digitale riservata ai Pro.
+- Coda admin con download delle foto e upload del modello approvato.
+- Garage pubblico visitabile da `/garage/[username]`.
+
+## Gaussian Splat
+
+Il file di riferimento `splat (1).ply` è un Gaussian Splat binario:
+
+- 262.144 gaussiane;
+- posizione XYZ;
+- colore tramite coefficienti `f_dc`;
+- opacità;
+- scala anisotropa;
+- rotazione quaternion.
+
+È compatibile con il formato standard INRIA usato da TriplaneGaussian. Non è una mesh tradizionale, quindi MotoGarage usa un renderer splat dedicato.
+
+Il progetto open source è **TriplaneGaussian (TGS)**, spesso abbreviato informalmente in “Tripo Splat”:
+
+- https://github.com/VAST-AI-Research/TriplaneGaussian
+
+## Flusso gratuito
+
+```text
+Utente Pro invia 1–2 foto
+            ↓
+Richiesta in attesa nell’admin
+            ↓
+Il team genera il PLY
+            ↓
+Upload dal pannello admin
+            ↓
+Pubblicazione automatica nel garage
+```
+
+Non viene usata alcuna API GPU a pagamento.
+
+## Pubblicare un modello
+
+1. Apri `/admin`.
+2. Vai a **Gemelli da generare**.
+3. Scarica Foto 1 ed eventualmente Foto 2.
+4. Genera il modello con TriplaneGaussian.
+5. Seleziona il file PLY, SPLAT, KSPLAT o GLB.
+6. Premi **Pubblica nel garage**.
+
+L’API admin controlla che un PLY contenga gli attributi Gaussian Splat prima di accettarlo.
+
+## Supabase
+
+Su un progetto nuovo:
+
+1. Esegui `supabase/schema.sql`.
+2. Esegui le migration necessarie alle funzioni presenti.
+3. Esegui per ultima `supabase/migration_motogarage.sql`.
+
+La migration MotoGarage:
+
+- aggiunge `model_url`, formati splat e stato `in_attesa`;
+- limita le richieste agli account Pro e admin;
+- impedisce agli utenti di auto-approvare il proprio modello;
+- mantiene private le foto;
+- consente la scrittura dei modelli soltanto all’API admin;
+- preserva eventuali vecchi GLB.
+
+Bucket:
+
+- `foto-moto`: privato, massimo 15 MB per foto;
+- `modelli-3d`: lettura pubblica, upload solo server-side, massimo 250 MB.
+
+## Variabili ambiente
+
+Tutta la configurazione vive in `.env.local`:
+
+```env
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=https://TUO-PROGETTO.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+```
+
+Non servono token AI, servizi GPU o sistemi di pagamento.
+
+## Avvio e test
 
 ```bash
 npm install
 npm run dev
+npm run typecheck
+npm run build
 ```
 
-Apri http://localhost:3000 — vedi già i 10 itinerari con mappe e avvisi demo.
+Test manuale:
 
-## Collegare Supabase (10 minuti)
+1. Attiva un utente come Pro dal pannello admin.
+2. Accedi con quell’utente e apri `/garage`.
+3. Invia una foto principale e una seconda facoltativa.
+4. Controlla che la richiesta compaia in `/admin`.
+5. Carica un PLY Gaussian Splat.
+6. Controlla rotazione, zoom, pan, fullscreen e download.
+7. Rendi la moto pubblica e verifica `/garage/[username]`.
 
-1. Vai su supabase.com → New project → nome `girosecco`
-2. SQL Editor → New query → incolla `supabase/schema.sql` → Run
-3. New query → incolla `supabase/seed.sql` → Run
-4. New query → incolla `supabase/migration_admin.sql` → Run (ti rende admin)
-5. New query → incolla `supabase/migration_profilo.sql` → Run (categoria moto + foto profilo)
-6. Project Settings → API → copia URL e anon key
-7. Crea `.env.local` (copia da `.env.local.example`) e incolla i valori
-8. Riavvia `npm run dev` — ora i dati arrivano dal database
+## Deploy Vercel
 
-> Su un progetto già esistente (creato prima di queste due migrazioni):
-> esegui solo i passi 4 e 5, lo schema base resta quello che hai già.
+1. Esegui la migration MotoGarage.
+2. Configura le quattro variabili di `.env.local` in Vercel.
+3. Esegui il deploy.
+4. Aggiorna Site URL e Redirect URLs in Supabase Auth.
 
-### Livelli account
-
-Il sito mostra contenuti diversi in base a chi sei:
-
-- **Anonimo**: home, descrizione e avvisi (sicurezza) di ogni itinerario.
-- **Registrato (free)**: + mappa, roadbook e GPX per i 6 itinerari free.
-- **Pro**: + mappa, roadbook, GPX, variante e weekend per i 4 itinerari Pro.
-- **Admin** (solo il tuo account): + pannello `/admin` per attivare/disattivare
-  avvisi e rendere Pro un utente con un click.
-
-### Autenticazione
-
-La registrazione richiede username, email e password. Supabase invia
-un'email di conferma con un link: l'utente deve cliccarlo prima di poter
-accedere. Lo schema crea `profiles` con un trigger che, alla conferma,
-salva anche l'username scelto (con un fallback automatico se è già in uso).
-
-**Configurazione necessaria in Supabase** (Authentication → URL
-Configuration):
-- **Site URL**: l'URL del sito pubblicato (es. `https://girosecco.it` o
-  l'URL di anteprima Vercel)
-- **Redirect URLs**: aggiungi anche `http://localhost:3000/accedi` se vuoi
-  testare in locale
-
-Il link nell'email di conferma riporta l'utente su `/accedi`, dove può
-fare login.
-
-Per rendere "Pro" un utente: Table Editor → `profiles` → metti `is_pro` a
-`true` sulla sua riga (in futuro lo farà Stripe in automatico).
-
-## Deploy su Vercel
-
-1. Push del progetto su GitHub
-2. vercel.com → Import project → seleziona il repo
-3. Environment Variables: aggiungi `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Deploy
-
-## Struttura
-
-- `src/app/page.tsx` — homepage con griglia itinerari + badge avvisi
-- `src/app/itinerari/[slug]/page.tsx` — dettaglio: avvisi, mappa, roadbook, contenuti Pro
-- `src/app/pro/page.tsx` — pagina Pro (pricing)
-- `src/app/accedi/page.tsx` — login/registrazione
-- `src/app/account/page.tsx` — stato account, logout
-- `src/components/AuthProvider.tsx` — contesto sessione utente
-- `src/components/AvvisoBanner.tsx` — banner chiusure/lavori/consigli
-- `src/components/MappaItinerario.tsx` — mappa Leaflet con tracciato reale
-- `src/lib/fallback.ts` — dati statici di emergenza (= seed.sql)
-- `supabase/schema.sql` — schema completo: itinerari, tappe, avvisi, profiles+trigger, Fase 2
-
-## Roadmap
-
-- **Fase 1 (ora):** catalogo itinerari + GPX free/pro + avvisi real-time
-- **Fase 1.5 (ora):** login/registrazione utenti
-- **Fase 2 (~50 utenti):** commenti, foto utenti, segnalazioni soste
-- **Fase 3:** forum, pagamenti Stripe per Pro
-
-## Per aggiungere un itinerario o un avviso
-
-Dal Table Editor di Supabase: insert in `itinerari` + `tappe`, oppure in
-`avvisi` (basta `itinerario_id`, `tipo`, `titolo`, `descrizione`). Gli avvisi
-con `attivo = false` non vengono mostrati.
+Il PLY non transita da Git: viene caricato direttamente in Supabase Storage.

@@ -1,4 +1,4 @@
--- GiroSecco — schema completo
+-- MotoGarage — schema completo
 -- Esegui in Supabase: SQL Editor → New query → incolla → Run
 -- Include già le tabelle Fase 2 (commenti, foto, segnalazioni): pronte ma inattive.
 

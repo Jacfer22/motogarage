@@ -3,31 +3,30 @@
 import { useEffect, useMemo, useState } from 'react';
 
 const FASI = [
-  { fino: 8, label: 'Caricamento immagini' },
-  { fino: 18, label: 'Analisi profilo moto' },
-  { fino: 32, label: 'Ricostruzione viste mancanti' },
-  { fino: 48, label: 'Generazione geometria' },
-  { fino: 62, label: 'Creazione mesh 3D' },
-  { fino: 78, label: 'Applicazione texture' },
-  { fino: 90, label: 'Ottimizzazione modello' },
-  { fino: 98, label: 'Salvataggio nel Garage' },
+  { fino: 10, label: 'Analisi moto' },
+  { fino: 28, label: 'Ricostruzione viste mancanti' },
+  { fino: 48, label: 'Ricostruzione geometria' },
+  { fino: 65, label: 'Generazione mesh' },
+  { fino: 82, label: 'Applicazione texture' },
+  { fino: 95, label: 'Ottimizzazione' },
+  { fino: 99, label: 'Salvataggio' },
   { fino: 100, label: 'Gemello digitale pronto' },
 ];
 
-function faseAttuale(pct: number) {
-  return FASI.find((fase) => pct <= fase.fino)?.label ?? FASI[FASI.length - 1].label;
+function faseAttuale(percentuale: number) {
+  return FASI.find((fase) => percentuale <= fase.fino)?.label ?? FASI[FASI.length - 1].label;
 }
 
-function percentualeSimulata(reale: number | null, secondi: number): number {
+function simulata(reale: number | null, secondi: number) {
   if (reale !== null && reale >= 100) return 100;
-
-  const simulata =
-    secondi < 5 ? secondi * 4 :
-    secondi < 30 ? 20 + (secondi - 5) * 1.2 :
-    secondi < 90 ? 50 + (secondi - 30) * 0.65 :
-    90 + Math.min(5, (secondi - 90) * 0.05);
-
-  return Math.min(95, Math.max(reale ?? 0, Math.round(simulata)));
+  const valore = secondi < 8
+    ? secondi * 2
+    : secondi < 45
+      ? 16 + (secondi - 8) * 1.05
+      : secondi < 180
+        ? 55 + (secondi - 45) * 0.24
+        : 88 + Math.min(7, (secondi - 180) * 0.025);
+  return Math.min(95, Math.max(reale ?? 0, Math.round(valore)));
 }
 
 interface Props {
@@ -36,42 +35,49 @@ interface Props {
   anno?: number | null;
   percentualeReale?: number | null;
   completato?: boolean;
+  errore?: string | null;
   onApriGarage?: () => void;
 }
 
-export default function GenerazioneProgress({ marca, modello, anno, percentualeReale, completato, onApriGarage }: Props) {
+export default function GenerazioneProgress({
+  marca,
+  modello,
+  anno,
+  percentualeReale = null,
+  completato = false,
+  errore = null,
+  onApriGarage,
+}: Props) {
   const [secondi, setSecondi] = useState(0);
-  const [pct, setPct] = useState(0);
+  const [percentuale, setPercentuale] = useState(0);
 
   useEffect(() => {
     if (completato) {
-      setPct(100);
+      setPercentuale(100);
       return;
     }
-
-    const interval = setInterval(() => {
-      setSecondi((attuale) => {
-        const prossimo = attuale + 1;
-        setPct(percentualeSimulata(percentualeReale ?? null, prossimo));
+    const timer = window.setInterval(() => {
+      setSecondi((value) => {
+        const prossimo = value + 1;
+        setPercentuale(simulata(percentualeReale, prossimo));
         return prossimo;
       });
     }, 1000);
-
-    return () => clearInterval(interval);
+    return () => window.clearInterval(timer);
   }, [completato, percentualeReale]);
 
-  const motoX = useMemo(() => Math.min(91, Math.max(6, pct * 0.88 + 5)), [pct]);
-  const nome = `${marca} ${modello}${anno ? ` ${anno}` : ''}`.trim();
+  const posizioneMoto = useMemo(() => Math.min(91, Math.max(5, percentuale * 0.88 + 5)), [percentuale]);
+  const nome = `${marca} ${modello}${anno ? ` · ${anno}` : ''}`;
 
   if (completato) {
     return (
-      <main className="grid min-h-[100dvh] place-items-center bg-[radial-gradient(circle_at_top,rgba(242,183,5,0.24),transparent_32%),linear-gradient(135deg,#050608,#15181a)] px-4 py-12 text-center text-cemento">
-        <div className="w-full max-w-xl rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur">
-          <div className="mx-auto mb-6 grid h-24 w-24 place-items-center rounded-[28px] bg-segnale text-5xl shadow-segnale">🏁</div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-segnale">MotoGarage</p>
+      <main className="grid min-h-[100dvh] place-items-center bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.24),transparent_34%),linear-gradient(135deg,#030405,#15181a)] px-4 py-12 text-center text-cemento">
+        <div className="w-full max-w-xl rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-[0_30px_100px_rgba(0,0,0,0.48)] backdrop-blur">
+          <div className="mx-auto grid h-24 w-24 place-items-center rounded-[28px] border border-red-400/30 bg-red-600 text-5xl shadow-[0_0_44px_rgba(220,38,38,0.42)]">🏁</div>
+          <p className="mt-7 font-mono text-xs uppercase tracking-[0.28em] text-red-400">MotoGarage</p>
           <h1 className="mt-3 font-display text-5xl font-black uppercase leading-none tracking-tight">La tua moto è pronta</h1>
-          <p className="mt-4 text-cemento/65">Il gemello digitale di <strong className="text-segnale">{nome}</strong> è stato salvato nel tuo garage.</p>
-          <button type="button" onClick={onApriGarage} className="tap mt-8 rounded-app bg-segnale px-8 py-4 font-mono text-sm font-bold uppercase tracking-wide text-asfalto shadow-segnale hover:bg-white">
+          <p className="mt-4 text-cemento/65">Il gemello digitale di <strong className="text-white">{nome}</strong> è stato inserito nel tuo garage.</p>
+          <button type="button" onClick={onApriGarage} className="tap mt-8 rounded-app bg-red-600 px-8 py-4 font-mono text-sm font-bold uppercase tracking-wide text-white hover:bg-white hover:text-asfalto">
             Apri nel mio Garage
           </button>
         </div>
@@ -80,47 +86,48 @@ export default function GenerazioneProgress({ marca, modello, anno, percentualeR
   }
 
   return (
-    <main className="min-h-[100dvh] bg-[radial-gradient(circle_at_top_left,rgba(242,183,5,0.22),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(220,38,38,0.20),transparent_28%),linear-gradient(135deg,#f4f4f5,#e7e8ea)] px-4 py-10 dark:from-notte dark:to-carbone">
+    <main className="min-h-[100dvh] bg-[radial-gradient(circle_at_top_left,rgba(220,38,38,0.18),transparent_30%),linear-gradient(135deg,#f5f5f6,#e7e8ea)] px-4 py-10 dark:from-notte dark:to-carbone">
       <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
-        <p className="font-mono text-sm uppercase tracking-[0.34em] text-segnale">Gemello digitale in creazione</p>
-        <h1 className="mt-8 font-display text-4xl font-black uppercase leading-none tracking-tight text-asfalto sm:text-6xl dark:text-cemento">
-          {nome}
+        <p className="font-mono text-sm uppercase tracking-[0.34em] text-red-600 dark:text-red-400">Laboratorio digitale</p>
+        <h1 className="mt-7 max-w-3xl font-display text-4xl font-black uppercase leading-none tracking-tight sm:text-6xl">
+          Stiamo creando il gemello digitale della tua moto
         </h1>
-        <p className="mt-4 max-w-xl text-sm leading-6 text-asfalto/45 sm:text-base dark:text-cemento/55">
-          Può richiedere qualche minuto. Puoi chiudere l'app e tornare più tardi: il modello verrà salvato automaticamente nel Garage.
+        <p className="mt-5 max-w-xl text-sm leading-6 text-asfalto/55 sm:text-base dark:text-cemento/55">
+          Può richiedere qualche minuto. Puoi chiudere l&apos;app e tornare più tardi.
         </p>
+        <p className="mt-2 font-mono text-xs uppercase tracking-wide text-asfalto/35 dark:text-cemento/35">{nome}</p>
 
-        <section className="mt-10 w-full overflow-hidden rounded-[32px] border border-white/20 bg-[#0b0d10] shadow-[0_28px_90px_rgba(21,24,26,0.25)]">
+        <section className="mt-10 w-full overflow-hidden rounded-[32px] border border-white/15 bg-[#090b0e] shadow-[0_28px_90px_rgba(21,24,26,0.28)]">
           <div className="relative h-64 sm:h-72">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(242,183,5,0.16),transparent_28%),linear-gradient(180deg,#15181a,#07080a)]" />
-            <div className="absolute inset-x-0 bottom-0 h-28 bg-[#111318]" />
-            <div className="absolute inset-x-0 bottom-16 h-1 bg-segnale/25" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(220,38,38,0.18),transparent_30%),linear-gradient(180deg,#15181a,#07080a)]" />
+            <div className="absolute inset-x-0 bottom-0 h-28 bg-[#101217]" />
             <div className="absolute inset-x-8 bottom-14 flex justify-between overflow-hidden">
-              {[0, 1, 2, 3, 4, 5].map((i) => (
-                <span key={i} className="h-2 w-14 rounded-full bg-segnale/55" style={{ animation: `motogarage-road 1s ${i * -0.14}s linear infinite` }} />
+              {[0, 1, 2, 3, 4, 5].map((indice) => (
+                <span key={indice} className="h-2 w-14 rounded-full bg-white/35" style={{ animation: `motogarage-road 1s ${indice * -0.14}s linear infinite` }} />
               ))}
             </div>
-            <div className="absolute bottom-20 transition-all duration-1000 ease-linear" style={{ left: `${motoX}%`, transform: 'translateX(-50%)' }}>
+            <div className="absolute bottom-20 transition-all duration-1000 ease-linear" style={{ left: `${posizioneMoto}%`, transform: 'translateX(-50%)' }}>
               <div className="relative">
-                <div className="absolute inset-x-0 bottom-0 h-5 rounded-full bg-segnale/25 blur-xl" />
-                <div className="text-5xl drop-shadow-[0_0_18px_rgba(242,183,5,0.55)]">🏍️</div>
+                <div className="absolute inset-x-0 bottom-0 h-5 rounded-full bg-red-500/35 blur-xl" />
+                <div className="text-5xl drop-shadow-[0_0_18px_rgba(239,68,68,0.58)]">🏍️</div>
               </div>
             </div>
             <div className="absolute bottom-16 right-5 text-5xl">🏁</div>
-            <div className="absolute left-6 top-6 rounded-full border border-white/10 bg-white/5 px-4 py-2 font-mono text-xs uppercase tracking-[0.22em] text-cemento/60">
-              Powered by Hunyuan3D · HuggingFace
+            <div className="absolute left-5 top-5 rounded-full border border-white/10 bg-black/35 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-cemento/55">
+              Elaborazione sicura lato server
             </div>
           </div>
         </section>
 
         <section className="mt-7 w-full max-w-2xl">
           <div className="mb-3 flex items-end justify-between gap-4">
-            <span className="text-left font-mono text-xs uppercase tracking-wide text-asfalto/45 dark:text-cemento/45">{faseAttuale(pct)}</span>
-            <span className="font-display text-4xl font-black text-segnale">{pct}%</span>
+            <span className="text-left font-mono text-xs uppercase tracking-wide text-asfalto/50 dark:text-cemento/50">{faseAttuale(percentuale)}</span>
+            <span className="font-display text-4xl font-black text-red-600 dark:text-red-400">{percentuale}%</span>
           </div>
           <div className="h-4 overflow-hidden rounded-full bg-asfalto/15 shadow-inner dark:bg-white/10">
-            <div className="h-full rounded-full bg-segnale transition-all duration-1000 ease-out shadow-segnale" style={{ width: `${pct}%` }} />
+            <div className="h-full rounded-full bg-red-600 transition-all duration-1000 ease-out shadow-[0_0_24px_rgba(220,38,38,0.45)]" style={{ width: `${percentuale}%` }} />
           </div>
+          {errore && <p role="alert" className="mt-5 rounded-app border border-red-500/30 bg-red-500/10 p-4 text-left text-sm text-red-700 dark:text-red-300">{errore}</p>}
         </section>
       </div>
 
