@@ -77,7 +77,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="it" className={`${display.variable} ${body.variable} ${mono.variable} ${hand.variable}`}>
+    <html lang="it" className={`dark ${display.variable} ${body.variable} ${mono.variable} ${hand.variable}`}>
       <head>
         <link
           rel="stylesheet"
@@ -88,7 +88,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <script dangerouslySetInnerHTML={{
-          __html: `(function(){try{var t=localStorage.getItem('motogarage-tema');var s=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='scuro'||(!t&&s)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          __html: `document.documentElement.classList.add('dark');`,
         }} />
       </head>
       <body className="con-bottomnav flex min-h-screen flex-col font-body antialiased">

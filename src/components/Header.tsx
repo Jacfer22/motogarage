@@ -1,16 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from './AuthProvider';
-import InterruttoreTema from './InterruttoreTema';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import Logo from './Logo';
 
 export default function Header() {
   const { user, profilo, loading, nonConfigurato } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [menuAperto, setMenuAperto] = useState(false);
+  const [esce, setEsce] = useState(false);
 
   const isLogged = !loading && !!user && !nonConfigurato;
   const isAdmin = !loading && profilo?.is_admin;
@@ -18,6 +20,17 @@ export default function Header() {
 
   function chiudiMenu() {
     setMenuAperto(false);
+  }
+
+  async function logout() {
+    const supabase = getSupabaseBrowser();
+    if (!supabase || esce) return;
+    setEsce(true);
+    await supabase.auth.signOut();
+    chiudiMenu();
+    router.push('/');
+    router.refresh();
+    setEsce(false);
   }
 
   return (
@@ -40,11 +53,19 @@ export default function Header() {
               attivo={attivo(user ? '/hub' : '/accedi')}
             />
           )}
-          <InterruttoreTema />
+          {isLogged && (
+            <button
+              type="button"
+              onClick={logout}
+              disabled={esce}
+              className="tap rounded-app border border-white/15 px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-cemento/75 transition-colors hover:border-brand/40 hover:text-brand-chiaro disabled:opacity-50"
+            >
+              {esce ? 'Uscita…' : 'Esci'}
+            </button>
+          )}
         </nav>
 
         <div className="flex items-center gap-2 sm:hidden">
-          <InterruttoreTema />
           <button
             type="button"
             onClick={() => setMenuAperto((v) => !v)}
@@ -66,6 +87,16 @@ export default function Header() {
             <MenuMobile href={user ? '/hub' : '/accedi'} label={user ? 'Hub' : 'Accedi'} onClick={chiudiMenu} />
           )}
           {isAdmin && <MenuMobile href="/admin" label="Admin" onClick={chiudiMenu} />}
+          {isLogged && (
+            <button
+              type="button"
+              onClick={logout}
+              disabled={esce}
+              className="mt-2 w-full rounded-app border border-white/15 py-4 font-mono text-sm font-bold uppercase tracking-wide text-cemento/80 hover:text-brand-chiaro disabled:opacity-50"
+            >
+              {esce ? 'Uscita…' : 'Esci'}
+            </button>
+          )}
         </nav>
       )}
       <div className="strada-viva strada-viva-animata" aria-hidden="true" />
