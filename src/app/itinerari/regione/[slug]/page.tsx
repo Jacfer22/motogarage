@@ -21,7 +21,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const nome = nomeRegione(slug);
   return {
-    title: nome ? `Itinerari moto in ${nome} — GiroSecco` : 'Itinerari — GiroSecco',
+    title: nome ? `Itinerari moto in ${nome} — MotoGarage` : 'Itinerari — MotoGarage',
   };
 }
 

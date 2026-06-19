@@ -50,7 +50,7 @@ export default function PaginaPro() {
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-14">
-      <p className="font-mono text-sm uppercase tracking-[0.2em] text-cartello">GiroSecco Pro</p>
+      <p className="font-mono text-sm uppercase tracking-[0.2em] text-cartello">MotoGarage Pro</p>
       <h1 className="mt-2 font-display text-5xl font-bold uppercase leading-none tracking-tight sm:text-7xl">
         Il giro completo,
         <br />

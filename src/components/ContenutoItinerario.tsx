@@ -85,7 +85,7 @@ function BloccoGpx({ gpxUrl }: { gpxUrl: string | null }) {
       {gpxUrl ? (
         <>
           <p className="mt-2 text-guardrail">
-            Percorso proposto da GiroSecco: scaricala e caricala sul navigatore o sull’app
+            Percorso proposto da MotoGarage: scaricala e caricala sul navigatore o sull’app
             che usi.
           </p>
           <a

@@ -68,7 +68,7 @@ export default function PaginaNuovoArticolo() {
   if (!user) {
     return (
       <section className="mx-auto max-w-2xl px-4 py-14">
-        <p className="font-mono text-sm uppercase tracking-widest text-cartello">GiroSecco</p>
+        <p className="font-mono text-sm uppercase tracking-widest text-cartello">MotoGarage</p>
         <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
           Scrivi un articolo
         </h1>
@@ -88,7 +88,7 @@ export default function PaginaNuovoArticolo() {
   if (inviato) {
     return (
       <section className="mx-auto max-w-2xl px-4 py-14">
-        <p className="font-mono text-sm uppercase tracking-widest text-cartello">GiroSecco</p>
+        <p className="font-mono text-sm uppercase tracking-widest text-cartello">MotoGarage</p>
         <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
           Articolo inviato
         </h1>
@@ -110,7 +110,7 @@ export default function PaginaNuovoArticolo() {
 
   return (
     <section className="mx-auto max-w-2xl px-4 py-14">
-      <p className="font-mono text-sm uppercase tracking-widest text-cartello">GiroSecco</p>
+      <p className="font-mono text-sm uppercase tracking-widest text-cartello">MotoGarage</p>
       <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
         Scrivi un articolo
       </h1>

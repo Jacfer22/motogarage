@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Privacy Policy — GiroSecco',
-  description: 'Come GiroSecco tratta i dati personali degli utenti.',
+  title: 'Privacy Policy — MotoGarage',
+  description: 'Come MotoGarage tratta i dati personali degli utenti.',
 };
 
 const AGGIORNAMENTO = '18 giugno 2026';
@@ -18,7 +18,7 @@ export default function PaginaPrivacy() {
 
       <div className="mt-8 space-y-6 text-asfalto/85 [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:uppercase [&_h2]:tracking-tight [&_p]:mt-2 [&_p]:leading-relaxed [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1">
         <p>
-          GiroSecco rispetta la tua privacy. Questa pagina spiega in modo chiaro
+          MotoGarage rispetta la tua privacy. Questa pagina spiega in modo chiaro
           quali dati raccogliamo, perché, e quali diritti hai. Usiamo solo i dati
           necessari a far funzionare il servizio.
         </p>
@@ -27,8 +27,8 @@ export default function PaginaPrivacy() {
         <p>
           Il titolare del trattamento è [TITOLARE — nome e dati da inserire].
           Per qualsiasi richiesta sui tuoi dati puoi scrivere a{' '}
-          <a href="mailto:info@girosecco.it" className="text-cartello underline">
-            info@girosecco.it
+          <a href="mailto:info@motogarage.it" className="text-cartello underline">
+            info@motogarage.it
           </a>
           .
         </p>
@@ -103,8 +103,8 @@ export default function PaginaPrivacy() {
         </ul>
         <p>
           Per esercitare questi diritti scrivi a{' '}
-          <a href="mailto:info@girosecco.it" className="text-cartello underline">
-            info@girosecco.it
+          <a href="mailto:info@motogarage.it" className="text-cartello underline">
+            info@motogarage.it
           </a>
           .
         </p>

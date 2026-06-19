@@ -2,8 +2,8 @@ import Feed from '@/components/Feed';
 import Reveal from '@/components/Reveal';
 
 export const metadata = {
-  title: 'Community — GiroSecco',
-  description: 'Le ultime foto, i commenti e i giri della community di GiroSecco.',
+  title: 'Community — MotoGarage',
+  description: 'Le ultime foto, i commenti e i giri della community di MotoGarage.',
 };
 
 export default function PaginaCommunity() {

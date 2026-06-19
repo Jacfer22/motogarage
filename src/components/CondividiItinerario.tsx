@@ -68,18 +68,18 @@ export default function CondividiItinerario({
 
       const testo =
         `${titolo} · ${zona}\n` +
-        `${km} km in moto 🏍️ — itinerario su GiroSecco`;
+        `${km} km in moto 🏍️ — itinerario su MotoGarage`;
 
       const res = await fetch(url);
       const blob = await res.blob();
-      const file = new File([blob], 'girosecco-itinerario.png', { type: 'image/png' });
+      const file = new File([blob], 'motogarage-itinerario.png', { type: 'image/png' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: titolo, text: testo });
       } else {
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'girosecco-itinerario.png';
+        a.download = 'motogarage-itinerario.png';
         a.click();
       }
       setStato('idle');

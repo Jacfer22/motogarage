@@ -6,7 +6,7 @@ import Reveal from '@/components/Reveal';
 export const revalidate = 3600;
 
 export const metadata = {
-  title: 'Itinerari moto in Italia — GiroSecco',
+  title: 'Itinerari moto in Italia — MotoGarage',
   description:
     'Itinerari in moto regione per regione, con mappa, roadbook e traccia GPX. Percorsi condivisi e aggiornati dalla community.',
 };

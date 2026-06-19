@@ -25,7 +25,7 @@ export default async function PaginaArticolo({
       </Link>
 
       <p className="mt-4 font-mono text-xs uppercase tracking-wide text-asfalto/50">
-        {articolo.autore?.username ?? 'GiroSecco'}
+        {articolo.autore?.username ?? 'MotoGarage'}
         {articolo.pubblicato_at && <> · {formattaData(articolo.pubblicato_at)}</>}
       </p>
       <h1 className="mt-1 font-display text-4xl font-bold uppercase leading-tight tracking-tight sm:text-6xl">

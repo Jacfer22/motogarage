@@ -112,7 +112,7 @@ export default function PaginaAccedi() {
   return (
     <section className="mx-auto max-w-md px-4 py-14">
       <p className="font-mono text-sm uppercase tracking-widest text-cartello">
-        GiroSecco
+        MotoGarage
       </p>
       <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
         {modalita === 'accedi' ? 'Accedi' : 'Crea il tuo account'}

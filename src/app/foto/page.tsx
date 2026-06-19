@@ -6,9 +6,9 @@ import Reveal from '@/components/Reveal';
 export const revalidate = 60;
 
 export const metadata = {
-  title: 'Foto dei Bikers — GiroSecco',
+  title: 'Foto dei Bikers — MotoGarage',
   description:
-    'Le foto scattate in sella dalla community: strade, panorami e moto lungo gli itinerari di GiroSecco.',
+    'Le foto scattate in sella dalla community: strade, panorami e moto lungo gli itinerari di MotoGarage.',
 };
 
 export default async function PaginaFoto() {

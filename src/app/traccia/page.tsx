@@ -10,7 +10,7 @@ import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 const MappaTraccia = dynamic(() => import('@/components/MappaTraccia'), { ssr: false });
 
-const STORAGE_KEY = 'girosecco_giri';
+const STORAGE_KEY = 'motogarage_giri';
 const SOGLIA_MOVIMENTO_M = 8; // ignora punti GPS che "ballano" da fermo
 const ACCURATEZZA_MAX_M = 35; // ignora letture GPS troppo imprecise
 
@@ -377,7 +377,7 @@ export default function PaginaTraccia() {
     if (!cardUrl) return;
     const a = document.createElement('a');
     a.href = cardUrl;
-    a.download = 'girosecco-giro.png';
+    a.download = 'motogarage-giro.png';
     a.click();
   }
 
@@ -386,22 +386,22 @@ export default function PaginaTraccia() {
     const testo =
       `${luogoCard.trim() ? luogoCard.trim() + ' · ' : ''}` +
       `${formattaKm(distanzaM)} km in moto 🏍️\n` +
-      `Il mio giro su GiroSecco — itinerari moto in Italia`;
+      `Il mio giro su MotoGarage — itinerari moto in Italia`;
     try {
       const res = await fetch(cardUrl);
       const blob = await res.blob();
-      const file = new File([blob], 'girosecco-giro.png', { type: 'image/png' });
+      const file = new File([blob], 'motogarage-giro.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: 'Il mio giro su GiroSecco',
+          title: 'Il mio giro su MotoGarage',
           text: testo,
         });
         return;
       }
       // fallback: prova a condividere almeno il testo+link
       if (navigator.share) {
-        await navigator.share({ title: 'GiroSecco', text: testo });
+        await navigator.share({ title: 'MotoGarage', text: testo });
         return;
       }
     } catch {
@@ -423,7 +423,7 @@ export default function PaginaTraccia() {
   if (!user) {
     return (
       <section className="mx-auto max-w-2xl px-4 py-14">
-        <p className="font-mono text-sm uppercase tracking-widest text-cartello">GiroSecco</p>
+        <p className="font-mono text-sm uppercase tracking-widest text-cartello">MotoGarage</p>
         <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
           Traccia un giro
         </h1>
@@ -445,7 +445,7 @@ export default function PaginaTraccia() {
 
   return (
     <section className="mx-auto max-w-2xl px-4 py-14">
-      <p className="font-mono text-sm uppercase tracking-widest text-cartello">GiroSecco</p>
+      <p className="font-mono text-sm uppercase tracking-widest text-cartello">MotoGarage</p>
       <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
         Traccia un giro
       </h1>

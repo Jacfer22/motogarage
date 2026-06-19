@@ -478,7 +478,7 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
   ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
   ctx.shadowBlur = conFoto ? 8 : 0;
   ctx.textAlign = 'right';
-  ctx.fillText('GiroSecco', LARGHEZZA - 64, ALTEZZA - 70);
+  ctx.fillText('MotoGarage', LARGHEZZA - 64, ALTEZZA - 70);
   ctx.shadowBlur = 0;
   ctx.textAlign = 'left';
   ctx.fillStyle = chiaro ? 'rgba(21,24,26,0.5)' : 'rgba(240,241,242,0.55)';

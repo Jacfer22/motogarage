@@ -20,7 +20,7 @@ export function TemaProvider({ children }: { children: React.ReactNode }) {
 
   // all'avvio leggo la preferenza salvata (o quella di sistema)
   useEffect(() => {
-    const salvato = localStorage.getItem('girosecco-tema') as Tema | null;
+    const salvato = localStorage.getItem('motogarage-tema') as Tema | null;
     const preferenzaSistema = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const iniziale: Tema = salvato ?? (preferenzaSistema ? 'scuro' : 'chiaro');
     applica(iniziale);
@@ -37,7 +37,7 @@ export function TemaProvider({ children }: { children: React.ReactNode }) {
     const nuovo: Tema = tema === 'scuro' ? 'chiaro' : 'scuro';
     setTema(nuovo);
     applica(nuovo);
-    localStorage.setItem('girosecco-tema', nuovo);
+    localStorage.setItem('motogarage-tema', nuovo);
   }
 
   return (

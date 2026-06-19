@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Termini di Servizio — GiroSecco',
-  description: 'Le condizioni d\'uso della piattaforma GiroSecco.',
+  title: 'Termini di Servizio — MotoGarage',
+  description: 'Le condizioni d\'uso della piattaforma MotoGarage.',
 };
 
 const AGGIORNAMENTO = '18 giugno 2026';
@@ -18,14 +18,14 @@ export default function PaginaTermini() {
 
       <div className="mt-8 space-y-6 text-asfalto/85 [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:uppercase [&_h2]:tracking-tight [&_p]:mt-2 [&_p]:leading-relaxed [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1">
         <p>
-          Usando GiroSecco accetti questi termini. Sono scritti in modo semplice:
+          Usando MotoGarage accetti questi termini. Sono scritti in modo semplice:
           l&apos;idea è che ci si comporti da persone civili e che la strada resti
           una cosa seria.
         </p>
 
-        <h2>Cos&apos;è GiroSecco</h2>
+        <h2>Cos&apos;è MotoGarage</h2>
         <p>
-          GiroSecco è una piattaforma che raccoglie itinerari in moto, permette di
+          MotoGarage è una piattaforma che raccoglie itinerari in moto, permette di
           registrare i propri giri, caricare foto e partecipare alla community. Gli
           itinerari sono proposti e aggiornati dagli utenti e dalla redazione.
         </p>
@@ -35,7 +35,7 @@ export default function PaginaTermini() {
           Gli itinerari e le informazioni sono indicativi. Le condizioni della
           strada cambiano: lavori, frane, meteo, chiusure. Prima di partire
           verifica sempre lo stato del percorso. Guida nel rispetto del codice
-          della strada e dei limiti di velocità: GiroSecco non incoraggia in alcun
+          della strada e dei limiti di velocità: MotoGarage non incoraggia in alcun
           modo comportamenti pericolosi o illegali. Sei l&apos;unico responsabile
           della tua guida.
         </p>
@@ -50,7 +50,7 @@ export default function PaginaTermini() {
         <h2>I contenuti che pubblichi</h2>
         <p>
           Resti proprietario delle tue foto e dei tuoi contenuti. Pubblicandoli su
-          GiroSecco ci dai il permesso di mostrarli all&apos;interno del servizio.
+          MotoGarage ci dai il permesso di mostrarli all&apos;interno del servizio.
           Ti impegni a non caricare contenuti:
         </p>
         <ul>
@@ -72,7 +72,7 @@ export default function PaginaTermini() {
 
         <h2>Limitazione di responsabilità</h2>
         <p>
-          GiroSecco è offerto &laquo;così com&apos;è&raquo;. Facciamo del nostro
+          MotoGarage è offerto &laquo;così com&apos;è&raquo;. Facciamo del nostro
           meglio per tenere le informazioni accurate e il servizio funzionante, ma
           non possiamo garantire l&apos;assenza di errori o interruzioni. Non siamo
           responsabili per danni derivanti dall&apos;uso del servizio o dalla
@@ -88,8 +88,8 @@ export default function PaginaTermini() {
         <h2>Contatti</h2>
         <p>
           Per qualsiasi domanda:{' '}
-          <a href="mailto:info@girosecco.it" className="text-cartello underline">
-            info@girosecco.it
+          <a href="mailto:info@motogarage.it" className="text-cartello underline">
+            info@motogarage.it
           </a>
           .
         </p>
