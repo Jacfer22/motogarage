@@ -118,7 +118,7 @@ export default async function HomePage() {
                 Traccia il mio giro
               </Link>
               <Link
-                href="/traccia#navigatore"
+                href="/naviga"
                 className="tap rounded-app border border-white/20 px-8 py-3.5 font-mono text-sm font-bold uppercase tracking-wide text-cemento/80 transition-colors hover:border-brand/40 hover:text-white"
               >
                 Apri navigatore

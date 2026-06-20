@@ -5,15 +5,28 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 
 // Icone SVG inline (nessuna dipendenza esterna). currentColor segue il testo.
-function IconaStrada({ attiva }: { attiva: boolean }) {
+function IconaBussola({ attiva }: { attiva: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={attiva ? 2.4 : 2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 22 9 2" />
-      <path d="M20 22 15 2" />
-      <path d="M12 6v2" />
-      <path d="M12 12v2" />
-      <path d="M12 18v2" />
+    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={attiva ? 2.4 : 2}
+      />
+      <path
+        d="M12 3v2M12 19v2M3 12h2M19 12h2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <polygon
+        points="12,5 14.2,13.5 12,11.2 9.8,13.5"
+        fill={attiva ? '#d11919' : 'currentColor'}
+      />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
     </svg>
   );
 }
@@ -54,7 +67,7 @@ export default function BottomNav() {
   const loggato = nonConfigurato || !!user;
 
   const voci = [
-    { href: '/itinerari', label: 'Itinerari', Icona: IconaStrada, match: (p: string) => p.startsWith('/itinerari') },
+    { href: '/naviga', label: 'Navigatore', Icona: IconaBussola, match: (p: string) => p.startsWith('/naviga') },
     { href: '/community', label: 'Community', Icona: IconaFoto, match: (p: string) => (p.startsWith('/community') && !p.startsWith('/community/classifica')) || p.startsWith('/foto') },
     { href: '/community/classifica', label: 'Classifica', Icona: IconaClassifica, match: (p: string) => p.startsWith('/community/classifica') },
     {

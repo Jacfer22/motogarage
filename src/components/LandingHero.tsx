@@ -46,7 +46,7 @@ export default function LandingHero({ itinerariCount }: Props) {
         <Reveal delay={200}>
           <div className="mt-8 flex flex-wrap gap-3">
             <Pill href="/traccia" label="Traccia il mio giro" evidenziata />
-            <Pill href="/traccia#navigatore" label="Navigatore GPS" />
+            <Pill href="/naviga" label="Navigatore GPS" />
             <Pill href="/garage" label="Il mio Garage" />
             <Pill href="/itinerari" label="Itinerari" />
             <Pill href="/community" label="Community" />

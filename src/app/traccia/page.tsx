@@ -15,8 +15,6 @@ import {
   type GiroUtente,
 } from '@/lib/giri-store';
 import EditorCardGiro from '@/components/EditorCardGiro';
-import PannelloNavigazione from '@/components/PannelloNavigazione';
-import type { DestinazioneNav, RottaCalcolata } from '@/lib/navigazione-osrm';
 
 const MappaTraccia = dynamic(() => import('@/components/MappaTraccia'), { ssr: false });
 
@@ -37,8 +35,6 @@ export default function PaginaTraccia() {
   const [giroConcluso, setGiroConcluso] = useState<GiroUtente | null>(null);
   const [salvataggioCloud, setSalvataggioCloud] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
-  const [percorsoNav, setPercorsoNav] = useState<RottaCalcolata['percorso']>([]);
-  const [destinazioneNav, setDestinazioneNav] = useState<DestinazioneNav | null>(null);
 
   const watchIdRef = useRef<number | null>(null);
   const inizioRef = useRef<number | null>(null);
@@ -313,8 +309,6 @@ export default function PaginaTraccia() {
     setVelCorrenteKmh(0);
     setGiroConcluso(null);
     setLuogoCard('');
-    setPercorsoNav([]);
-    setDestinazioneNav(null);
     inizioRef.current = null;
     pausaAccumulataRef.current = 0;
     pausaInizioRef.current = null;
@@ -368,14 +362,21 @@ export default function PaginaTraccia() {
       )}
 
       {stato !== 'concluso' && (
-        <div id="navigatore" className="mt-6 scroll-mt-24">
-          <PannelloNavigazione
-            posizione={punti.length > 0 ? punti[punti.length - 1] : null}
-            attiva={stato === 'in_corso' || stato === 'in_pausa' || stato === 'pronto'}
-            onDestinazioneChange={setDestinazioneNav}
-            onRottaChange={(r) => setPercorsoNav(r?.percorso ?? [])}
-            onPassoChange={() => {}}
-          />
+        <div className="mt-6">
+          <Link
+            href="/naviga"
+            className="flex items-center justify-between gap-3 rounded-app-lg border-2 border-brand/30 bg-asfalto px-4 py-3 text-white transition-colors hover:border-brand/50"
+          >
+            <span>
+              <span className="block font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-brand">
+                Navigatore GPS
+              </span>
+              <span className="mt-0.5 block text-sm text-cemento/75">
+                Mappa, prossima manovra e ricentra — il giro GPS resta qui
+              </span>
+            </span>
+            <span className="font-mono text-xs font-bold uppercase text-brand">Apri →</span>
+          </Link>
         </div>
       )}
 
@@ -410,20 +411,14 @@ export default function PaginaTraccia() {
       )}
 
       {/* Mappa: percorso nav + tracciato GPS */}
-      {(punti.length > 0 || percorsoNav.length > 0) && (
+      {punti.length > 0 && (
         <div className="mt-6">
           <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-asfalto/55">
-            {percorsoNav.length > 0 && punti.length > 0
-              ? 'Giallo = il tuo giro GPS reale · Blu = suggerimento stradale'
-              : percorsoNav.length > 0
-                ? 'Blu = percorso suggerito verso destinazione'
-                : 'Giallo = tracciato GPS in tempo reale'}
+            Tracciato GPS in tempo reale
           </p>
           <MappaTraccia
             punti={punti}
             inCorso={stato === 'in_corso'}
-            percorsoNav={percorsoNav}
-            destinazione={destinazioneNav}
           />
         </div>
       )}
