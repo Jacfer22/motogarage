@@ -9,6 +9,7 @@ const PIXEL_TRASPARENTE =
 interface Props {
   posizione: Punto | null;
   percorsoNav?: Punto[];
+  percorsoGps?: Punto[];
   destinazione?: { lat: number; lng: number } | null;
   segui: boolean;
   onSeguiChange: (segui: boolean) => void;
@@ -18,6 +19,7 @@ interface Props {
 export default function MappaNavigatore({
   posizione,
   percorsoNav,
+  percorsoGps,
   destinazione,
   segui,
   onSeguiChange,
@@ -26,6 +28,7 @@ export default function MappaNavigatore({
   const contenitore = useRef<HTMLDivElement>(null);
   const mappaRef = useRef<unknown>(null);
   const lineaNavRef = useRef<unknown>(null);
+  const lineaGpsRef = useRef<unknown>(null);
   const markerRef = useRef<unknown>(null);
   const markerDestRef = useRef<unknown>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,6 +71,13 @@ export default function MappaNavigatore({
         color: '#2563eb',
         weight: 7,
         opacity: 0.85,
+        lineJoin: 'round',
+      }).addTo(mappa);
+
+      lineaGpsRef.current = L.polyline([], {
+        color: '#F2B705',
+        weight: 5,
+        opacity: 0.9,
         lineJoin: 'round',
       }).addTo(mappa);
 
@@ -119,6 +129,13 @@ export default function MappaNavigatore({
       markerDestRef.current = null;
     }
   }, [percorsoNav, destinazione]);
+
+  useEffect(() => {
+    const lineaGps = lineaGpsRef.current as { setLatLngs: (l: [number, number][]) => void } | null;
+    if (!lineaGps) return;
+    const gpsLatlngs = (percorsoGps ?? []).map((p) => [p.lat, p.lng] as [number, number]);
+    lineaGps.setLatLngs(gpsLatlngs);
+  }, [percorsoGps]);
 
   useEffect(() => {
     const L = leafletRef.current;
