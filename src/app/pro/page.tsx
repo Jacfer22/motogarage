@@ -89,7 +89,7 @@ export default function PaginaPro() {
         <div className="flex-1 rounded-app border-2 border-asfalto bg-white p-6 dark:bg-carbone">
           <p className="font-mono text-sm uppercase text-cartello">Mensile</p>
           <p className="mt-1 font-display text-5xl font-bold">3,99€</p>
-          <p className="font-mono text-xs text-asfalto/50">al mese</p>
+          <p className="font-mono text-xs text-asfalto/65 dark:text-cemento/70">al mese</p>
         </div>
       </div>
 
@@ -105,26 +105,26 @@ export default function PaginaPro() {
           {stato === 'fatto' ? (
             <div className="text-center">
               <p className="font-display text-2xl font-bold uppercase tracking-tight text-bosco">Ci sei! Ti avvisiamo noi 🏍️</p>
-              <p className="mt-2 text-asfalto/70">Sei in lista. Ti scriveremo quando apriremo ufficialmente MotoGarage Pro.</p>
+              <p className="mt-2 text-asfalto/75 dark:text-cemento/80">Sei in lista. Ti scriveremo quando apriremo ufficialmente MotoGarage Pro.</p>
             </div>
           ) : (
             <>
               <p className="font-display text-2xl font-bold uppercase tracking-tight">Pro · beta privata</p>
-              <p className="mt-1 text-sm text-asfalto/70">Durante la beta gli account Pro vengono attivati manualmente. Lascia la tua email per partecipare.</p>
+              <p className="mt-1 text-sm text-asfalto/75 dark:text-cemento/80">Durante la beta gli account Pro vengono attivati manualmente. Lascia la tua email per partecipare.</p>
               <div className="mt-4 flex gap-2">
                 {(['annuale', 'mensile'] as const).map((item) => (
-                  <button key={item} type="button" onClick={() => setPiano(item)} className={`flex-1 rounded-app border-2 px-3 py-2 font-mono text-xs font-medium uppercase ${piano === item ? 'border-red-600 bg-red-600/10' : 'border-asfalto/15 text-asfalto/60'}`}>
+                  <button key={item} type="button" onClick={() => setPiano(item)} className={`flex-1 rounded-app border-2 px-3 py-2 font-mono text-xs font-medium uppercase ${piano === item ? 'border-red-600 bg-red-600/10' : 'border-asfalto/15 text-asfalto/70 dark:text-cemento/75'}`}>
                     {item}
                   </button>
                 ))}
               </div>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder={user?.email || 'la-tua@email.it'} className="flex-1 rounded-app border border-asfalto/20 px-4 py-3 text-sm focus:border-red-600 focus:outline-none" />
+                <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder={user?.email || 'la-tua@email.it'} className="input-app flex-1 text-sm" />
                 <button type="button" onClick={iscriviti} disabled={stato === 'invio'} className="rounded-app bg-red-600 px-6 py-3 font-mono text-sm font-medium uppercase text-white disabled:opacity-60">
                   {stato === 'invio' ? 'Invio…' : 'Candidati'}
                 </button>
               </div>
-              {errore && <p className="mt-2 text-sm text-red-700">{errore}</p>}
+              {errore && <p className="mt-2 rounded-app border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-100">{errore}</p>}
             </>
           )}
         </div>

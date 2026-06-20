@@ -94,7 +94,7 @@ export default function BottoneLike({
       aria-label={mioLike ? 'Togli mi piace' : 'Metti mi piace'}
       className={`tap inline-flex items-center gap-1.5 font-mono ${
         compatto ? 'text-xs' : 'text-sm'
-      } ${mioLike ? 'text-cartello' : 'text-asfalto/55 hover:text-cartello'}`}
+      } ${mioLike ? 'text-cartello' : 'text-asfalto/70 hover:text-cartello dark:text-cemento/75'}`}
     >
       <svg
         width={compatto ? 16 : 18}

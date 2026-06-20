@@ -100,10 +100,10 @@ export default function CommentiItinerario({ itinerarioId }: { itinerarioId: str
             placeholder="Hai fatto questo giro? Com'era la strada, il traffico, i panorami?"
             rows={3}
             maxLength={500}
-            className="w-full rounded-app border border-asfalto/15 px-4 py-3 text-sm focus:border-segnale focus:outline-none"
+            className="input-app w-full text-sm"
           />
           <div className="mt-2 flex items-center justify-between">
-            <span className="font-mono text-[11px] text-asfalto/40">{testo.length}/500</span>
+            <span className="font-mono text-[11px] text-asfalto/60 dark:text-cemento/65">{testo.length}/500</span>
             <button
               type="button"
               onClick={invia}
@@ -138,7 +138,7 @@ export default function CommentiItinerario({ itinerarioId }: { itinerarioId: str
         {!caricato ? (
           <div className="skeleton h-16 rounded-app" />
         ) : commenti.length === 0 ? (
-          <p className="font-mono text-sm text-asfalto/50">
+          <p className="font-mono text-sm text-asfalto/65 dark:text-cemento/70">
             Ancora nessun commento. {loggato ? 'Scrivi il primo!' : ''}
           </p>
         ) : (
@@ -152,7 +152,7 @@ export default function CommentiItinerario({ itinerarioId }: { itinerarioId: str
                   <button
                     type="button"
                     onClick={() => elimina(c.id)}
-                    className="font-mono text-[11px] uppercase text-asfalto/40 hover:text-cartello"
+                    className="font-mono text-[11px] uppercase text-asfalto/60 hover:text-cartello dark:text-cemento/65"
                   >
                     Elimina
                   </button>

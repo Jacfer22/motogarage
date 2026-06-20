@@ -75,7 +75,7 @@ export default function CercaUtenti() {
 
   return (
     <section className="rounded-app-lg border border-asfalto/12 bg-white/60 p-4 shadow-app dark:bg-carbone/80">
-      <label htmlFor="cerca-utenti" className="font-mono text-[11px] uppercase tracking-[0.2em] text-asfalto/50">
+      <label htmlFor="cerca-utenti" className="font-mono text-[11px] uppercase tracking-[0.2em] text-asfalto/65 dark:text-cemento/70">
         Cerca rider
       </label>
       <div className="relative mt-2">
@@ -90,13 +90,13 @@ export default function CercaUtenti() {
           className="input-app w-full pr-10"
         />
         {cerca && (
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase text-asfalto/40">
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase text-asfalto/60 dark:text-cemento/65">
             …
           </span>
         )}
       </div>
       {!user && (
-        <p className="mt-2 text-xs text-asfalto/55">
+        <p className="mt-2 text-xs text-asfalto/65 dark:text-cemento/70">
           <Link href="/accedi" className="text-brand hover:underline">Accedi</Link>
           {' '}per cercare per username o email.
         </p>
@@ -124,7 +124,7 @@ export default function CercaUtenti() {
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-display text-lg font-bold uppercase">{item.username}</span>
-                  {item.moto && <span className="block truncate font-mono text-[10px] uppercase text-asfalto/50">{item.moto}</span>}
+                  {item.moto && <span className="block truncate font-mono text-[10px] uppercase text-asfalto/65 dark:text-cemento/70">{item.moto}</span>}
                 </span>
                 {item.is_pro && (
                   <span className="shrink-0 rounded-full bg-brand px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-white">Pro</span>
@@ -136,7 +136,7 @@ export default function CercaUtenti() {
       )}
 
       {risultati && risultati.length === 0 && query.trim().length >= 2 && !cerca && !errore && (
-        <p className="mt-3 font-mono text-xs uppercase text-asfalto/45">Nessun utente trovato.</p>
+        <p className="mt-3 font-mono text-xs uppercase text-asfalto/65 dark:text-cemento/70">Nessun utente trovato.</p>
       )}
     </section>
   );

@@ -3,7 +3,7 @@ import { Avviso, TipoAvviso } from '@/lib/types';
 const STILE: Record<TipoAvviso, { etichetta: string; classi: string; icona: string }> = {
   chiuso: {
     etichetta: 'Strada chiusa',
-    classi: 'border-red-700 bg-red-50 text-red-900',
+    classi: 'border-red-400/40 bg-red-500/10 text-red-100',
     icona: '⛔',
   },
   lavori: {
@@ -13,7 +13,7 @@ const STILE: Record<TipoAvviso, { etichetta: string; classi: string; icona: stri
   },
   info: {
     etichetta: 'Info',
-    classi: 'border-asfalto/30 bg-white text-asfalto',
+    classi: 'border-white/15 bg-carbone text-cemento',
     icona: 'ℹ️',
   },
   consiglio: {
@@ -37,15 +37,15 @@ export default function AvvisoBanner({ avvisi }: { avvisi: Avviso[] }) {
         const stile = STILE[avviso.tipo];
         return (
           <div key={avviso.id} className={`border-2 p-4 ${stile.classi}`}>
-            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-wide opacity-80">
+            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-wide">
               <span>{stile.icona}</span>
               <span>{stile.etichetta}</span>
-              <span className="opacity-60">· aggiornato il {formattaData(avviso.data)}</span>
+              <span className="opacity-80">· aggiornato il {formattaData(avviso.data)}</span>
             </div>
             <p className="mt-1.5 font-medium">{avviso.titolo}</p>
-            <p className="mt-1 text-sm opacity-90">{avviso.descrizione}</p>
+            <p className="mt-1 text-sm opacity-95">{avviso.descrizione}</p>
             {avviso.fonte && (
-              <p className="mt-2 font-mono text-xs uppercase tracking-wide opacity-50">
+              <p className="mt-2 font-mono text-xs uppercase tracking-wide opacity-75">
                 Fonte: {avviso.fonte}
               </p>
             )}

@@ -12,8 +12,8 @@ export function ChipDifficolta({ value }: { value: Difficolta }) {
 
 export function ChipDato({ label, value }: { label: string; value: string }) {
   return (
-    <span className="chip text-asfalto/80">
-      <span className="text-asfalto/50">{label}</span> {value}
+    <span className="chip text-asfalto/85 dark:text-cemento/85">
+      <span className="text-asfalto/65 dark:text-cemento/70">{label}</span> {value}
     </span>
   );
 }

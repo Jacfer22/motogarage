@@ -204,7 +204,7 @@ export default function PaginaTraccia() {
       {track.stato === 'pronto' && (
         <div className="mt-10 rounded-app-lg border border-asfalto/10 bg-asfalto/[0.03] p-5">
           <h2 className="font-display text-xl font-bold uppercase tracking-tight">I miei giri salvati</h2>
-          <p className="mt-2 text-sm text-asfalto/60">
+          <p className="mt-2 text-sm text-asfalto/70 dark:text-cemento/75">
             Tutti i percorsi GPS sono nel cloud. Crea la card quando vuoi da qualsiasi telefono.
           </p>
           <Link
@@ -217,10 +217,10 @@ export default function PaginaTraccia() {
       )}
 
       <p className="mt-10 flex flex-wrap gap-4">
-        <Link href="/giri" className="font-mono text-sm uppercase text-asfalto/60 underline hover:text-asfalto">
+        <Link href="/giri" className="font-mono text-sm uppercase text-asfalto/70 underline hover:text-asfalto dark:text-cemento/75 dark:hover:text-white">
           I miei giri
         </Link>
-        <Link href="/hub" className="font-mono text-sm uppercase text-asfalto/60 underline hover:text-asfalto">
+        <Link href="/hub" className="font-mono text-sm uppercase text-asfalto/70 underline hover:text-asfalto dark:text-cemento/75 dark:hover:text-white">
           ← Hub
         </Link>
       </p>

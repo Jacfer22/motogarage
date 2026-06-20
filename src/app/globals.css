@@ -39,21 +39,127 @@ body {
 .dark .text-asfalto {
   color: #f0f1f2 !important;
 }
+/* Rete di sicurezza: se una utility Tailwind con slash non viene intercettata
+   dalla variante puntuale, il token reale della classe resta comunque leggibile. */
+.dark [class~="text-asfalto/95"] { color: rgba(248,249,250,0.96) !important; }
+.dark [class~="text-asfalto/90"] { color: rgba(248,249,250,0.93) !important; }
+.dark [class~="text-asfalto/85"] { color: rgba(240,241,242,0.85) !important; }
+.dark [class~="text-asfalto/80"] { color: rgba(240,241,242,0.80) !important; }
+.dark [class~="text-asfalto/75"] { color: rgba(240,241,242,0.75) !important; }
+.dark [class~="text-asfalto/70"] { color: rgba(240,241,242,0.70) !important; }
+.dark [class~="text-asfalto/65"] { color: rgba(240,241,242,0.68) !important; }
+.dark [class~="text-asfalto/60"] { color: rgba(240,241,242,0.64) !important; }
+.dark [class~="text-asfalto/55"] { color: rgba(240,241,242,0.60) !important; }
+.dark [class~="text-asfalto/50"] { color: rgba(240,241,242,0.64) !important; }
+.dark [class~="text-asfalto/45"] { color: rgba(240,241,242,0.62) !important; }
+.dark [class~="text-asfalto/40"] { color: rgba(240,241,242,0.60) !important; }
+.dark [class~="text-asfalto/35"] { color: rgba(240,241,242,0.58) !important; }
+.dark [class~="text-asfalto/30"] { color: rgba(240,241,242,0.56) !important; }
+.dark [class~="text-asfalto/25"] { color: rgba(240,241,242,0.54) !important; }
+.dark [class~="text-asfalto/20"] { color: rgba(240,241,242,0.52) !important; }
+.dark [class~="text-asfalto/15"],
+.dark [class~="text-asfalto/10"],
+.dark [class~="text-asfalto/5"] {
+  color: rgba(240,241,242,0.50) !important;
+}
+.dark .text-asfalto\/95 { color: rgba(248,249,250,0.96) !important; }
+.dark .text-asfalto\/90 { color: rgba(248,249,250,0.93) !important; }
 .dark .text-asfalto\/85 { color: rgba(240,241,242,0.85) !important; }
 .dark .text-asfalto\/80 { color: rgba(240,241,242,0.80) !important; }
 .dark .text-asfalto\/75 { color: rgba(240,241,242,0.75) !important; }
 .dark .text-asfalto\/70 { color: rgba(240,241,242,0.70) !important; }
-.dark .text-asfalto\/60 { color: rgba(240,241,242,0.55) !important; }
-.dark .text-asfalto\/55 { color: rgba(240,241,242,0.5) !important; }
-.dark .text-asfalto\/50 { color: rgba(240,241,242,0.45) !important; }
-.dark .text-asfalto\/45 { color: rgba(240,241,242,0.4) !important; }
-.dark .text-asfalto\/40 { color: rgba(240,241,242,0.38) !important; }
+.dark .text-asfalto\/65 { color: rgba(240,241,242,0.68) !important; }
+.dark .text-asfalto\/60 { color: rgba(240,241,242,0.64) !important; }
+.dark .text-asfalto\/55 { color: rgba(240,241,242,0.60) !important; }
+.dark .text-asfalto\/50 { color: rgba(240,241,242,0.64) !important; }
+.dark .text-asfalto\/45 { color: rgba(240,241,242,0.62) !important; }
+.dark .text-asfalto\/40 { color: rgba(240,241,242,0.60) !important; }
+.dark .text-asfalto\/35 { color: rgba(240,241,242,0.58) !important; }
+.dark .text-asfalto\/30 { color: rgba(240,241,242,0.56) !important; }
+.dark .text-asfalto\/25 { color: rgba(240,241,242,0.54) !important; }
+.dark .text-asfalto\/20 { color: rgba(240,241,242,0.52) !important; }
+.dark [class~="text-cemento/55"] { color: rgba(240,241,242,0.72) !important; }
+.dark [class~="text-cemento/50"] { color: rgba(240,241,242,0.68) !important; }
+.dark [class~="text-cemento/45"] { color: rgba(240,241,242,0.66) !important; }
+.dark [class~="text-cemento/40"] { color: rgba(240,241,242,0.64) !important; }
+.dark [class~="text-cemento/35"] { color: rgba(240,241,242,0.62) !important; }
+.dark [class~="text-cemento/30"] { color: rgba(240,241,242,0.60) !important; }
+.dark .text-cemento\/55 { color: rgba(240,241,242,0.72) !important; }
+.dark .text-cemento\/50 { color: rgba(240,241,242,0.68) !important; }
+.dark .text-cemento\/45 { color: rgba(240,241,242,0.66) !important; }
+.dark .text-cemento\/40 { color: rgba(240,241,242,0.64) !important; }
+.dark .text-cemento\/35 { color: rgba(240,241,242,0.62) !important; }
+.dark .text-cemento\/30 { color: rgba(240,241,242,0.60) !important; }
+.dark .placeholder\:text-asfalto\/50::placeholder { color: rgba(240,241,242,0.54) !important; }
+.dark .placeholder\:text-asfalto\/45::placeholder { color: rgba(240,241,242,0.50) !important; }
+.dark .placeholder\:text-asfalto\/40::placeholder { color: rgba(240,241,242,0.48) !important; }
+.dark .placeholder\:text-asfalto\/35::placeholder { color: rgba(240,241,242,0.44) !important; }
+.dark .placeholder\:text-asfalto\/30::placeholder { color: rgba(240,241,242,0.40) !important; }
+/* colori semantici: in dark devono restare accesi, non "sporchi" */
+.dark .text-brand,
+.dark .text-segnale {
+  color: #ff4a4a !important;
+}
+.dark .text-brand-chiaro {
+  color: #ff6b6b !important;
+}
+.dark .text-segnale-scuro,
+.dark .text-red-600,
+.dark .text-red-700,
+.dark .text-red-900 {
+  color: #ff6b6b !important;
+}
+.dark .text-bosco {
+  color: #8ee0a3 !important;
+}
+.dark .text-cartello {
+  color: #f2b705 !important;
+}
+.dark .text-guardrail {
+  color: rgba(226, 232, 240, 0.78) !important;
+}
 /* bordi scuri -> chiari tenui */
 .dark .border-asfalto { border-color: rgba(240,241,242,0.25) !important; }
 .dark .border-asfalto\/15 { border-color: rgba(240,241,242,0.12) !important; }
 .dark .border-asfalto\/10 { border-color: rgba(240,241,242,0.1) !important; }
 .dark .border-asfalto\/20 { border-color: rgba(240,241,242,0.15) !important; }
 .dark .border-asfalto\/25 { border-color: rgba(240,241,242,0.18) !important; }
+.dark .border-asfalto\/8 { border-color: rgba(240,241,242,0.08) !important; }
+.dark .border-asfalto\/12 { border-color: rgba(240,241,242,0.1) !important; }
+.dark .border-asfalto\/30 { border-color: rgba(240,241,242,0.22) !important; }
+/* superfici chiare semitrasparenti -> pannelli scuri leggibili */
+.dark [class~="bg-white"] { background-color: #1c2024 !important; }
+.dark [class~="bg-cemento"] { background-color: #15181a !important; }
+.dark [class~="bg-nebbia"] { background-color: #1c2024 !important; }
+.dark [class~="bg-white/95"] { background-color: rgba(28, 32, 36, 0.96) !important; }
+.dark [class~="bg-white/90"] { background-color: rgba(28, 32, 36, 0.92) !important; }
+.dark [class~="bg-white/80"] { background-color: rgba(28, 32, 36, 0.86) !important; }
+.dark [class~="bg-white/70"] { background-color: rgba(28, 32, 36, 0.78) !important; }
+.dark [class~="bg-white/60"] { background-color: rgba(28, 32, 36, 0.72) !important; }
+.dark [class~="bg-white/50"] { background-color: rgba(28, 32, 36, 0.66) !important; }
+.dark [class~="bg-white/40"] { background-color: rgba(28, 32, 36, 0.58) !important; }
+.dark [class~="bg-cemento/80"] { background-color: rgba(21, 24, 26, 0.86) !important; }
+.dark [class~="bg-cemento/60"] { background-color: rgba(21, 24, 26, 0.72) !important; }
+.dark [class~="bg-nebbia/80"] { background-color: rgba(28, 32, 36, 0.86) !important; }
+.dark .bg-white\/95 { background-color: rgba(28, 32, 36, 0.96) !important; }
+.dark .bg-white\/90 { background-color: rgba(28, 32, 36, 0.92) !important; }
+.dark .bg-white\/80 { background-color: rgba(28, 32, 36, 0.86) !important; }
+.dark .bg-white\/70 { background-color: rgba(28, 32, 36, 0.78) !important; }
+.dark .bg-white\/60 { background-color: rgba(28, 32, 36, 0.72) !important; }
+.dark .bg-white\/50 { background-color: rgba(28, 32, 36, 0.66) !important; }
+.dark .bg-white\/40 { background-color: rgba(28, 32, 36, 0.58) !important; }
+.dark .bg-cemento\/80 { background-color: rgba(21, 24, 26, 0.86) !important; }
+.dark .bg-cemento\/60 { background-color: rgba(21, 24, 26, 0.72) !important; }
+.dark .bg-nebbia\/80 { background-color: rgba(28, 32, 36, 0.86) !important; }
+.dark .bg-red-50 {
+  background-color: rgba(127, 29, 29, 0.24) !important;
+}
+.dark .bg-bosco\/10 {
+  background-color: rgba(34, 197, 94, 0.12) !important;
+}
+.dark .bg-cartello\/10 {
+  background-color: rgba(242, 183, 5, 0.12) !important;
+}
 /* la card app in dark */
 .dark .card-app {
   background: #1c2024;
@@ -392,6 +498,43 @@ body {
   transform: scale(0.97);
 }
 
+/* Campi form condivisi: diversi componenti usano input-app come classe semantica. */
+.input-app {
+  min-height: 2.75rem;
+  border-radius: 14px;
+  border: 1px solid rgba(21, 24, 26, 0.18);
+  background: #fff;
+  padding: 0.75rem 0.95rem;
+  color: #15181a;
+  box-shadow: 0 1px 2px rgba(21, 24, 26, 0.04);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+.input-app::placeholder {
+  color: rgba(21, 24, 26, 0.46);
+}
+.input-app:focus {
+  border-color: rgba(209, 25, 25, 0.68);
+  box-shadow: 0 0 0 3px rgba(209, 25, 25, 0.16);
+  outline: none;
+}
+.input-app:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.dark .input-app {
+  border-color: rgba(240, 241, 242, 0.16) !important;
+  background: rgba(14, 16, 18, 0.92) !important;
+  color: #f8f9fa !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.dark .input-app::placeholder {
+  color: rgba(240, 241, 242, 0.60) !important;
+}
+.dark .input-app:focus {
+  border-color: rgba(255, 74, 74, 0.74) !important;
+  box-shadow: 0 0 0 3px rgba(209, 25, 25, 0.24);
+}
+
 /* Vetro smerigliato per header/bottom-nav */
 .vetro {
   background: rgba(240, 241, 242, 0.8);
@@ -402,6 +545,14 @@ body {
   background: rgba(14, 16, 18, 0.78);
   backdrop-filter: saturate(160%) blur(12px);
   -webkit-backdrop-filter: saturate(160%) blur(12px);
+}
+.dark .vetro {
+  background: rgba(14, 16, 18, 0.92);
+  border-color: rgba(240, 241, 242, 0.12);
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.28);
+}
+.dark .vetro-scuro {
+  background: rgba(10, 12, 14, 0.94);
 }
 
 /* Spazio per la bottom-nav su mobile, così il contenuto non resta coperto */

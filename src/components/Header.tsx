@@ -61,7 +61,7 @@ export default function Header() {
               type="button"
               onClick={logout}
               disabled={esce}
-              className="tap rounded-app border border-white/15 px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-cemento/75 transition-colors hover:border-brand/40 hover:text-brand-chiaro disabled:opacity-50"
+              className="tap rounded-app border border-white/15 px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-cemento/85 transition-colors hover:border-brand/40 hover:text-brand-chiaro disabled:opacity-50"
             >
               {esce ? 'Uscita…' : 'Esci'}
             </button>
@@ -95,7 +95,7 @@ export default function Header() {
               type="button"
               onClick={logout}
               disabled={esce}
-              className="mt-2 w-full rounded-app border border-white/15 py-4 font-mono text-sm font-bold uppercase tracking-wide text-cemento/80 hover:text-brand-chiaro disabled:opacity-50"
+              className="mt-2 w-full rounded-app border border-white/15 py-4 font-mono text-sm font-bold uppercase tracking-wide text-cemento/85 hover:text-brand-chiaro disabled:opacity-50"
             >
               {esce ? 'Uscita…' : 'Esci'}
             </button>
@@ -129,7 +129,7 @@ function Voce({ href, label, attivo, evidenza }: { href: string; label: string; 
       className={`font-mono text-xs font-bold uppercase tracking-wide transition-colors ${
         attivo
           ? 'text-brand'
-          : 'text-cemento/75 hover:text-brand-chiaro'
+          : 'text-cemento/85 hover:text-brand-chiaro'
       }`}
     >
       {label}
@@ -142,7 +142,7 @@ function MenuMobile({ href, label, onClick }: { href: string; label: string; onC
     <Link
       href={href}
       onClick={onClick}
-      className="block border-b border-white/10 py-4 font-mono text-sm font-bold uppercase tracking-wide text-cemento/80 hover:text-brand-chiaro"
+      className="block border-b border-white/10 py-4 font-mono text-sm font-bold uppercase tracking-wide text-cemento/85 hover:text-brand-chiaro"
     >
       {label}
     </Link>

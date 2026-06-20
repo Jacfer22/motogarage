@@ -39,10 +39,10 @@ export default function ClassificaKm() {
   if (righe.length === 0) {
     return (
       <div className="rounded-app-lg border border-dashed border-asfalto/25 bg-white/40 p-8 text-center dark:bg-carbone/40">
-        <p className="font-display text-2xl font-bold uppercase tracking-tight text-asfalto/40">
+        <p className="font-display text-2xl font-bold uppercase tracking-tight text-asfalto/60 dark:text-cemento/65">
           {errore ? 'Classifica non disponibile' : 'Nessun km in classifica'}
         </p>
-        <p className="mt-2 text-sm text-asfalto/60">
+        <p className="mt-2 text-sm text-asfalto/70 dark:text-cemento/75">
           {errore || 'Traccia un giro con GPS: i km compariranno qui appena registrati.'}
         </p>
         {!errore && (
@@ -65,7 +65,7 @@ export default function ClassificaKm() {
               href={`/profilo/${riga.username}`}
               className={`card-app flex items-center gap-3 p-4 transition-colors hover:border-brand/30 ${posizione <= 3 ? 'border-brand/20 bg-brand/5' : ''}`}
             >
-              <span className="w-8 shrink-0 text-center font-display text-xl font-black text-asfalto/35">
+              <span className="w-8 shrink-0 text-center font-display text-xl font-black text-asfalto/55 dark:text-cemento/60">
                 {icona ?? posizione}
               </span>
               {riga.avatar_url ? (
@@ -78,7 +78,7 @@ export default function ClassificaKm() {
               )}
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-display text-lg font-bold uppercase">{riga.username}</span>
-                <span className="font-mono text-[10px] uppercase text-asfalto/45">
+                <span className="font-mono text-[10px] uppercase text-asfalto/60 dark:text-cemento/65">
                   {riga.giri_count} {riga.giri_count === 1 ? 'giro' : 'giri'}
                   {riga.moto ? ` · ${riga.moto}` : ''}
                 </span>
@@ -87,7 +87,7 @@ export default function ClassificaKm() {
                 <span className="block font-display text-2xl font-black leading-none text-brand">
                   {Math.round(riga.km_totali)}
                 </span>
-                <span className="font-mono text-[10px] uppercase text-asfalto/45">km</span>
+                <span className="font-mono text-[10px] uppercase text-asfalto/60 dark:text-cemento/65">km</span>
               </span>
             </Link>
           </li>

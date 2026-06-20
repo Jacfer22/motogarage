@@ -209,18 +209,18 @@ export default function PaginaAccount() {
 
       {/* Dati privati: visibili solo all'utente loggato, non pubblici */}
       <details className="mt-4 border-2 border-asfalto/20">
-        <summary className="cursor-pointer px-3 py-2 font-mono text-xs uppercase tracking-wide text-asfalto/50 hover:text-asfalto">
+        <summary className="cursor-pointer px-3 py-2 font-mono text-xs uppercase tracking-wide text-asfalto/65 hover:text-asfalto dark:text-cemento/70 dark:hover:text-white">
           Dati riservati (solo tu puoi vederli)
         </summary>
         <div className="border-t border-asfalto/20 px-3 py-3">
-          <p className="font-mono text-xs uppercase text-asfalto/40">Email</p>
+          <p className="font-mono text-xs uppercase text-asfalto/60 dark:text-cemento/65">Email</p>
           <p className="text-sm">{user.email}</p>
         </div>
       </details>
 
       <form onSubmit={salvaProfilo} className="mt-8 space-y-4">
         <div>
-          <label htmlFor="username" className="font-mono text-xs uppercase text-asfalto/60">
+          <label htmlFor="username" className="font-mono text-xs uppercase text-asfalto/70 dark:text-cemento/75">
             Username
           </label>
           <input
@@ -228,7 +228,7 @@ export default function PaginaAccount() {
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value.toLowerCase())}
-            className="mt-1 w-full border-2 border-asfalto bg-white px-3 py-2 font-mono lowercase focus:outline-none"
+            className="input-app mt-1 w-full font-mono lowercase"
             placeholder="es. jacopo_rm"
             pattern="[a-z0-9_]{3,20}"
             autoCapitalize="none"
@@ -236,14 +236,14 @@ export default function PaginaAccount() {
         </div>
 
         <div>
-          <label htmlFor="categoria" className="font-mono text-xs uppercase text-asfalto/60">
+          <label htmlFor="categoria" className="font-mono text-xs uppercase text-asfalto/70 dark:text-cemento/75">
             Tipo di moto
           </label>
           <select
             id="categoria"
             value={categoriaMoto}
             onChange={(e) => setCategoriaMoto(e.target.value)}
-            className="mt-1 w-full border-2 border-asfalto bg-white px-3 py-2 focus:outline-none"
+            className="input-app mt-1 w-full"
           >
             <option value="">— Seleziona —</option>
             {CATEGORIE_MOTO.map((c) => (
@@ -255,7 +255,7 @@ export default function PaginaAccount() {
         </div>
 
         <div>
-          <label htmlFor="moto" className="font-mono text-xs uppercase text-asfalto/60">
+          <label htmlFor="moto" className="font-mono text-xs uppercase text-asfalto/70 dark:text-cemento/75">
             Modello
           </label>
           <input
@@ -263,16 +263,16 @@ export default function PaginaAccount() {
             type="text"
             value={moto}
             onChange={(e) => setMoto(e.target.value)}
-            className="mt-1 w-full border-2 border-asfalto bg-white px-3 py-2 focus:outline-none"
+            className="input-app mt-1 w-full"
             placeholder="es. Panigale V4 2021, 1100cc"
           />
         </div>
 
         {errore && (
-          <p className="border-2 border-red-700 bg-red-50 p-3 text-sm text-red-900">{errore}</p>
+          <p className="rounded-app border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-100">{errore}</p>
         )}
         {messaggio && (
-          <p className="border-2 border-bosco bg-bosco/10 p-3 text-sm text-bosco">{messaggio}</p>
+          <p className="rounded-app border border-bosco/40 bg-bosco/10 p-3 text-sm text-bosco">{messaggio}</p>
         )}
 
         <button

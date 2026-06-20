@@ -195,7 +195,7 @@ export default function CaricaFoto({
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="tap flex w-full items-center justify-center gap-2 rounded-app border-2 border-dashed border-asfalto/25 py-6 font-mono text-sm uppercase tracking-wide text-asfalto/60 hover:border-segnale hover:text-asfalto"
+          className="tap flex w-full items-center justify-center gap-2 rounded-app border-2 border-dashed border-asfalto/25 py-6 font-mono text-sm uppercase tracking-wide text-asfalto/70 hover:border-segnale hover:text-asfalto dark:border-white/20 dark:text-cemento/75 dark:hover:text-white"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="3" y="5" width="18" height="14" rx="2" />
@@ -214,7 +214,7 @@ export default function CaricaFoto({
             onChange={(e) => setDidascalia(e.target.value)}
             placeholder="Didascalia (dove? com'era la strada?)"
             maxLength={140}
-            className="w-full rounded-app border border-asfalto/15 px-3 py-2 text-sm focus:border-segnale focus:outline-none"
+            className="input-app w-full text-sm"
           />
           <div className="flex gap-2">
             <button
@@ -232,7 +232,7 @@ export default function CaricaFoto({
                 fileScelto.current = null;
                 if (fileRef.current) fileRef.current.value = '';
               }}
-              className="tap rounded-app border border-asfalto/15 px-4 py-2.5 font-mono text-sm uppercase text-asfalto/60"
+              className="tap rounded-app border border-asfalto/15 px-4 py-2.5 font-mono text-sm uppercase text-asfalto/70 dark:border-white/15 dark:text-cemento/75"
             >
               Annulla
             </button>

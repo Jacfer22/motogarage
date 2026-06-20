@@ -135,7 +135,7 @@ export default function PaginaAccedi() {
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         {modalita === 'registrati' && (
           <div>
-            <label htmlFor="username" className="font-mono text-xs uppercase text-asfalto/60">
+            <label htmlFor="username" className="font-mono text-xs uppercase text-asfalto/70 dark:text-cemento/75">
               Username
             </label>
             <input
@@ -144,19 +144,19 @@ export default function PaginaAccedi() {
               required
               value={username}
               onChange={(e) => setUsername(e.target.value.toLowerCase())}
-              className="mt-1 w-full border-2 border-asfalto bg-white px-3 py-2 font-mono lowercase focus:outline-none"
+              className="input-app mt-1 w-full font-mono lowercase"
               placeholder="es. jacopo_rm"
               pattern="[a-z0-9_]{3,20}"
               autoCapitalize="none"
             />
-            <p className="mt-1 font-mono text-xs text-asfalto/40">
+            <p className="mt-1 font-mono text-xs text-asfalto/60 dark:text-cemento/65">
               3-20 caratteri: lettere minuscole, numeri, underscore.
             </p>
           </div>
         )}
 
         <div>
-          <label htmlFor="email" className="font-mono text-xs uppercase text-asfalto/60">
+          <label htmlFor="email" className="font-mono text-xs uppercase text-asfalto/70 dark:text-cemento/75">
             Email
           </label>
           <input
@@ -165,12 +165,12 @@ export default function PaginaAccedi() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full border-2 border-asfalto bg-white px-3 py-2 focus:outline-none"
+            className="input-app mt-1 w-full"
             placeholder="nome@esempio.it"
           />
         </div>
         <div>
-          <label htmlFor="password" className="font-mono text-xs uppercase text-asfalto/60">
+          <label htmlFor="password" className="font-mono text-xs uppercase text-asfalto/70 dark:text-cemento/75">
             Password
           </label>
           <input
@@ -180,18 +180,18 @@ export default function PaginaAccedi() {
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full border-2 border-asfalto bg-white px-3 py-2 focus:outline-none"
+            className="input-app mt-1 w-full"
             placeholder="Almeno 6 caratteri"
           />
         </div>
 
         {errore && (
-          <p className="border-2 border-red-700 bg-red-50 p-3 text-sm text-red-900">
+          <p className="rounded-app border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-100">
             {errore}
           </p>
         )}
         {messaggio && (
-          <p className="border-2 border-bosco bg-bosco/10 p-3 text-sm text-bosco">
+          <p className="rounded-app border border-bosco/40 bg-bosco/10 p-3 text-sm text-bosco">
             {messaggio}
           </p>
         )}
@@ -209,7 +209,7 @@ export default function PaginaAccedi() {
         </button>
 
         {modalita === 'registrati' && (
-          <p className="mt-3 text-center font-mono text-[11px] leading-relaxed text-asfalto/45">
+          <p className="mt-3 text-center font-mono text-[11px] leading-relaxed text-asfalto/60 dark:text-cemento/65">
             Creando un account accetti i{' '}
             <a href="/termini" className="underline hover:text-asfalto">Termini</a> e la{' '}
             <a href="/privacy" className="underline hover:text-asfalto">Privacy Policy</a>.
@@ -224,12 +224,12 @@ export default function PaginaAccedi() {
           setErrore(null);
           setMessaggio(null);
         }}
-        className="mt-4 font-mono text-sm uppercase text-asfalto/60 underline hover:text-asfalto"
+        className="mt-4 font-mono text-sm uppercase text-asfalto/70 underline hover:text-asfalto dark:text-cemento/75 dark:hover:text-white"
       >
         {modalita === 'accedi' ? 'Non hai un account? Registrati' : 'Hai già un account? Accedi'}
       </button>
 
-      <p className="mt-8 font-mono text-xs text-asfalto/40">
+      <p className="mt-8 font-mono text-xs text-asfalto/60 dark:text-cemento/65">
         <Link href="/" className="underline">
           ← Torna alla home
         </Link>
