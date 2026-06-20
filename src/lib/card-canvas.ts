@@ -49,6 +49,9 @@ interface DatiCard {
   fotoScala?: number;
   /** Luminosità foto di sfondo: 1 = normale */
   fotoLuminosita?: number;
+  /** Centro foto 0–1 (0.5 = centrata) */
+  fotoOffsetX?: number;
+  fotoOffsetY?: number;
 }
 
 function caricaImmagine(src: string): Promise<HTMLImageElement> {
@@ -288,13 +291,17 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       const foto = await caricaImmagine(dati.fotoDataUrl);
       const zoom = Math.min(2, Math.max(0.6, dati.fotoScala ?? 1));
       const luminosita = Math.min(1.5, Math.max(0.5, dati.fotoLuminosita ?? 1));
+      const offsetX = (dati.fotoOffsetX ?? 0.5) - 0.5;
+      const offsetY = (dati.fotoOffsetY ?? 0.5) - 0.5;
       const scalaBase = Math.max(LARGHEZZA / foto.width, ALTEZZA / foto.height);
       const w = foto.width * scalaBase * zoom;
       const h = foto.height * scalaBase * zoom;
+      const panX = offsetX * LARGHEZZA * 0.8;
+      const panY = offsetY * ALTEZZA * 0.8;
 
       ctx.save();
       ctx.filter = `brightness(${luminosita})`;
-      ctx.drawImage(foto, (LARGHEZZA - w) / 2, (ALTEZZA - h) / 2, w, h);
+      ctx.drawImage(foto, (LARGHEZZA - w) / 2 + panX, (ALTEZZA - h) / 2 + panY, w, h);
       ctx.restore();
 
       const velo = ctx.createLinearGradient(0, 0, 0, ALTEZZA);

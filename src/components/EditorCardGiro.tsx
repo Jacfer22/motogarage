@@ -50,6 +50,10 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   const [preferFoto, setPreferFoto] = useState(false);
   const [fotoZoom, setFotoZoom] = useState(1);
   const [fotoLuminosita, setFotoLuminosita] = useState(1);
+  const [fotoOffsetX, setFotoOffsetX] = useState(0.5);
+  const [fotoOffsetY, setFotoOffsetY] = useState(0.5);
+  const panRef = useRef<HTMLDivElement>(null);
+  const trascinaRef = useRef({ attivo: false, x: 0, y: 0, offX: 0.5, offY: 0.5 });
   const [cardUrl, setCardUrl] = useState<string | null>(null);
   const [generandoCard, setGenerandoCard] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
@@ -99,6 +103,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
           tracciatoOffsetY: tracciatoY,
           fotoScala: preferFotoRef.current || foto !== undefined ? fotoZoom : undefined,
           fotoLuminosita: preferFotoRef.current || foto !== undefined ? fotoLuminosita : undefined,
+          fotoOffsetX: preferFotoRef.current || foto !== undefined ? fotoOffsetX : undefined,
+          fotoOffsetY: preferFotoRef.current || foto !== undefined ? fotoOffsetY : undefined,
         });
         setCardUrl(url);
         rigeneraAbilitato.current = true;
@@ -122,6 +128,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       tracciatoY,
       fotoZoom,
       fotoLuminosita,
+      fotoOffsetX,
+      fotoOffsetY,
     ]
   );
 
@@ -143,6 +151,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     tracciatoY,
     fotoZoom,
     fotoLuminosita,
+    fotoOffsetX,
+    fotoOffsetY,
     creaCard,
   ]);
 
@@ -177,6 +187,34 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       // fallback download
     }
     scaricaCard();
+  }
+
+  function iniziaTrascina(clientX: number, clientY: number) {
+    trascinaRef.current = {
+      attivo: true,
+      x: clientX,
+      y: clientY,
+      offX: fotoOffsetX,
+      offY: fotoOffsetY,
+    };
+  }
+
+  function muoviTrascina(clientX: number, clientY: number) {
+    if (!trascinaRef.current.attivo || !panRef.current) return;
+    const rect = panRef.current.getBoundingClientRect();
+    const dx = clientX - trascinaRef.current.x;
+    const dy = clientY - trascinaRef.current.y;
+    const sens = 0.85;
+    setFotoOffsetX(
+      Math.min(1, Math.max(0, trascinaRef.current.offX + (dx / rect.width) * sens)),
+    );
+    setFotoOffsetY(
+      Math.min(1, Math.max(0, trascinaRef.current.offY + (dy / rect.height) * sens)),
+    );
+  }
+
+  function terminaTrascina() {
+    trascinaRef.current.attivo = false;
   }
 
   return (
@@ -308,6 +346,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
               setPreferFoto(true);
               setFotoZoom(1);
               setFotoLuminosita(1);
+              setFotoOffsetX(0.5);
+              setFotoOffsetY(0.5);
               rigeneraAbilitato.current = true;
               await creaCard(foto);
             }}
@@ -327,60 +367,56 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       </div>
 
       {fotoSalvata && preferFoto && (
-        <div className="space-y-3 rounded-app border border-asfalto/12 bg-asfalto/[0.03] p-4">
-          <p className="font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Regola foto</p>
-          <div className="flex items-center justify-between gap-3">
-            <span className="font-mono text-xs text-asfalto/65">Dimensione</span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={fotoZoom <= 0.6 || generandoCard}
-                onClick={() => setFotoZoom((z) => Math.max(0.6, Math.round((z - 0.1) * 10) / 10))}
-                className="tap flex h-9 w-9 items-center justify-center rounded-app border border-asfalto/20 font-mono text-lg font-bold hover:bg-asfalto hover:text-cemento disabled:opacity-35"
-                aria-label="Rimpicciolisci foto"
-              >
-                −
-              </button>
-              <span className="min-w-[3rem] text-center font-mono text-xs tabular-nums text-asfalto/55">
-                {Math.round(fotoZoom * 100)}%
-              </span>
-              <button
-                type="button"
-                disabled={fotoZoom >= 2 || generandoCard}
-                onClick={() => setFotoZoom((z) => Math.min(2, Math.round((z + 0.1) * 10) / 10))}
-                className="tap flex h-9 w-9 items-center justify-center rounded-app border border-asfalto/20 font-mono text-lg font-bold hover:bg-asfalto hover:text-cemento disabled:opacity-35"
-                aria-label="Ingrandisci foto"
-              >
-                +
-              </button>
-            </div>
+        <div className="space-y-4 rounded-app border-2 border-asfalto/15 bg-white p-4">
+          <p className="font-mono text-xs font-bold uppercase tracking-wide text-asfalto">
+            Regola la foto
+          </p>
+
+          <div
+            ref={panRef}
+            className="relative mx-auto aspect-[9/16] w-full max-w-[240px] cursor-grab overflow-hidden rounded-app border-2 border-asfalto/20 bg-asfalto touch-none active:cursor-grabbing"
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              iniziaTrascina(e.clientX, e.clientY);
+            }}
+            onPointerMove={(e) => muoviTrascina(e.clientX, e.clientY)}
+            onPointerUp={terminaTrascina}
+            onPointerCancel={terminaTrascina}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={fotoSalvata}
+              alt="Anteprima posizione foto"
+              draggable={false}
+              className="pointer-events-none absolute left-1/2 top-1/2 max-w-none select-none"
+              style={{
+                filter: `brightness(${fotoLuminosita})`,
+                minWidth: `${fotoZoom * 100}%`,
+                minHeight: `${fotoZoom * 100}%`,
+                width: 'auto',
+                height: 'auto',
+                transform: `translate(calc(-50% + ${(fotoOffsetX - 0.5) * 80}%), calc(-50% + ${(fotoOffsetY - 0.5) * 80}%))`,
+              }}
+            />
+            <p className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-center font-mono text-[10px] font-bold uppercase tracking-wide text-white">
+              Trascina per spostare
+            </p>
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <span className="font-mono text-xs text-asfalto/65">Luminosità</span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={fotoLuminosita <= 0.5 || generandoCard}
-                onClick={() => setFotoLuminosita((l) => Math.max(0.5, Math.round((l - 0.1) * 10) / 10))}
-                className="tap flex h-9 w-9 items-center justify-center rounded-app border border-asfalto/20 font-mono text-lg font-bold hover:bg-asfalto hover:text-cemento disabled:opacity-35"
-                aria-label="Riduci luminosità"
-              >
-                −
-              </button>
-              <span className="min-w-[3rem] text-center font-mono text-xs tabular-nums text-asfalto/55">
-                {Math.round(fotoLuminosita * 100)}%
-              </span>
-              <button
-                type="button"
-                disabled={fotoLuminosita >= 1.5 || generandoCard}
-                onClick={() => setFotoLuminosita((l) => Math.min(1.5, Math.round((l + 0.1) * 10) / 10))}
-                className="tap flex h-9 w-9 items-center justify-center rounded-app border border-asfalto/20 font-mono text-lg font-bold hover:bg-asfalto hover:text-cemento disabled:opacity-35"
-                aria-label="Aumenta luminosità"
-              >
-                +
-              </button>
-            </div>
-          </div>
+
+          <SliderFoto
+            etichetta="Luminosità"
+            valore={Math.round(fotoLuminosita * 100)}
+            min={50}
+            max={150}
+            onChange={(v) => setFotoLuminosita(v / 100)}
+          />
+          <SliderFoto
+            etichetta="Zoom"
+            valore={Math.round(fotoZoom * 100)}
+            min={60}
+            max={200}
+            onChange={(v) => setFotoZoom(v / 100)}
+          />
         </div>
       )}
 
@@ -394,6 +430,39 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function SliderFoto({
+  etichetta,
+  valore,
+  min,
+  max,
+  onChange,
+}: {
+  etichetta: string;
+  valore: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="font-mono text-xs font-bold uppercase tracking-wide text-asfalto">{etichetta}</span>
+        <span className="font-display text-lg font-bold tabular-nums text-asfalto">{valore}%</span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={1}
+        value={valore}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-4 w-full cursor-pointer accent-[#d11919]"
+        aria-label={`${etichetta} ${valore}%`}
+      />
     </div>
   );
 }
