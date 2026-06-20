@@ -48,7 +48,7 @@ export default function CtaHome() {
       >
         Accedi / Registrati
       </Link>
-      <p className="font-mono text-[10px] uppercase tracking-wide text-cemento/50 sm:max-w-[11rem] sm:text-left">
+      <p className="hidden font-mono text-[10px] uppercase tracking-wide text-cemento/50 sm:block sm:max-w-[11rem]">
         Registrati gratis per tracciare giri GPS e creare card social
       </p>
     </div>

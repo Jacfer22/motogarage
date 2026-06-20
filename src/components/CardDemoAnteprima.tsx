@@ -58,10 +58,10 @@ export default function CardDemoAnteprima({
           </div>
         </div>
 
-        <div className="mt-2 flex gap-4 px-2 py-1 font-mono text-xs text-cemento/45">
-          <span>♥ 128</span>
-          <span>💬 12</span>
-          <span>↗</span>
+        <div className="mt-2 flex gap-4 px-2 py-1 font-mono text-[10px] uppercase tracking-wide text-cemento/40">
+          <span>Mi piace</span>
+          <span>Commenta</span>
+          <span>Condividi</span>
         </div>
       </div>
     </div>

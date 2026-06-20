@@ -45,76 +45,75 @@ export default function RiepilogoGiroConcluso({
   ];
 
   return (
-    <div className="pannello-leggibile mt-4 rounded-app-lg border border-segnale p-5 shadow-app animate-scale-in">
-      {info && (
-        <p className="mb-3 rounded-app border border-cartello/30 bg-cartello/10 px-3 py-2 text-sm text-asfalto/80">
-          {info}
+    <div className="mt-4 space-y-4 animate-scale-in">
+      <div className="rounded-app-lg border border-white/10 bg-[#12151a] p-4 text-cemento shadow-app sm:p-5">
+        {info && (
+          <p className="mb-3 rounded-app border border-cartello/30 bg-cartello/10 px-3 py-2 text-sm text-cemento/85">
+            {info}
+          </p>
+        )}
+        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-brand">Giro concluso</p>
+        <h2 className="mt-1 font-display text-2xl font-black uppercase tracking-tight text-white">Registrato</h2>
+        <p className="mt-1 font-mono text-xs uppercase tracking-wide text-cemento/50">
+          {formattaKm(distanzaM)} km · {formattaDurata(durataSec)}
         </p>
-      )}
-      <h2 className="font-display text-2xl font-bold uppercase tracking-tight">Giro registrato</h2>
-      <p className="mt-1 text-asfalto/70">
-        {formattaKm(distanzaM)} km in {formattaDurata(durataSec)}.
-      </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stats.map((x) => (
-          <div key={x.l} className="rounded-app bg-cemento p-3 text-center">
-            <p className="font-mono text-[10px] uppercase tracking-wide text-asfalto/50">{x.l}</p>
-            <p className="mt-0.5 font-display text-2xl font-bold leading-none">{x.v}</p>
-            {x.u && <p className="font-mono text-[10px] uppercase text-asfalto/40">{x.u}</p>}
-          </div>
-        ))}
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {stats.map((x) => (
+            <div key={x.l} className="rounded-app border border-white/8 bg-white/[0.04] p-3 text-center">
+              <p className="font-mono text-[9px] uppercase tracking-wide text-cemento/45">{x.l}</p>
+              <p className="mt-0.5 font-display text-xl font-bold leading-none text-white">{x.v}</p>
+              {x.u && <p className="font-mono text-[9px] uppercase text-cemento/40">{x.u}</p>}
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-4 font-mono text-[10px] uppercase tracking-wide text-cemento/45">
+          {salvataggioCloud
+            ? 'Salvataggio nel cloud…'
+            : giroConcluso.cloudId
+              ? 'Salvato nel cloud'
+              : loggato
+                ? 'Salvato in locale'
+                : 'Accedi per salvare nel cloud'}
+        </p>
+
+        <div className="mt-4">
+          <label className="editor-card-label" htmlFor="nome-giro">Nome giro</label>
+          <input
+            id="nome-giro"
+            type="text"
+            value={luogoCard}
+            onChange={(e) => onLuogoCardChange(e.target.value)}
+            placeholder="Es. Passo dello Stelvio"
+            maxLength={40}
+            className="editor-card-input mt-2"
+          />
+        </div>
       </div>
 
-      <p className="mt-4 font-mono text-xs uppercase tracking-wide text-asfalto/50">
-        {salvataggioCloud
-          ? 'Salvataggio nel cloud…'
-          : giroConcluso.cloudId
-            ? '✓ Salvato nel cloud'
-            : loggato
-              ? 'Salvato in locale'
-              : 'Accedi per salvare nel cloud'}
-      </p>
+      <EditorCardGiro
+        giro={giroConcluso}
+        onNomeChange={onNomeChange}
+        onPubblicoChange={onPubblicoChange}
+      />
 
-      <div className="mt-4">
-        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Nome giro (opzionale)</p>
-        <input
-          type="text"
-          value={luogoCard}
-          onChange={(e) => onLuogoCardChange(e.target.value)}
-          placeholder="Es. Passo dello Stelvio"
-          maxLength={40}
-          className="input-app w-full"
-        />
-      </div>
-
-      <div className="mt-4">
-        <EditorCardGiro
-          giro={giroConcluso}
-          onNomeChange={onNomeChange}
-          onPubblicoChange={onPubblicoChange}
-        />
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-3">
-        <Link
-          href="/giri"
-          className="rounded-app border border-asfalto/15 px-4 py-2.5 font-mono text-xs font-bold uppercase hover:border-brand hover:text-brand"
-        >
+      <div className="flex flex-wrap gap-2">
+        <Link href="/giri" className="tap editor-card-btn-secondary">
           I miei giri
         </Link>
         <button
           type="button"
           onClick={onElimina}
           disabled={salvataggioCloud}
-          className="rounded-app border border-red-500/35 bg-red-500/10 px-4 py-2.5 font-mono text-xs font-bold uppercase text-red-600 hover:bg-red-500/15 disabled:opacity-40"
+          className="tap rounded-app border border-red-500/35 bg-red-500/10 px-4 py-2.5 font-mono text-[10px] font-bold uppercase text-red-400 hover:bg-red-500/15 disabled:opacity-40"
         >
           Elimina giro
         </button>
         <button
           type="button"
           onClick={onNuovoGiro}
-          className="font-mono text-xs uppercase text-asfalto/60 underline hover:text-asfalto"
+          className="tap px-2 py-2.5 font-mono text-[10px] uppercase tracking-wide text-cemento/50 underline hover:text-cemento"
         >
           Nuovo giro
         </button>

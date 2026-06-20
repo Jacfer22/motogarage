@@ -37,6 +37,57 @@ interface Props {
   onPubblicoChange?: (pubblico: boolean) => void;
 }
 
+function Chip({
+  attivo,
+  onClick,
+  children,
+  className = '',
+}: {
+  attivo: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`tap flex-1 rounded-app border px-3 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wide transition-colors ${
+        attivo
+          ? 'border-brand bg-brand/20 text-white'
+          : 'border-white/12 bg-white/[0.03] text-cemento/55 hover:border-white/22 hover:text-cemento/85'
+      } ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function StatChip({
+  label,
+  attivo,
+  onToggle,
+}: {
+  label: string;
+  attivo: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`tap flex items-center justify-between gap-2 rounded-app border px-3 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wide transition-colors ${
+        attivo
+          ? 'border-brand/50 bg-brand/10 text-white'
+          : 'border-white/10 bg-transparent text-cemento/40'
+      }`}
+    >
+      <span>{label}</span>
+      <span className={`h-2 w-2 rounded-full ${attivo ? 'bg-brand' : 'bg-white/20'}`} />
+    </button>
+  );
+}
+
 export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }: Props) {
   const { toast } = useFeedback();
   const [temaCard, setTemaCard] = useState<'tracciato' | 'foto'>('tracciato');
@@ -132,7 +183,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       fotoLuminosita,
       fotoOffsetX,
       fotoOffsetY,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -164,21 +215,21 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     a.href = cardUrl;
     a.download = 'motogarage-giro.png';
     a.click();
+    toast('Card salvata');
   }
 
   function testoDidascalia() {
     const titolo = luogoCard.trim() || giro.nome;
     return (
       `${titolo !== 'Giro libero' ? `${titolo} · ` : ''}` +
-      `${formattaKm(giro.km)} km in moto 🏍️\n` +
+      `${formattaKm(giro.km)} km in moto\n` +
       `Il mio giro su MotoGarage`
     );
   }
 
   async function copiaDidascalia() {
-    const testo = testoDidascalia();
     try {
-      await navigator.clipboard.writeText(testo);
+      await navigator.clipboard.writeText(testoDidascalia());
       toast('Didascalia copiata negli appunti');
     } catch {
       setErrore('Non sono riuscito a copiare la didascalia.');
@@ -235,142 +286,85 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   }
 
   return (
-    <div className="pannello-leggibile space-y-4 rounded-app-lg border border-asfalto/12 p-5">
-      <div>
-        <p className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
-          Crea la card da condividere
-        </p>
-        <p className="mt-1 text-sm text-asfalto/65">
+    <div className="editor-card space-y-5 rounded-app-lg border border-white/10 bg-[#0e1012] p-4 text-cemento shadow-app-lg sm:p-5">
+      <header>
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand">Card social</p>
+        <h2 className="mt-1 font-display text-xl font-black uppercase leading-tight tracking-tight text-white sm:text-2xl">
+          Personalizza e condividi
+        </h2>
+        <p className="mt-2 font-mono text-[11px] uppercase tracking-wide text-cemento/45">
           {formattaKm(giro.km)} km · {formattaDurata(giro.durataSec)} · {formattaDataBreve(giro.data)}
         </p>
-      </div>
+      </header>
 
       {giro.cloudId && onPubblicoChange && (
         <button
           type="button"
           onClick={() => onPubblicoChange(!giro.pubblico)}
-          className={`tap flex w-full items-center justify-between gap-3 rounded-app border-2 p-3 text-left ${
-            giro.pubblico ? 'border-bosco bg-bosco/10' : 'border-asfalto/15'
+          className={`tap flex w-full items-center justify-between gap-3 rounded-app border p-3.5 text-left transition-colors ${
+            giro.pubblico
+              ? 'border-brand/40 bg-brand/10'
+              : 'border-white/10 bg-white/[0.03]'
           }`}
         >
           <span>
-            <span className="block font-mono text-sm font-medium uppercase">
-              {giro.pubblico ? '✓ Visibile nella community' : 'Condividi nella community'}
+            <span className="block font-mono text-xs font-bold uppercase text-white">
+              {giro.pubblico ? 'In community' : 'Pubblica in community'}
             </span>
-            <span className="block font-mono text-[11px] text-asfalto/55">
-              Mostra questo giro nel feed pubblico
+            <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-wide text-cemento/45">
+              Mostra questo giro nel feed
             </span>
           </span>
-          <span className={`relative h-6 w-11 shrink-0 rounded-full ${giro.pubblico ? 'bg-bosco' : 'bg-asfalto/20'}`}>
+          <span className={`relative h-6 w-11 shrink-0 rounded-full ${giro.pubblico ? 'bg-brand' : 'bg-white/15'}`}>
             <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${giro.pubblico ? 'left-[22px]' : 'left-0.5'}`} />
           </span>
         </button>
       )}
 
-      <div>
-        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Tema</p>
-        <div className="flex gap-2">
-          {(['scuro', 'chiaro'] as const).map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPaletteCard(p)}
-              className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
-                paletteCard === p ? 'border-segnale bg-segnale/10' : 'border-asfalto/15 text-asfalto/60'
-              }`}
-            >
-              {p === 'scuro' ? '🌑 Scuro' : '☀️ Chiaro'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Stile</p>
-        <div className="flex gap-2">
-          {(['tracciato', 'foto'] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTemaCard(t)}
-              className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
-                temaCard === t ? 'border-segnale bg-segnale/10' : 'border-asfalto/15 text-asfalto/60'
-              }`}
-            >
-              {t === 'tracciato' ? 'Stats in basso' : 'Stats laterali'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Luogo (opzionale)</p>
-        <input
-          type="text"
-          value={luogoCard}
-          onChange={(e) => setLuogoCard(e.target.value)}
-          placeholder="Es. Passo dello Stelvio"
-          maxLength={40}
-          className="input-app w-full"
-        />
-      </div>
-
-      <div>
-        <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Statistiche nella card</p>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { label: 'Vel. media', attivo: mostraMedia, set: setMostraMedia },
-            { label: 'Vel. massima', attivo: mostraMax, set: setMostraMax },
-            { label: 'Curve', attivo: mostraCurve, set: setMostraCurve },
-            { label: 'Dislivello', attivo: mostraDislivello, set: setMostraDislivello },
-          ].map(({ label, attivo, set }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => set(!attivo)}
-              className={`tap flex items-center gap-2 rounded-app border px-3 py-2 font-mono text-xs font-medium ${
-                attivo ? 'border-bosco bg-bosco/10 text-bosco' : 'border-asfalto/15 text-asfalto/40'
-              }`}
-            >
-              <span>{attivo ? '✓' : '○'}</span>
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {cardUrl && (
-        <div className="space-y-4">
-          <p className="font-mono text-[11px] uppercase tracking-wide text-asfalto/40">
-            Anteprima Instagram (4:5)
-          </p>
-          <div className="mx-auto w-full max-w-[280px] rounded-[20px] border border-asfalto/15 bg-asfalto p-2 shadow-app-lg dark:border-white/10">
-            <div className="flex items-center gap-2 px-2 py-1">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
-                MG
-              </div>
-              <span className="font-mono text-[10px] font-bold uppercase text-cemento">motogarage</span>
-            </div>
-            <div className="aspect-[4/5] overflow-hidden rounded-[14px] bg-black">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={cardUrl} alt="Anteprima card su Instagram" className="h-full w-full object-cover" />
-            </div>
-            <div className="mt-1 flex gap-3 px-2 py-1 text-xs text-cemento/40" aria-hidden="true">
-              <span>♥</span>
-              <span>💬</span>
-              <span>↗</span>
-            </div>
+      <section className="space-y-4">
+        <div>
+          <p className="editor-card-label">Tema colore</p>
+          <div className="mt-2 flex gap-2">
+            <Chip attivo={paletteCard === 'scuro'} onClick={() => setPaletteCard('scuro')}>Scuro</Chip>
+            <Chip attivo={paletteCard === 'chiaro'} onClick={() => setPaletteCard('chiaro')}>Chiaro</Chip>
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={cardUrl} alt="Card del giro" className="w-full max-w-xs rounded-app border-2 border-asfalto/20 shadow-app" />
         </div>
-      )}
 
-      {errore && <p className="text-sm text-red-700 dark:text-red-300">{errore}</p>}
+        <div>
+          <p className="editor-card-label">Layout stats</p>
+          <div className="mt-2 flex gap-2">
+            <Chip attivo={temaCard === 'tracciato'} onClick={() => setTemaCard('tracciato')}>In basso</Chip>
+            <Chip attivo={temaCard === 'foto'} onClick={() => setTemaCard('foto')}>Laterale</Chip>
+          </div>
+        </div>
 
-      <div className="flex flex-wrap gap-3">
-        <label className="tap cursor-pointer rounded-app bg-segnale px-5 py-2.5 font-mono text-sm font-medium uppercase text-asfalto hover:bg-white">
-          {generandoCard ? 'Genero…' : '📷 Con foto'}
+        <div>
+          <label className="editor-card-label" htmlFor="luogo-card">Luogo</label>
+          <input
+            id="luogo-card"
+            type="text"
+            value={luogoCard}
+            onChange={(e) => setLuogoCard(e.target.value)}
+            placeholder="Es. Passo dello Stelvio"
+            maxLength={40}
+            className="editor-card-input mt-2"
+          />
+        </div>
+
+        <div>
+          <p className="editor-card-label">Statistiche</p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <StatChip label="Vel. media" attivo={mostraMedia} onToggle={() => setMostraMedia((v) => !v)} />
+            <StatChip label="Vel. max" attivo={mostraMax} onToggle={() => setMostraMax((v) => !v)} />
+            <StatChip label="Curve" attivo={mostraCurve} onToggle={() => setMostraCurve((v) => !v)} />
+            <StatChip label="Dislivello" attivo={mostraDislivello} onToggle={() => setMostraDislivello((v) => !v)} />
+          </div>
+        </div>
+      </section>
+
+      <div className="flex flex-wrap gap-2 border-t border-white/8 pt-4">
+        <label className="tap btn-primary cursor-pointer">
+          {generandoCard ? 'Genero…' : 'Aggiungi foto'}
           <input
             type="file"
             accept="image/*"
@@ -397,21 +391,18 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
             void creaCard(null);
           }}
           disabled={generandoCard}
-          className="tap rounded-app border border-asfalto/20 px-5 py-2.5 font-mono text-sm font-medium uppercase hover:bg-asfalto hover:text-cemento disabled:opacity-60"
+          className="tap editor-card-btn-secondary disabled:opacity-50"
         >
-          Senza foto
+          Solo tracciato
         </button>
       </div>
 
       {fotoSalvata && preferFoto && (
-        <div className="space-y-4 rounded-app border-2 border-asfalto/15 bg-white p-4">
-          <p className="font-mono text-xs font-bold uppercase tracking-wide text-asfalto">
-            Regola la foto
-          </p>
-
+        <section className="space-y-4 rounded-app border border-white/10 bg-black/35 p-4">
+          <p className="editor-card-label">Regola foto di sfondo</p>
           <div
             ref={panRef}
-            className="relative mx-auto aspect-[9/16] w-full max-w-[240px] cursor-grab overflow-hidden rounded-app border-2 border-asfalto/20 bg-asfalto touch-none active:cursor-grabbing"
+            className="relative mx-auto aspect-[9/16] w-full max-w-[220px] cursor-grab overflow-hidden rounded-app border border-white/15 bg-black touch-none active:cursor-grabbing"
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
               iniziaTrascina(e.clientX, e.clientY);
@@ -435,38 +426,45 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
                 transform: `translate(calc(-50% + ${(fotoOffsetX - 0.5) * 80}%), calc(-50% + ${(fotoOffsetY - 0.5) * 80}%))`,
               }}
             />
-            <p className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-center font-mono text-[10px] font-bold uppercase tracking-wide text-white">
+            <p className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 py-2 text-center font-mono text-[9px] font-bold uppercase tracking-wide text-cemento/70">
               Trascina per spostare
             </p>
           </div>
-
-          <SliderFoto
-            etichetta="Luminosità"
-            valore={Math.round(fotoLuminosita * 100)}
-            min={50}
-            max={150}
-            onChange={(v) => setFotoLuminosita(v / 100)}
-          />
-          <SliderFoto
-            etichetta="Zoom"
-            valore={Math.round(fotoZoom * 100)}
-            min={60}
-            max={200}
-            onChange={(v) => setFotoZoom(v / 100)}
-          />
-        </div>
+          <SliderFoto etichetta="Luminosità" valore={Math.round(fotoLuminosita * 100)} min={50} max={150} onChange={(v) => setFotoLuminosita(v / 100)} />
+          <SliderFoto etichetta="Zoom" valore={Math.round(fotoZoom * 100)} min={60} max={200} onChange={(v) => setFotoZoom(v / 100)} />
+        </section>
       )}
 
       {cardUrl && (
-        <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={condividiCard} className="tap btn-primary">
+        <section className="space-y-3 border-t border-white/8 pt-4">
+          <p className="editor-card-label">Anteprima Instagram · 4:5</p>
+          <div className="mx-auto w-full max-w-[260px] rounded-[18px] border border-white/10 bg-[#08090b] p-2">
+            <div className="flex items-center gap-2 px-1 py-1">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-[9px] font-bold text-white">MG</div>
+              <span className="font-mono text-[9px] font-bold uppercase text-cemento/70">motogarage</span>
+            </div>
+            <div className="aspect-[4/5] overflow-hidden rounded-[12px] bg-black">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={cardUrl} alt="Anteprima card" className="h-full w-full object-cover" />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {errore && (
+        <p className="rounded-app border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{errore}</p>
+      )}
+
+      {cardUrl && (
+        <div className="flex flex-col gap-2 border-t border-white/8 pt-4 sm:flex-row sm:flex-wrap">
+          <button type="button" onClick={condividiCard} className="tap btn-primary flex-1 sm:flex-none">
             Condividi
           </button>
-          <button type="button" onClick={() => void copiaDidascalia()} className="tap btn-ghost">
+          <button type="button" onClick={() => void copiaDidascalia()} className="tap editor-card-btn-secondary flex-1 sm:flex-none">
             Copia didascalia
           </button>
-          <button type="button" onClick={scaricaCard} className="tap btn-ghost">
-            Salva card
+          <button type="button" onClick={scaricaCard} className="tap editor-card-btn-secondary flex-1 sm:flex-none">
+            Salva PNG
           </button>
         </div>
       )}
@@ -490,8 +488,8 @@ function SliderFoto({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="font-mono text-xs font-bold uppercase tracking-wide text-asfalto">{etichetta}</span>
-        <span className="font-display text-lg font-bold tabular-nums text-asfalto">{valore}%</span>
+        <span className="editor-card-label mb-0">{etichetta}</span>
+        <span className="font-mono text-xs tabular-nums text-cemento/70">{valore}%</span>
       </div>
       <input
         type="range"
@@ -500,7 +498,7 @@ function SliderFoto({
         step={1}
         value={valore}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-4 w-full cursor-pointer accent-[#d11919]"
+        className="editor-card-range h-2 w-full cursor-pointer"
         aria-label={`${etichetta} ${valore}%`}
       />
     </div>
