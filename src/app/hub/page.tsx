@@ -158,7 +158,7 @@ export default function PaginaHub() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-asfalto/40">Cosa vuoi fare?</p>
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-asfalto/60 dark:text-cemento/65">Cosa vuoi fare?</p>
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
           {azioni.map((azione) => (
             <Link
@@ -166,12 +166,12 @@ export default function PaginaHub() {
               href={azione.href}
               className={`card-app group flex flex-col p-5 ${azione.accento ? 'border-red-600 bg-asfalto text-cemento' : ''}`}
             >
-              <span className={`flex h-11 w-11 items-center justify-center rounded-app ${azione.accento ? 'bg-red-600 text-white' : 'bg-asfalto/[0.04] text-asfalto group-hover:bg-red-600 group-hover:text-white'}`}>
+              <span className={`flex h-11 w-11 items-center justify-center rounded-app ${azione.accento ? 'bg-red-600 text-white' : 'bg-asfalto/10 text-asfalto/85 group-hover:bg-red-600 group-hover:text-white dark:text-cemento/85'}`}>
                 <IconaHub nome={azione.icona} />
               </span>
               <h2 className="mt-4 font-display text-2xl font-bold uppercase leading-tight tracking-tight sm:text-3xl">{azione.titolo}</h2>
-              <p className={`mt-1 text-sm ${azione.accento ? 'text-guardrail' : 'text-asfalto/60'}`}>{azione.sotto}</p>
-              <span className={`mt-4 font-mono text-xs uppercase ${azione.accento ? 'text-red-400' : 'text-asfalto/50'}`}>Vai →</span>
+              <p className={`mt-1 text-sm ${azione.accento ? 'text-guardrail' : 'text-asfalto/70 dark:text-cemento/75'}`}>{azione.sotto}</p>
+              <span className={`mt-4 font-mono text-xs uppercase ${azione.accento ? 'text-red-400' : 'text-asfalto/65 dark:text-cemento/70'}`}>Vai →</span>
             </Link>
           ))}
         </div>
@@ -182,7 +182,7 @@ export default function PaginaHub() {
           <div className="border-2 border-cartello bg-cartello/10 p-5">
             <p className="font-mono text-xs uppercase tracking-wide text-cartello">Condizioni strada</p>
             <p className="mt-1 font-medium">{avviso.titolo}</p>
-            <p className="mt-1 text-sm text-asfalto/70">{avviso.descrizione}</p>
+            <p className="mt-1 text-sm text-asfalto/75 dark:text-cemento/80">{avviso.descrizione}</p>
             {avviso.itinerari && (
               <Link href={`/itinerari/${avviso.itinerari.slug}`} className="mt-3 inline-block font-mono text-xs uppercase underline">
                 Vedi {avviso.itinerari.titolo} →

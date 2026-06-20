@@ -112,7 +112,7 @@ export default function PannelloNavigazione({
           <h2 className="mt-1 font-display text-2xl font-black uppercase leading-none tracking-tight text-white sm:text-3xl">
             Dove vuoi andare?
           </h2>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-cemento/75">
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-cemento/85">
             Strumento di supporto mentre guidi. Il <strong className="text-white">giro GPS resta sempre il tuo percorso reale</strong>
             {' '}— la linea gialla sulla mappa è quella che conta per km, curve e card social.
           </p>
@@ -121,7 +121,7 @@ export default function PannelloNavigazione({
           <button
             type="button"
             onClick={disattiva}
-            className="shrink-0 rounded-app border border-white/15 px-3 py-1.5 font-mono text-[10px] font-bold uppercase text-cemento/70 transition-colors hover:border-white/30 hover:text-white"
+            className="shrink-0 rounded-app border border-white/15 px-3 py-1.5 font-mono text-[10px] font-bold uppercase text-cemento/85 transition-colors hover:border-white/30 hover:text-white"
           >
             Chiudi
           </button>
@@ -136,7 +136,7 @@ export default function PannelloNavigazione({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && cerca()}
             placeholder="Passo, lago, bar, città…"
-            className="input-app min-w-0 flex-1 border-white/15 bg-white/95 text-asfalto placeholder:text-asfalto/40"
+            className="input-app min-w-0 flex-1 border-white/15 bg-[#0f1215] text-cemento placeholder:text-cemento/70"
             maxLength={80}
           />
           <button
@@ -181,7 +181,7 @@ export default function PannelloNavigazione({
               {formattaDistanzaNav(distanzaMano)}
             </p>
           )}
-          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 font-mono text-[11px] uppercase tracking-wide text-cemento/55">
+          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 font-mono text-[11px] uppercase tracking-wide text-cemento/75">
             <span>Destinazione: {destinazione?.nome}</span>
             <span>
               Strada: {formattaDistanzaNav(rotta.distanzaM)} · ~
@@ -192,11 +192,11 @@ export default function PannelloNavigazione({
       )}
 
       {caricamento && (
-        <p className="mt-3 font-mono text-[11px] uppercase tracking-wide text-cemento/45">Calcolo percorso…</p>
+        <p className="mt-3 font-mono text-[11px] uppercase tracking-wide text-cemento/75">Calcolo percorso…</p>
       )}
 
       {!navOn && (
-        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-cemento/40">
+        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-cemento/65">
           Poi premi Inizia percorso — traccia e naviga insieme, senza confondere i km.
         </p>
       )}

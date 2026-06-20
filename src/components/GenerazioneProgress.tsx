@@ -92,10 +92,10 @@ export default function GenerazioneProgress({
         <h1 className="mt-7 max-w-3xl font-display text-4xl font-black uppercase leading-none tracking-tight sm:text-6xl">
           Stiamo creando il gemello digitale della tua moto
         </h1>
-        <p className="mt-5 max-w-xl text-sm leading-6 text-asfalto/55 sm:text-base dark:text-cemento/55">
+        <p className="mt-5 max-w-xl text-sm leading-6 text-asfalto/70 sm:text-base dark:text-cemento/75">
           Può richiedere qualche minuto. Puoi chiudere l&apos;app e tornare più tardi.
         </p>
-        <p className="mt-2 font-mono text-xs uppercase tracking-wide text-asfalto/35 dark:text-cemento/35">{nome}</p>
+        <p className="mt-2 font-mono text-xs uppercase tracking-wide text-asfalto/60 dark:text-cemento/65">{nome}</p>
 
         <section className="mt-10 w-full overflow-hidden rounded-[32px] border border-white/15 bg-[#090b0e] shadow-[0_28px_90px_rgba(21,24,26,0.28)]">
           <div className="relative h-64 sm:h-72">
@@ -122,7 +122,7 @@ export default function GenerazioneProgress({
 
         <section className="mt-7 w-full max-w-2xl">
           <div className="mb-3 flex items-end justify-between gap-4">
-            <span className="text-left font-mono text-xs uppercase tracking-wide text-asfalto/50 dark:text-cemento/50">{faseAttuale(percentuale)}</span>
+            <span className="text-left font-mono text-xs uppercase tracking-wide text-asfalto/65 dark:text-cemento/70">{faseAttuale(percentuale)}</span>
             <span className="font-display text-4xl font-black text-red-600 dark:text-red-400">{percentuale}%</span>
           </div>
           <div className="h-4 overflow-hidden rounded-full bg-asfalto/15 shadow-inner dark:bg-white/10">

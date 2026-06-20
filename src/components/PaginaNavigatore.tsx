@@ -125,9 +125,9 @@ export default function PaginaNavigatore() {
   return (
     <div className="flex min-h-[calc(100dvh-4rem)] flex-col">
       {!navOn && (
-        <div className="border-b border-asfalto/10 bg-white px-4 py-3">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-brand">Navigatore</p>
-          <p className="mt-1 text-sm text-asfalto/65">
+        <div className="border-b border-white/10 bg-[#1a1f24] px-4 py-4 text-cemento shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-brand-chiaro">Navigatore</p>
+          <p className="mt-1 text-sm leading-relaxed text-cemento/80">
             Scegli dove andare: il <strong>giro GPS parte in automatico</strong> e alla fine hai la card.
           </p>
           <div className="mt-3 flex gap-2">
@@ -137,26 +137,26 @@ export default function PaginaNavigatore() {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && cerca()}
               placeholder="Dove vuoi andare?"
-              className="input-app min-w-0 flex-1"
+              className="input-app min-w-0 flex-1 border-white/15 bg-[#0f1215] text-cemento placeholder:text-cemento/70"
               maxLength={80}
             />
             <button
               type="button"
               onClick={cerca}
               disabled={caricamento || query.trim().length < 2}
-              className="shrink-0 rounded-app bg-brand px-4 py-2 font-mono text-[10px] font-bold uppercase text-white disabled:opacity-40"
+              className="shrink-0 rounded-app bg-brand px-4 py-2 font-mono text-[10px] font-bold uppercase text-white shadow-brand transition-colors hover:bg-brand-chiaro disabled:bg-white/10 disabled:text-cemento/55 disabled:shadow-none"
             >
               Vai
             </button>
           </div>
           {risultati.length > 0 && (
-            <ul className="mt-2 max-h-36 overflow-y-auto rounded-app border border-asfalto/12">
+            <ul className="mt-2 max-h-36 overflow-y-auto rounded-app border border-white/10 bg-[#101418] text-cemento">
               {risultati.map((r) => (
                 <li key={`${r.lat}-${r.lng}`}>
                   <button
                     type="button"
                     onClick={() => impostaDestinazione(r)}
-                    className="w-full px-3 py-2.5 text-left text-sm hover:bg-asfalto/[0.04]"
+                    className="w-full px-3 py-2.5 text-left text-sm text-cemento/85 hover:bg-white/10 hover:text-white"
                   >
                     {r.nome}
                   </button>
@@ -165,7 +165,9 @@ export default function PaginaNavigatore() {
             </ul>
           )}
           {(erroreNav || track.errore) && (
-            <p className="mt-2 text-sm text-red-700">{erroreNav ?? track.errore}</p>
+            <p className="mt-2 rounded-app border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              {erroreNav ?? track.errore}
+            </p>
           )}
         </div>
       )}
@@ -243,13 +245,13 @@ export default function PaginaNavigatore() {
       </div>
 
       {caricamento && (
-        <p className="px-4 py-2 font-mono text-[10px] uppercase text-asfalto/45">Calcolo percorso…</p>
+        <p className="px-4 py-2 font-mono text-[10px] uppercase text-cemento/80">Calcolo percorso…</p>
       )}
 
-      <div className="border-t border-asfalto/8 bg-white/80 px-4 py-3">
+      <div className="border-t border-white/10 bg-[#101418] px-4 py-3">
         <Link
           href="/traccia"
-          className="font-mono text-[10px] font-bold uppercase tracking-wide text-asfalto/50 underline hover:text-brand"
+          className="font-mono text-[10px] font-bold uppercase tracking-wide text-cemento/80 underline hover:text-brand-chiaro"
         >
           Traccia un giro senza destinazione →
         </Link>

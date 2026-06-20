@@ -104,10 +104,10 @@ export default function Feed() {
   if (voci.length === 0) {
     return (
       <div className="rounded-app-lg border border-dashed border-asfalto/25 bg-white/40 p-8 text-center">
-        <p className="font-display text-2xl font-bold uppercase tracking-tight text-asfalto/40">
+        <p className="font-display text-2xl font-bold uppercase tracking-tight text-asfalto/60 dark:text-cemento/65">
           Ancora silenzio in garage
         </p>
-        <p className="mt-1 text-sm text-asfalto/60">
+        <p className="mt-1 text-sm text-asfalto/70 dark:text-cemento/75">
           Le prime foto, i primi commenti e i primi giri appariranno qui. Comincia tu.
         </p>
       </div>
@@ -119,7 +119,7 @@ export default function Feed() {
       {voci.map((v) => (
         <div key={`${v.tipo}-${v.id}`} className="card-app overflow-hidden p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="font-mono text-xs uppercase tracking-wide text-asfalto/55">
+            <p className="font-mono text-xs uppercase tracking-wide text-asfalto/65 dark:text-cemento/70">
               <Link href={`/profilo/${v.autore}`} className="font-medium text-asfalto hover:text-brand hover:underline">
                 {v.autore}
               </Link>
@@ -127,7 +127,7 @@ export default function Feed() {
               {v.tipo === 'commento' && ' ha commentato'}
               {v.tipo === 'giro' && ' ha registrato un giro'}
             </p>
-            <span className="shrink-0 font-mono text-[11px] text-asfalto/40">{tempoFa(v.quando)}</span>
+            <span className="shrink-0 font-mono text-[11px] text-asfalto/60 dark:text-cemento/65">{tempoFa(v.quando)}</span>
           </div>
 
           {v.tipo === 'foto' && (
@@ -162,7 +162,7 @@ export default function Feed() {
               <div className="flex items-center gap-4">
                 <span className="font-display text-3xl font-bold leading-none">{v.km} <span className="text-base">km</span></span>
                 {v.curve > 0 && (
-                  <span className="font-mono text-sm text-asfalto/60">{v.curve} curve</span>
+                  <span className="font-mono text-sm text-asfalto/70 dark:text-cemento/75">{v.curve} curve</span>
                 )}
                 <span className="font-display text-lg uppercase tracking-tight text-asfalto/70">{v.nome}</span>
               </div>

@@ -80,7 +80,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="vetro fixed inset-x-0 bottom-0 z-40 border-t border-asfalto/10 md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#101418] text-cemento shadow-[0_-10px_28px_rgba(0,0,0,0.32)] md:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Navigazione principale"
     >
@@ -92,10 +92,10 @@ export default function BottomNav() {
               key={href}
               href={href}
               className={`tap flex flex-1 flex-col items-center gap-1 py-2.5 ${
-                attiva ? 'text-asfalto' : 'text-asfalto/45'
+                attiva ? 'text-white' : 'text-cemento/70'
               }`}
             >
-              <span className={attiva ? 'text-brand' : ''}>
+              <span className={attiva ? 'text-brand-chiaro' : ''}>
                 <Icona attiva={attiva} />
               </span>
               <span className="font-mono text-[10px] uppercase tracking-wide">{label}</span>

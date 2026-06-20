@@ -220,10 +220,10 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   return (
     <div className="space-y-4 rounded-app-lg border border-asfalto/12 bg-white/80 p-5 dark:bg-carbone/60">
       <div>
-        <p className="font-mono text-xs uppercase tracking-wide text-asfalto/50">
+        <p className="font-mono text-xs uppercase tracking-wide text-asfalto/65 dark:text-cemento/70">
           Crea la card da condividere
         </p>
-        <p className="mt-1 text-sm text-asfalto/65">
+        <p className="mt-1 text-sm text-asfalto/75 dark:text-cemento/80">
           {formattaKm(giro.km)} km · {formattaDurata(giro.durataSec)} · {formattaDataBreve(giro.data)}
         </p>
       </div>
@@ -240,7 +240,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
             <span className="block font-mono text-sm font-medium uppercase">
               {giro.pubblico ? '✓ Visibile nella community' : 'Condividi nella community'}
             </span>
-            <span className="block font-mono text-[11px] text-asfalto/55">
+            <span className="block font-mono text-[11px] text-asfalto/65 dark:text-cemento/70">
               Mostra questo giro nel feed pubblico
             </span>
           </span>
@@ -251,7 +251,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       )}
 
       <div>
-        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Tema</p>
+        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/65 dark:text-cemento/70">Tema</p>
         <div className="flex gap-2">
           {(['scuro', 'chiaro'] as const).map((p) => (
             <button
@@ -259,7 +259,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
               type="button"
               onClick={() => setPaletteCard(p)}
               className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
-                paletteCard === p ? 'border-segnale bg-segnale/10' : 'border-asfalto/15 text-asfalto/60'
+                paletteCard === p ? 'border-segnale bg-segnale/10' : 'border-asfalto/15 text-asfalto/70 dark:text-cemento/75'
               }`}
             >
               {p === 'scuro' ? '🌑 Scuro' : '☀️ Chiaro'}
@@ -269,7 +269,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       </div>
 
       <div>
-        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Stile</p>
+        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/65 dark:text-cemento/70">Stile</p>
         <div className="flex gap-2">
           {(['tracciato', 'foto'] as const).map((t) => (
             <button
@@ -277,7 +277,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
               type="button"
               onClick={() => setTemaCard(t)}
               className={`tap flex-1 rounded-app border-2 px-3 py-2.5 font-mono text-xs font-medium uppercase ${
-                temaCard === t ? 'border-segnale bg-segnale/10' : 'border-asfalto/15 text-asfalto/60'
+                temaCard === t ? 'border-segnale bg-segnale/10' : 'border-asfalto/15 text-asfalto/70 dark:text-cemento/75'
               }`}
             >
               {t === 'tracciato' ? 'Stats in basso' : 'Stats laterali'}
@@ -287,7 +287,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       </div>
 
       <div>
-        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Luogo (opzionale)</p>
+        <p className="mb-1.5 font-mono text-[11px] uppercase tracking-wide text-asfalto/65 dark:text-cemento/70">Luogo (opzionale)</p>
         <input
           type="text"
           value={luogoCard}
@@ -299,7 +299,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       </div>
 
       <div>
-        <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-asfalto/40">Statistiche nella card</p>
+        <p className="mb-2 font-mono text-[11px] uppercase tracking-wide text-asfalto/65 dark:text-cemento/70">Statistiche nella card</p>
         <div className="grid grid-cols-2 gap-2">
           {[
             { label: 'Vel. media', attivo: mostraMedia, set: setMostraMedia },
@@ -312,7 +312,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
               type="button"
               onClick={() => set(!attivo)}
               className={`tap flex items-center gap-2 rounded-app border px-3 py-2 font-mono text-xs font-medium ${
-                attivo ? 'border-bosco bg-bosco/10 text-bosco' : 'border-asfalto/15 text-asfalto/40'
+                attivo ? 'border-bosco bg-bosco/10 text-bosco' : 'border-asfalto/15 text-asfalto/65 dark:text-cemento/70'
               }`}
             >
               <span>{attivo ? '✓' : '○'}</span>

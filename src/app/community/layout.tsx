@@ -36,7 +36,7 @@ export default function LayoutCommunity({ children }: { children: React.ReactNod
               className={`tap rounded-t-app px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wide transition-colors ${
                 attivo
                   ? 'border-b-2 border-brand bg-brand/10 text-brand'
-                  : 'text-asfalto/50 hover:text-asfalto'
+                  : 'text-asfalto/65 hover:text-asfalto dark:text-cemento/70 dark:hover:text-white'
               }`}
             >
               {tab.label}

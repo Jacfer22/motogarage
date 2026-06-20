@@ -131,7 +131,7 @@ export default function HubNavigazione() {
           >
             <span className="text-2xl">{tile.icona}</span>
             <h3 className="font-display text-2xl font-bold uppercase leading-tight tracking-tight">{tile.titolo}</h3>
-            <p className="text-sm text-asfalto/70 group-hover:text-cemento/70">{tile.sotto}</p>
+            <p className="text-sm text-asfalto/75 group-hover:text-cemento/90 dark:text-cemento/75">{tile.sotto}</p>
           </a>
         ))}
       </div>

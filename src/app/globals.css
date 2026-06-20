@@ -39,6 +39,29 @@ body {
 .dark .text-asfalto {
   color: #f0f1f2 !important;
 }
+/* Rete di sicurezza: se una utility Tailwind con slash non viene intercettata
+   dalla variante puntuale, il token reale della classe resta comunque leggibile. */
+.dark [class~="text-asfalto/95"] { color: rgba(248,249,250,0.96) !important; }
+.dark [class~="text-asfalto/90"] { color: rgba(248,249,250,0.93) !important; }
+.dark [class~="text-asfalto/85"] { color: rgba(240,241,242,0.85) !important; }
+.dark [class~="text-asfalto/80"] { color: rgba(240,241,242,0.80) !important; }
+.dark [class~="text-asfalto/75"] { color: rgba(240,241,242,0.75) !important; }
+.dark [class~="text-asfalto/70"] { color: rgba(240,241,242,0.70) !important; }
+.dark [class~="text-asfalto/65"] { color: rgba(240,241,242,0.68) !important; }
+.dark [class~="text-asfalto/60"] { color: rgba(240,241,242,0.64) !important; }
+.dark [class~="text-asfalto/55"] { color: rgba(240,241,242,0.60) !important; }
+.dark [class~="text-asfalto/50"] { color: rgba(240,241,242,0.64) !important; }
+.dark [class~="text-asfalto/45"] { color: rgba(240,241,242,0.62) !important; }
+.dark [class~="text-asfalto/40"] { color: rgba(240,241,242,0.60) !important; }
+.dark [class~="text-asfalto/35"] { color: rgba(240,241,242,0.58) !important; }
+.dark [class~="text-asfalto/30"] { color: rgba(240,241,242,0.56) !important; }
+.dark [class~="text-asfalto/25"] { color: rgba(240,241,242,0.54) !important; }
+.dark [class~="text-asfalto/20"] { color: rgba(240,241,242,0.52) !important; }
+.dark [class~="text-asfalto/15"],
+.dark [class~="text-asfalto/10"],
+.dark [class~="text-asfalto/5"] {
+  color: rgba(240,241,242,0.50) !important;
+}
 .dark .text-asfalto\/95 { color: rgba(248,249,250,0.96) !important; }
 .dark .text-asfalto\/90 { color: rgba(248,249,250,0.93) !important; }
 .dark .text-asfalto\/85 { color: rgba(240,241,242,0.85) !important; }
@@ -48,13 +71,25 @@ body {
 .dark .text-asfalto\/65 { color: rgba(240,241,242,0.68) !important; }
 .dark .text-asfalto\/60 { color: rgba(240,241,242,0.64) !important; }
 .dark .text-asfalto\/55 { color: rgba(240,241,242,0.60) !important; }
-.dark .text-asfalto\/50 { color: rgba(240,241,242,0.56) !important; }
-.dark .text-asfalto\/45 { color: rgba(240,241,242,0.52) !important; }
-.dark .text-asfalto\/40 { color: rgba(240,241,242,0.48) !important; }
-.dark .text-asfalto\/35 { color: rgba(240,241,242,0.44) !important; }
-.dark .text-asfalto\/30 { color: rgba(240,241,242,0.42) !important; }
-.dark .text-asfalto\/25 { color: rgba(240,241,242,0.38) !important; }
-.dark .text-asfalto\/20 { color: rgba(240,241,242,0.34) !important; }
+.dark .text-asfalto\/50 { color: rgba(240,241,242,0.64) !important; }
+.dark .text-asfalto\/45 { color: rgba(240,241,242,0.62) !important; }
+.dark .text-asfalto\/40 { color: rgba(240,241,242,0.60) !important; }
+.dark .text-asfalto\/35 { color: rgba(240,241,242,0.58) !important; }
+.dark .text-asfalto\/30 { color: rgba(240,241,242,0.56) !important; }
+.dark .text-asfalto\/25 { color: rgba(240,241,242,0.54) !important; }
+.dark .text-asfalto\/20 { color: rgba(240,241,242,0.52) !important; }
+.dark [class~="text-cemento/55"] { color: rgba(240,241,242,0.72) !important; }
+.dark [class~="text-cemento/50"] { color: rgba(240,241,242,0.68) !important; }
+.dark [class~="text-cemento/45"] { color: rgba(240,241,242,0.66) !important; }
+.dark [class~="text-cemento/40"] { color: rgba(240,241,242,0.64) !important; }
+.dark [class~="text-cemento/35"] { color: rgba(240,241,242,0.62) !important; }
+.dark [class~="text-cemento/30"] { color: rgba(240,241,242,0.60) !important; }
+.dark .text-cemento\/55 { color: rgba(240,241,242,0.72) !important; }
+.dark .text-cemento\/50 { color: rgba(240,241,242,0.68) !important; }
+.dark .text-cemento\/45 { color: rgba(240,241,242,0.66) !important; }
+.dark .text-cemento\/40 { color: rgba(240,241,242,0.64) !important; }
+.dark .text-cemento\/35 { color: rgba(240,241,242,0.62) !important; }
+.dark .text-cemento\/30 { color: rgba(240,241,242,0.60) !important; }
 .dark .placeholder\:text-asfalto\/50::placeholder { color: rgba(240,241,242,0.54) !important; }
 .dark .placeholder\:text-asfalto\/45::placeholder { color: rgba(240,241,242,0.50) !important; }
 .dark .placeholder\:text-asfalto\/40::placeholder { color: rgba(240,241,242,0.48) !important; }
@@ -93,6 +128,19 @@ body {
 .dark .border-asfalto\/12 { border-color: rgba(240,241,242,0.1) !important; }
 .dark .border-asfalto\/30 { border-color: rgba(240,241,242,0.22) !important; }
 /* superfici chiare semitrasparenti -> pannelli scuri leggibili */
+.dark [class~="bg-white"] { background-color: #1c2024 !important; }
+.dark [class~="bg-cemento"] { background-color: #15181a !important; }
+.dark [class~="bg-nebbia"] { background-color: #1c2024 !important; }
+.dark [class~="bg-white/95"] { background-color: rgba(28, 32, 36, 0.96) !important; }
+.dark [class~="bg-white/90"] { background-color: rgba(28, 32, 36, 0.92) !important; }
+.dark [class~="bg-white/80"] { background-color: rgba(28, 32, 36, 0.86) !important; }
+.dark [class~="bg-white/70"] { background-color: rgba(28, 32, 36, 0.78) !important; }
+.dark [class~="bg-white/60"] { background-color: rgba(28, 32, 36, 0.72) !important; }
+.dark [class~="bg-white/50"] { background-color: rgba(28, 32, 36, 0.66) !important; }
+.dark [class~="bg-white/40"] { background-color: rgba(28, 32, 36, 0.58) !important; }
+.dark [class~="bg-cemento/80"] { background-color: rgba(21, 24, 26, 0.86) !important; }
+.dark [class~="bg-cemento/60"] { background-color: rgba(21, 24, 26, 0.72) !important; }
+.dark [class~="bg-nebbia/80"] { background-color: rgba(28, 32, 36, 0.86) !important; }
 .dark .bg-white\/95 { background-color: rgba(28, 32, 36, 0.96) !important; }
 .dark .bg-white\/90 { background-color: rgba(28, 32, 36, 0.92) !important; }
 .dark .bg-white\/80 { background-color: rgba(28, 32, 36, 0.86) !important; }
