@@ -14,6 +14,7 @@ interface Props {
   segui: boolean;
   onSeguiChange: (segui: boolean) => void;
   ricentraTick: number;
+  fullscreen?: boolean;
 }
 
 export default function MappaNavigatore({
@@ -24,6 +25,7 @@ export default function MappaNavigatore({
   segui,
   onSeguiChange,
   ricentraTick,
+  fullscreen = false,
 }: Props) {
   const contenitore = useRef<HTMLDivElement>(null);
   const mappaRef = useRef<unknown>(null);
@@ -36,8 +38,11 @@ export default function MappaNavigatore({
   const onSeguiChangeRef = useRef(onSeguiChange);
 
   useEffect(() => {
-    onSeguiChangeRef.current = onSeguiChange;
-  }, [onSeguiChange]);
+    const mappa = mappaRef.current as { invalidateSize?: () => void } | null;
+    if (!mappa?.invalidateSize) return;
+    const t = window.setTimeout(() => mappa.invalidateSize?.(), 250);
+    return () => window.clearTimeout(t);
+  }, [fullscreen]);
 
   useEffect(() => {
     let attivo = true;
@@ -178,7 +183,7 @@ export default function MappaNavigatore({
   return (
     <div
       ref={contenitore}
-      className="h-full min-h-[52dvh] w-full"
+      className={fullscreen ? 'absolute inset-0 h-full w-full' : 'h-full min-h-[45dvh] w-full'}
       role="img"
       aria-label="Mappa navigatore con la tua posizione GPS"
     />

@@ -973,13 +973,7 @@ body {
   overflow-x: hidden;
   background: #080706;
   color: #f0f1f2;
-  padding-bottom: 5rem;
-}
-
-@media (min-width: 768px) {
-  .garage-pagina-wrap {
-    padding-bottom: 0;
-  }
+  padding-bottom: 0;
 }
 
 .garage-tuning-wrap {
@@ -1358,4 +1352,117 @@ body {
   background: #d11919;
   border: 2px solid #fff;
   cursor: pointer;
+}
+
+/* ── App immersiva ── */
+body.app-immersive-mobile {
+  background: #0e1012 !important;
+}
+@media (max-width: 767px) {
+  body.app-immersive-mobile .app-chrome-header,
+  body.app-immersive-mobile .app-chrome-footer,
+  body.app-immersive-mobile .app-chrome-bottomnav {
+    display: none !important;
+  }
+  body.app-immersive-mobile.con-bottomnav {
+    padding-bottom: 0 !important;
+  }
+  body.app-immersive-mobile .app-main,
+  body.app-immersive-mobile .main-immersivo {
+    min-height: 100dvh;
+    padding-bottom: 0;
+  }
+  body.app-immersive-mobile .app-pagina,
+  body.app-immersive-mobile .garage-pagina-wrap {
+    min-height: 100dvh;
+  }
+  body.app-immersive-mobile .wizard-giro {
+    min-height: 100dvh;
+  }
+}
+body.app-immersive-footer .app-chrome-footer {
+  display: none !important;
+}
+body.nav-fullscreen-active {
+  overflow: hidden;
+  background: #050608 !important;
+}
+body.nav-fullscreen-active .app-chrome-header,
+body.nav-fullscreen-active .app-chrome-footer,
+body.nav-fullscreen-active .app-chrome-bottomnav {
+  display: none !important;
+}
+body.nav-fullscreen-active.con-bottomnav {
+  padding-bottom: 0 !important;
+}
+.nav-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: #050608;
+}
+.nav-overlay-top {
+  background: linear-gradient(180deg, rgba(5, 6, 8, 0.92) 0%, rgba(5, 6, 8, 0.55) 70%, transparent 100%);
+  padding: calc(env(safe-area-inset-top) + 0.75rem) 0.75rem 2.5rem;
+}
+.nav-overlay-btn {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 0.45rem 0.65rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(240, 241, 242, 0.85);
+  backdrop-filter: blur(8px);
+}
+.nav-overlay-btn-attivo {
+  border-color: rgba(209, 25, 25, 0.55);
+  background: rgba(209, 25, 25, 0.25);
+  color: #fff;
+}
+.nav-overlay-btn-termina {
+  border-color: rgba(209, 25, 25, 0.45);
+  color: #fecaca;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.6rem;
+}
+.nav-stat-box {
+  min-width: 4.5rem;
+}
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-left { padding-left: env(safe-area-inset-left); }
+
+.app-pagina {
+  background: #0e1012;
+  color: #f0f1f2;
+  min-height: calc(100dvh - 4rem);
+}
+.app-shell-loggato {
+  background: #0e1012;
+}
+.page-enter {
+  animation: page-enter 0.28s ease;
+}
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: page-enter 0.35s ease;
+}
+.wizard-giro {
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .animate-fade-in {
+    animation: none;
+  }
 }

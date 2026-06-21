@@ -11,6 +11,7 @@ interface Props {
   inCorso: boolean;
   percorsoNav?: Punto[];
   destinazione?: { lat: number; lng: number } | null;
+  fullscreen?: boolean;
 }
 
 function centroIniziale(
@@ -24,7 +25,7 @@ function centroIniziale(
   return [41.9, 12.5];
 }
 
-export default function MappaTraccia({ punti, inCorso, percorsoNav, destinazione }: Props) {
+export default function MappaTraccia({ punti, inCorso, percorsoNav, destinazione, fullscreen = false }: Props) {
   const contenitore = useRef<HTMLDivElement>(null);
   const mappaRef = useRef<unknown>(null);
   const lineaRef = useRef<unknown>(null);
@@ -34,6 +35,13 @@ export default function MappaTraccia({ punti, inCorso, percorsoNav, destinazione
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const leafletRef = useRef<any>(null);
   const [mappaPronta, setMappaPronta] = useState(false);
+
+  useEffect(() => {
+    const mappa = mappaRef.current as { invalidateSize?: () => void } | null;
+    if (!mappa?.invalidateSize) return;
+    const t = window.setTimeout(() => mappa.invalidateSize?.(), 250);
+    return () => window.clearTimeout(t);
+  }, [fullscreen]);
 
   useEffect(() => {
     let attivo = true;
@@ -169,7 +177,11 @@ export default function MappaTraccia({ punti, inCorso, percorsoNav, destinazione
   return (
     <div
       ref={contenitore}
-      className="mappa-itinerario h-72 w-full border-2 border-asfalto sm:h-96"
+      className={
+        fullscreen
+          ? 'absolute inset-0 h-full w-full'
+          : 'mappa-itinerario h-72 w-full border-2 border-asfalto sm:h-96'
+      }
       role="img"
       aria-label="Mappa con tracciato GPS e percorso di navigazione"
     />

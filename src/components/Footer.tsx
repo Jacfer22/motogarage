@@ -3,6 +3,8 @@
 import { usePathname } from 'next/navigation';
 import Logo from './Logo';
 
+import { footerNascosto } from '@/lib/chrome-app';
+
 const PAGINE_IMMERSIVE = ['/naviga', '/traccia'];
 
 const LINK_NAV = [
@@ -16,12 +18,12 @@ const LINK_NAV = [
 
 export default function Footer() {
   const pathname = usePathname();
-  const immersivo = PAGINE_IMMERSIVE.some((p) => pathname.startsWith(p));
+  const immersivo = footerNascosto(pathname) || PAGINE_IMMERSIVE.some((p) => pathname.startsWith(p));
 
   if (immersivo) return null;
 
   return (
-    <footer className="mt-16 bg-asfalto text-cemento">
+    <footer className="app-chrome-footer mt-16 bg-asfalto text-cemento">
       <div className="strada-viva" aria-hidden="true" />
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">

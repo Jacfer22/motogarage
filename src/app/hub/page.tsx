@@ -110,48 +110,30 @@ export default function PaginaHub() {
   });
 
   return (
-    <div className="min-h-[80vh]">
-      <section className="bg-asfalto text-cemento">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-5">
-            <div className="relative shrink-0">
-              {profilo?.avatar_url ? (
-                <img src={profilo.avatar_url} alt="" className="h-20 w-20 border-2 border-red-600 object-cover sm:h-24 sm:w-24" />
-              ) : (
-                <div className="flex h-20 w-20 items-center justify-center border-2 border-red-600 bg-asfalto sm:h-24 sm:w-24">
-                  <Logo variante="icon" />
-                </div>
-              )}
-              {(isAdmin || isPro) && (
-                <span className={`absolute -bottom-2 -right-2 px-2 py-0.5 font-mono text-[10px] uppercase ${isAdmin ? 'bg-cartello text-cemento' : 'bg-red-600 text-white'}`}>
-                  {isAdmin ? 'admin' : 'pro'}
-                </span>
-              )}
-            </div>
-            <div>
-              <p className="font-mono text-xs uppercase tracking-widest text-guardrail">Bentornato</p>
-              <h1 className="font-display text-4xl font-bold uppercase leading-none tracking-tight sm:text-5xl">
-                {profilo?.username ?? 'Motociclista'}
-              </h1>
-              {(categoria || profilo?.moto) && (
-                <p className="mt-1 font-mono text-sm text-guardrail">{[categoria, profilo?.moto].filter(Boolean).join(' · ')}</p>
-              )}
-            </div>
+    <div className="app-pagina min-h-[100dvh] pb-6">
+      <section className="px-4 pt-6 pb-4">
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
+            {profilo?.avatar_url ? (
+              <img src={profilo.avatar_url} alt="" className="h-14 w-14 rounded-full border-2 border-brand object-cover" />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-brand bg-black/40">
+                <Logo variante="icon" />
+              </div>
+            )}
           </div>
-
-          <div className="rounded-app border border-white/10 bg-white/[0.04] p-4 sm:text-right">
-            <p className="font-mono text-xs uppercase tracking-wide text-guardrail">Stato account</p>
-            <p className={`mt-1 font-display text-xl font-bold uppercase ${isAdmin ? 'text-cartello' : isPro ? 'text-red-400' : 'text-cemento'}`}>
-              {isAdmin ? 'Admin · tutto sbloccato' : isPro ? 'Pro attivo' : 'Account free'}
-            </p>
-            {!isPro && (
-              <Link href="/pro" className="mt-2 inline-block rounded-app bg-red-600 px-3 py-1.5 font-mono text-xs font-medium uppercase text-white">
-                Scopri Pro →
-              </Link>
+          <div className="min-w-0 flex-1">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-brand">Cockpit</p>
+            <h1 className="truncate font-display text-2xl font-black uppercase leading-none tracking-tight text-white">
+              {profilo?.username ?? 'Motociclista'}
+            </h1>
+            {(categoria || profilo?.moto) && (
+              <p className="mt-0.5 truncate font-mono text-[11px] text-cemento/50">
+                {[categoria, profilo?.moto].filter(Boolean).join(' · ')}
+              </p>
             )}
           </div>
         </div>
-        <div className="strada-viva strada-viva-animata" aria-hidden="true" />
       </section>
 
       <ChecklistHub
@@ -159,42 +141,60 @@ export default function PaginaHub() {
         profiloOk={Boolean(profilo?.username && profilo?.avatar_url)}
       />
 
-      <section className="mx-auto -mt-8 max-w-6xl px-4">
+      <section className="px-4 py-4">
         <div className="rounded-app-lg bg-asfalto p-1"><BadgeUtente /></div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-10">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-asfalto/40">Cosa vuoi fare?</p>
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {azioni.map((azione) => (
+      <section className="px-4 py-2">
+        <Link
+          href="/traccia"
+          className="tap flex flex-col items-center justify-center rounded-app-lg border border-brand/40 bg-brand/15 py-10 text-center shadow-[0_0_40px_rgba(209,25,25,0.15)] transition-colors hover:bg-brand/25"
+        >
+          <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-brand">Pronto?</span>
+          <span className="mt-2 font-display text-4xl font-black uppercase leading-none tracking-tight text-white">
+            Traccia un giro
+          </span>
+          <span className="mt-2 font-mono text-[10px] uppercase text-cemento/50">GPS · card · community</span>
+        </Link>
+        <Link
+          href="/naviga"
+          className="tap mt-3 flex items-center justify-between rounded-app border border-white/10 bg-white/[0.04] px-4 py-3.5"
+        >
+          <span>
+            <span className="block font-mono text-[10px] uppercase tracking-wide text-cemento/45">Navigatore</span>
+            <span className="block text-sm font-medium text-white">Destinazione + voce + mappa full</span>
+          </span>
+          <span className="font-mono text-xs font-bold uppercase text-brand">Apri</span>
+        </Link>
+      </section>
+
+      <section className="px-4 py-4">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-cemento/40">Accesso rapido</p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {azioni.filter((a) => !a.accento && a.href !== '/traccia').slice(0, 6).map((azione) => (
             <Link
               key={azione.titolo}
               href={azione.href}
-              className={`card-app group flex flex-col p-5 ${azione.accento ? 'border-red-600 bg-asfalto text-cemento' : ''}`}
+              className="tap rounded-app border border-white/10 bg-white/[0.03] p-3 transition-colors hover:border-brand/30"
             >
-              <span className={`flex h-11 w-11 items-center justify-center rounded-app ${azione.accento ? 'bg-red-600 text-white' : 'bg-asfalto/[0.04] text-asfalto group-hover:bg-red-600 group-hover:text-white'}`}>
+              <span className="flex h-8 w-8 items-center justify-center rounded-app bg-brand/20 text-brand">
                 <IconaHub nome={azione.icona} />
               </span>
-              <h2 className="mt-4 font-display text-2xl font-bold uppercase leading-tight tracking-tight sm:text-3xl">{azione.titolo}</h2>
-              <p className={`mt-1 text-sm ${azione.accento ? 'text-guardrail' : 'text-asfalto/60'}`}>{azione.sotto}</p>
-              <span className={`mt-4 font-mono text-xs uppercase ${azione.accento ? 'text-red-400' : 'text-asfalto/50'}`}>Vai →</span>
+              <p className="mt-2 font-display text-sm font-bold uppercase leading-tight text-white">{azione.titolo}</p>
             </Link>
           ))}
         </div>
       </section>
 
       {avviso && (
-        <section className="mx-auto max-w-6xl px-4 pb-10">
-          <div className="border-2 border-cartello bg-cartello/10 p-5">
-            <p className="font-mono text-xs uppercase tracking-wide text-cartello">Condizioni strada</p>
-            <p className="mt-1 font-medium">{avviso.titolo}</p>
-            <p className="mt-1 text-sm text-asfalto/70">{avviso.descrizione}</p>
-            {avviso.itinerari && (
-              <Link href={`/itinerari/${avviso.itinerari.slug}`} className="mt-3 inline-block font-mono text-xs uppercase underline">
-                Vedi {avviso.itinerari.titolo} →
-              </Link>
-            )}
-          </div>
+        <section className="mx-4 mt-2 rounded-app border border-cartello/40 bg-cartello/10 p-4">
+          <p className="font-mono text-[10px] uppercase tracking-wide text-cartello">Strada</p>
+          <p className="mt-1 text-sm font-medium text-white">{avviso.titolo}</p>
+          {avviso.itinerari && (
+            <Link href={`/itinerari/${avviso.itinerari.slug}`} className="mt-2 inline-block font-mono text-[10px] uppercase text-brand underline">
+              Vedi itinerario
+            </Link>
+          )}
         </section>
       )}
     </div>

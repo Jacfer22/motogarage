@@ -236,7 +236,7 @@ export default function PaginaGarage() {
     ?? null;
 
   return (
-    <main className="garage-pagina-wrap">
+    <main className="garage-pagina-wrap app-pagina">
       <GarageAmbiente
         motoPronte={pronte}
         selezionataId={selezionataId}

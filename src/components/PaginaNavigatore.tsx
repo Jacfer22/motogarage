@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import RiepilogoGiroConcluso from '@/components/RiepilogoGiroConcluso';
+import WizardGiroConcluso from '@/components/WizardGiroConcluso';
+import OverlayNavigatore from '@/components/OverlayNavigatore';
 import { useTracciamentoGiro } from '@/hooks/use-tracciamento-giro';
+import { useNavigazioneVocale } from '@/hooks/use-navigazione-vocale';
 import { useFeedback } from '@/components/FeedbackProvider';
 import {
   calcolaRotta,
@@ -16,6 +18,7 @@ import {
   type DestinazioneNav,
   type RottaCalcolata,
 } from '@/lib/navigazione-osrm';
+import { distanzaRimanenteNav } from '@/lib/chrome-app';
 
 const MappaNavigatore = dynamic(() => import('./MappaNavigatore'), { ssr: false });
 
@@ -32,6 +35,16 @@ export default function PaginaNavigatore() {
   const [erroreNav, setErroreNav] = useState<string | null>(null);
   const [segui, setSegui] = useState(true);
   const [ricentraTick, setRicentraTick] = useState(0);
+  const [voceAttiva, setVoceAttiva] = useState(true);
+
+  useEffect(() => {
+    if (navOn) {
+      document.body.classList.add('nav-fullscreen-active');
+    } else {
+      document.body.classList.remove('nav-fullscreen-active');
+    }
+    return () => document.body.classList.remove('nav-fullscreen-active');
+  }, [navOn]);
 
   async function cerca() {
     setErroreNav(null);
@@ -60,6 +73,7 @@ export default function PaginaNavigatore() {
       setRotta(nuova);
       setNavOn(true);
       setSegui(true);
+      setVoceAttiva(true);
       setRicentraTick((t) => t + 1);
 
       if (track.stato === 'pronto') {
@@ -100,12 +114,23 @@ export default function PaginaNavigatore() {
   const passoIdx = rotta && posizione ? indicePassoCorrente(rotta.passi, posizione) : 0;
   const passo = rotta?.passi[passoIdx] ?? null;
   const distanzaMano = passo && posizione ? distanzaAlPasso(posizione, passo) : null;
+  const distanzaRimanente =
+    rotta && posizione
+      ? distanzaRimanenteNav(rotta.passi, passoIdx, posizione, distanzaAlPasso)
+      : null;
   const inGiro = track.stato === 'in_corso' || track.stato === 'in_pausa';
+
+  useNavigazioneVocale({
+    abilitata: navOn && voceAttiva,
+    passo,
+    passoIdx,
+    distanzaMano,
+  });
 
   if (track.stato === 'concluso' && track.giroConcluso) {
     return (
-      <div className="px-4 py-4">
-        <RiepilogoGiroConcluso
+      <div className="app-pagina px-4 py-4">
+        <WizardGiroConcluso
           giroConcluso={track.giroConcluso}
           distanzaM={track.distanzaM}
           durataSec={track.durataSec}
@@ -129,97 +154,91 @@ export default function PaginaNavigatore() {
     );
   }
 
+  if (navOn && passo) {
+    return (
+      <div className="nav-fullscreen">
+        <MappaNavigatore
+          posizione={posizione}
+          percorsoNav={rotta?.percorso}
+          percorsoGps={track.punti}
+          destinazione={destinazione}
+          segui={segui}
+          onSeguiChange={setSegui}
+          ricentraTick={ricentraTick}
+          fullscreen
+        />
+        <OverlayNavigatore
+          passo={passo}
+          distanzaMano={distanzaMano}
+          distanzaRimanente={distanzaRimanente}
+          velocitaKmh={track.velCorrenteKmh}
+          kmGiro={track.formattaKm(track.distanzaM)}
+          durataGiro={track.formattaDurata(track.durataSec)}
+          voceAttiva={voceAttiva}
+          onToggleVoce={() => setVoceAttiva((v) => !v)}
+          onChiudi={chiudiNav}
+          onRicentra={ricentra}
+          onTerminaGiro={inGiro ? () => void track.terminaGiro() : undefined}
+          inGiro={inGiro}
+          segui={segui}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="pagina-immersiva flex min-h-[calc(100dvh-4rem)] flex-col md:min-h-0">
-      {!navOn && (
-        <div className="pannello-leggibile border-b border-asfalto/10 px-4 py-4">
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-brand">Navigatore</p>
-          <p className="testo-secondario mt-2 text-[15px] leading-snug">
-            Scegli dove andare — il <strong className="font-semibold text-asfalto">giro GPS parte da solo</strong> e alla fine hai la card.
-          </p>
-          <div className="mt-4 flex gap-2">
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && cerca()}
-              placeholder="Dove vuoi andare?"
-              className="input-app min-w-0 flex-1"
-              maxLength={80}
-            />
-            <button
-              type="button"
-              onClick={cerca}
-              disabled={caricamento || query.trim().length < 2}
-              className="shrink-0 rounded-app bg-brand px-5 py-3 font-mono text-xs font-bold uppercase text-white disabled:opacity-40"
-            >
-              Vai
-            </button>
-          </div>
-          {risultati.length > 0 && (
-            <ul className="mt-3 max-h-40 overflow-y-auto rounded-app border border-asfalto/12 bg-white">
-              {risultati.map((r) => (
-                <li key={`${r.lat}-${r.lng}`}>
-                  <button
-                    type="button"
-                    onClick={() => impostaDestinazione(r)}
-                    className="w-full px-3 py-3 text-left text-sm text-asfalto hover:bg-brand/5"
-                  >
-                    {r.nome}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {(erroreNav || track.errore) && (
-            <p className="mt-2 text-sm font-medium text-red-700">{erroreNav ?? track.errore}</p>
-          )}
-          <p className="mt-3 font-mono text-[10px] uppercase tracking-wide text-asfalto/45">
-            Guarda poco lo schermo — in sella la strada viene prima.
-          </p>
-        </div>
-      )}
-
-      {navOn && passo && (
-        <div className="border-b-2 border-brand/40 bg-asfalto px-4 py-4 text-white">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="font-display text-2xl font-black uppercase leading-tight tracking-tight sm:text-3xl">
-                {passo.istruzione}
-              </p>
-              {distanzaMano !== null && passo.istruzione !== 'Sei arrivato a destinazione' && (
-                <p className="mt-1 font-display text-4xl font-black leading-none text-brand sm:text-5xl">
-                  {formattaDistanzaNav(distanzaMano)}
-                </p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={chiudiNav}
-              className="shrink-0 rounded-app border border-white/20 px-2 py-1 font-mono text-[10px] font-bold uppercase text-cemento/70"
-            >
-              Chiudi
-            </button>
-          </div>
-        </div>
-      )}
-
-      {inGiro && (
-        <div className="flex items-center justify-between gap-3 border-b border-bosco/20 bg-bosco/10 px-4 py-2">
-          <p className="font-mono text-[11px] font-bold uppercase text-bosco">
-            ● Giro in corso — {track.formattaKm(track.distanzaM)} km · {track.formattaDurata(track.durataSec)}
-          </p>
+    <div className="app-pagina pagina-immersiva flex min-h-[calc(100dvh-4rem)] flex-col">
+      <div className="border-b border-white/10 bg-[#0e1012] px-4 py-5 text-cemento">
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand">Navigatore</p>
+        <h1 className="mt-1 font-display text-2xl font-black uppercase leading-tight tracking-tight text-white">
+          Dove vuoi andare?
+        </h1>
+        <p className="mt-2 text-sm text-cemento/55">
+          Il giro GPS parte in automatico. Indicazioni a schermo intero con voce.
+        </p>
+        <div className="mt-4 flex gap-2">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && cerca()}
+            placeholder="Destinazione…"
+            className="editor-card-input min-w-0 flex-1"
+            maxLength={80}
+          />
           <button
             type="button"
-            onClick={() => void track.terminaGiro()}
-            className="rounded-app bg-asfalto px-3 py-1.5 font-mono text-[10px] font-bold uppercase text-cemento"
+            onClick={cerca}
+            disabled={caricamento || query.trim().length < 2}
+            className="tap btn-primary shrink-0 px-5 disabled:opacity-40"
           >
-            Termina
+            Vai
           </button>
         </div>
-      )}
+        {risultati.length > 0 && (
+          <ul className="mt-3 max-h-44 overflow-y-auto rounded-app border border-white/10 bg-black/40">
+            {risultati.map((r) => (
+              <li key={`${r.lat}-${r.lng}`}>
+                <button
+                  type="button"
+                  onClick={() => impostaDestinazione(r)}
+                  className="tap w-full border-b border-white/5 px-3 py-3 text-left text-sm text-cemento/85 last:border-0 hover:bg-brand/10"
+                >
+                  {r.nome}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {(erroreNav || track.errore) && (
+          <p className="mt-2 text-sm text-red-400">{erroreNav ?? track.errore}</p>
+        )}
+        {caricamento && (
+          <p className="mt-2 font-mono text-[10px] uppercase text-cemento/40">Calcolo percorso…</p>
+        )}
+      </div>
 
-      <div className="mappa-immersiva relative min-h-[52dvh] flex-1 border-y border-asfalto/10">
+      <div className="relative min-h-[45dvh] flex-1">
         <MappaNavigatore
           posizione={posizione}
           percorsoNav={rotta?.percorso}
@@ -229,37 +248,11 @@ export default function PaginaNavigatore() {
           onSeguiChange={setSegui}
           ricentraTick={ricentraTick}
         />
-        <button
-          type="button"
-          onClick={ricentra}
-          className={`btn-ricentra absolute bottom-4 right-4 z-[600] flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-lg transition-colors ${
-            segui ? '' : 'btn-ricentra-attivo'
-          }`}
-          aria-label="Ricentra sulla mia posizione"
-          title="Ricentra"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" strokeLinecap="round" />
-          </svg>
-        </button>
-        {!segui && (
-          <p className="pointer-events-none absolute bottom-4 left-4 z-[600] rounded-app bg-asfalto/90 px-2 py-1 font-mono text-[10px] font-bold uppercase text-white">
-            Mappa libera
-          </p>
-        )}
       </div>
 
-      {caricamento && (
-        <p className="px-4 py-2 font-mono text-[10px] uppercase text-asfalto/45">Calcolo percorso…</p>
-      )}
-
-      <div className="pannello-leggibile border-t border-asfalto/8 px-4 py-3">
-        <Link
-          href="/traccia"
-          className="font-mono text-[11px] font-bold uppercase tracking-wide text-asfalto/55 underline hover:text-brand"
-        >
-          Traccia un giro senza destinazione →
+      <div className="border-t border-white/8 px-4 py-3">
+        <Link href="/traccia" className="font-mono text-[10px] font-bold uppercase tracking-wide text-cemento/45 underline hover:text-brand">
+          Traccia senza destinazione
         </Link>
       </div>
     </div>
