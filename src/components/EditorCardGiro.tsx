@@ -99,6 +99,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   const [mostraDislivello, setMostraDislivello] = useState(true);
   const [tracciatoX, setTracciatoX] = useState(0.5);
   const [tracciatoY, setTracciatoY] = useState(0.5);
+  const [modalitaEdit, setModalitaEdit] = useState<'foto' | 'tracciato'>('foto');
   const [fotoSalvata, setFotoSalvata] = useState<string | null>(null);
   const [preferFoto, setPreferFoto] = useState(false);
   const [fotoZoom, setFotoZoom] = useState(1);
@@ -106,7 +107,19 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   const [fotoOffsetX, setFotoOffsetX] = useState(0.5);
   const [fotoOffsetY, setFotoOffsetY] = useState(0.5);
   const panRef = useRef<HTMLDivElement>(null);
+  const anteprimaRef = useRef<HTMLDivElement>(null);
   const trascinaRef = useRef({ attivo: false, x: 0, y: 0, offX: 0.5, offY: 0.5 });
+  const touchRef = useRef({
+    tipo: 'none' as 'none' | 'pan' | 'pinch',
+    x: 0,
+    y: 0,
+    offX: 0.5,
+    offY: 0.5,
+    trX: 0.5,
+    trY: 0.5,
+    zoom: 1,
+    dist: 0,
+  });
   const [cardUrl, setCardUrl] = useState<string | null>(null);
   const [generandoCard, setGenerandoCard] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
@@ -285,6 +298,69 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     trascinaRef.current.attivo = false;
   }
 
+  function distanzaDita(touches: React.TouchList | TouchList) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  }
+
+  function iniziaTouchMobile(e: React.TouchEvent) {
+    if (e.touches.length === 2 && preferFoto && modalitaEdit === 'foto') {
+      touchRef.current = {
+        tipo: 'pinch',
+        x: 0,
+        y: 0,
+        offX: fotoOffsetX,
+        offY: fotoOffsetY,
+        trX: tracciatoX,
+        trY: tracciatoY,
+        zoom: fotoZoom,
+        dist: distanzaDita(e.touches),
+      };
+    } else if (e.touches.length === 1) {
+      touchRef.current = {
+        tipo: 'pan',
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        offX: fotoOffsetX,
+        offY: fotoOffsetY,
+        trX: tracciatoX,
+        trY: tracciatoY,
+        zoom: fotoZoom,
+        dist: 0,
+      };
+    }
+  }
+
+  function muoviTouchMobile(e: React.TouchEvent) {
+    const st = touchRef.current;
+    const rect = anteprimaRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    if (st.tipo === 'pinch' && e.touches.length === 2 && preferFoto && modalitaEdit === 'foto') {
+      const ratio = distanzaDita(e.touches) / st.dist;
+      setFotoZoom(Math.min(2, Math.max(0.6, st.zoom * ratio)));
+      return;
+    }
+
+    if (st.tipo === 'pan' && e.touches.length === 1) {
+      const dx = e.touches[0].clientX - st.x;
+      const dy = e.touches[0].clientY - st.y;
+      const sens = 0.95;
+      if (modalitaEdit === 'foto' && preferFoto) {
+        setFotoOffsetX(Math.min(1, Math.max(0, st.offX + (dx / rect.width) * sens)));
+        setFotoOffsetY(Math.min(1, Math.max(0, st.offY + (dy / rect.height) * sens)));
+      } else {
+        setTracciatoX(Math.min(1, Math.max(0, st.trX + (dx / rect.width) * sens)));
+        setTracciatoY(Math.min(1, Math.max(0, st.trY + (dy / rect.height) * sens)));
+      }
+    }
+  }
+
+  function terminaTouchMobile() {
+    touchRef.current.tipo = 'none';
+  }
+
   return (
     <div className="editor-card space-y-5 rounded-app-lg border border-white/10 bg-[#0e1012] p-4 text-cemento shadow-app-lg sm:p-5">
       <header>
@@ -398,8 +474,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       </div>
 
       {fotoSalvata && preferFoto && (
-        <section className="space-y-4 rounded-app border border-white/10 bg-black/35 p-4">
-          <p className="editor-card-label">Regola foto di sfondo</p>
+        <section className="hidden space-y-4 rounded-app border border-white/10 bg-black/35 p-4 md:block">
+          <p className="editor-card-label">Regola foto di sfondo (desktop)</p>
           <div
             ref={panRef}
             className="relative mx-auto aspect-[9/16] w-full max-w-[220px] cursor-grab overflow-hidden rounded-app border border-white/15 bg-black touch-none active:cursor-grabbing"
@@ -437,17 +513,54 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
 
       {cardUrl && (
         <section className="space-y-3 border-t border-white/8 pt-4">
-          <p className="editor-card-label">Anteprima Instagram · 4:5</p>
-          <div className="mx-auto w-full max-w-[260px] rounded-[18px] border border-white/10 bg-[#08090b] p-2">
-            <div className="flex items-center gap-2 px-1 py-1">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <p className="editor-card-label mb-0">Anteprima card</p>
+            <div className="flex gap-2 md:hidden">
+              {preferFoto && (
+                <Chip attivo={modalitaEdit === 'foto'} onClick={() => setModalitaEdit('foto')} className="flex-none px-2.5">
+                  Foto
+                </Chip>
+              )}
+              <Chip attivo={modalitaEdit === 'tracciato'} onClick={() => setModalitaEdit('tracciato')} className="flex-none px-2.5">
+                Tracciato
+              </Chip>
+            </div>
+          </div>
+          <p className="font-mono text-[9px] uppercase tracking-wide text-cemento/40 md:hidden">
+            {modalitaEdit === 'foto' && preferFoto
+              ? '1 dito sposta · 2 dita zoom'
+              : '1 dito sposta il tracciato sulla card'}
+          </p>
+          {preferFoto && (
+            <div className="md:hidden">
+              <SliderFoto etichetta="Luminosità" valore={Math.round(fotoLuminosita * 100)} min={50} max={150} onChange={(v) => setFotoLuminosita(v / 100)} />
+            </div>
+          )}
+          <div className="mx-auto w-full max-w-[300px] rounded-[18px] border border-white/10 bg-[#08090b] p-2 md:max-w-[260px]">
+            <div className="hidden items-center gap-2 px-1 py-1 md:flex">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-[9px] font-bold text-white">MG</div>
               <span className="font-mono text-[9px] font-bold uppercase text-cemento/70">motogarage</span>
             </div>
-            <div className="aspect-[4/5] overflow-hidden rounded-[12px] bg-black">
+            <div
+              ref={anteprimaRef}
+              className={`aspect-[4/5] overflow-hidden rounded-[12px] bg-black md:touch-auto ${generandoCard ? 'opacity-70' : ''} touch-none`}
+              onTouchStart={iniziaTouchMobile}
+              onTouchMove={muoviTouchMobile}
+              onTouchEnd={terminaTouchMobile}
+              onTouchCancel={terminaTouchMobile}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={cardUrl} alt="Anteprima card" className="h-full w-full object-cover" />
+              <img src={cardUrl} alt="Anteprima card" className="h-full w-full select-none object-cover" draggable={false} />
             </div>
           </div>
+        </section>
+      )}
+
+      {cardUrl && (
+        <section className="hidden space-y-3 border-t border-white/8 pt-4 md:block">
+          <p className="editor-card-label">Posizione tracciato (desktop)</p>
+          <SliderFoto etichetta="Orizzontale" valore={Math.round(tracciatoX * 100)} min={0} max={100} onChange={(v) => setTracciatoX(v / 100)} />
+          <SliderFoto etichetta="Verticale" valore={Math.round(tracciatoY * 100)} min={0} max={100} onChange={(v) => setTracciatoY(v / 100)} />
         </section>
       )}
 

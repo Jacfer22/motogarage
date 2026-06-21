@@ -89,23 +89,6 @@ function scriviTestoMultilinea(
 }
 
 /** Genera la card come PNG (data URL) pronta da scaricare o condividere. */
-// Smussa una serie di valori (media mobile) per togliere il rumore GPS
-// dall'altitudine, così il rilievo 3D non sembra una sega.
-function smussa(valori: number[], finestra = 2): number[] {
-  if (valori.length === 0) return valori;
-  return valori.map((_, i) => {
-    let somma = 0;
-    let n = 0;
-    for (let j = i - finestra; j <= i + finestra; j++) {
-      if (j >= 0 && j < valori.length) {
-        somma += valori[j];
-        n++;
-      }
-    }
-    return somma / n;
-  });
-}
-
 interface AreaTracciato {
   x: number;
   y: number;
@@ -113,61 +96,12 @@ interface AreaTracciato {
   h: number;
 }
 
-// Disegna il tracciato in leggera prospettiva 3D: i punti sono proiettati su un
-// piano inclinato (effetto vista a volo d'uccello) e sollevati in base
-// all'altitudine, così salite e discese si "vedono". Effetto sobrio.
-// Disegna un piccolo profilo altimetrico (area chart) dai punti con altitudine.
-// Ritorna true se l'ha disegnato, false se non c'erano dati di quota.
-function disegnaProfiloAltimetrico(
-  ctx: CanvasRenderingContext2D,
-  punti: Punto[],
-  area: { x: number; y: number; w: number; h: number },
-  segnale: string
-): boolean {
-  const alt = punti
-    .map((p) => (typeof p.alt === 'number' ? p.alt : null))
-    .filter((a): a is number => a != null);
-  if (alt.length < 3) return false;
-
-  const minA = Math.min(...alt);
-  const maxA = Math.max(...alt);
-  if (maxA - minA < 5) return false; // pianeggiante: niente grafico
-
-  const n = alt.length;
-  const px = (i: number) => area.x + (i / (n - 1)) * area.w;
-  const py = (a: number) => area.y + area.h - ((a - minA) / (maxA - minA)) * area.h;
-
-  // area riempita
-  ctx.beginPath();
-  ctx.moveTo(area.x, area.y + area.h);
-  alt.forEach((a, i) => ctx.lineTo(px(i), py(a)));
-  ctx.lineTo(area.x + area.w, area.y + area.h);
-  ctx.closePath();
-  const grad = ctx.createLinearGradient(0, area.y, 0, area.y + area.h);
-  grad.addColorStop(0, 'rgba(242,183,5,0.5)');
-  grad.addColorStop(1, 'rgba(242,183,5,0.05)');
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // linea di cresta
-  ctx.beginPath();
-  alt.forEach((a, i) => {
-    if (i === 0) ctx.moveTo(px(i), py(a));
-    else ctx.lineTo(px(i), py(a));
-  });
-  ctx.strokeStyle = segnale;
-  ctx.lineWidth = 4;
-  ctx.lineJoin = 'round';
-  ctx.stroke();
-
-  return true;
-}
-
-function disegnaTracciato3D(
+/** Tracciato GPS piatto 2D — tutto il percorso visibile nell'area (contain). */
+function disegnaTracciato2D(
   ctx: CanvasRenderingContext2D,
   punti: Punto[],
   area: AreaTracciato,
-  opt: { compatto: boolean; segnale: string; cemento: string }
+  opt: { segnale: string; cemento: string; spessore?: number },
 ) {
   if (punti.length < 2) return;
 
@@ -180,80 +114,112 @@ function disegnaTracciato3D(
   const spanLat = Math.max(maxLat - minLat, 0.0005);
   const spanLng = Math.max(maxLng - minLng, 0.0005);
 
-  // altitudini: se assenti restano a 0 (tracciato piatto ma comunque in prospettiva)
-  const alts = punti.map((p) => (typeof p.alt === 'number' ? p.alt : 0));
-  const altSmussate = smussa(alts, 2);
-  const minAlt = Math.min(...altSmussate);
-  const maxAlt = Math.max(...altSmussate);
-  const spanAlt = Math.max(maxAlt - minAlt, 1);
+  const pad = 0.08;
+  const innerW = area.w * (1 - 2 * pad);
+  const innerH = area.h * (1 - 2 * pad);
+  const scale = Math.min(innerW / spanLng, innerH / spanLat);
 
-  // inclinazione sobria: il piano è schiacciato in verticale (tilt) e
-  // l'altitudine solleva i punti di una quota contenuta
-  const tilt = 0.55; // 1 = vista dall'alto piatta, <1 = inclinata (sobria)
-  const altezzaMax = area.h * 0.22; // quanto può sollevarsi al massimo un punto
+  const centerLat = (minLat + maxLat) / 2;
+  const centerLng = (minLng + maxLng) / 2;
+  const cx = area.x + area.w / 2;
+  const cy = area.y + area.h / 2;
 
-  const scalaX = area.w / spanLng;
-  const scalaY = (area.h * tilt) / spanLat;
+  const proietta = (p: Punto) => ({
+    x: cx + (p.lng - centerLng) * scale,
+    y: cy + (centerLat - p.lat) * scale,
+  });
 
-  const proietta = (p: Punto, alt: number) => {
-    const baseX = area.x + (p.lng - minLng) * scalaX;
-    const baseY = area.y + (maxLat - p.lat) * scalaY;
-    const sollevamento = ((alt - minAlt) / spanAlt) * altezzaMax;
-    return { x: baseX, y: baseY - sollevamento, base: baseY };
+  const pts = punti.map(proietta);
+  const spessore = opt.spessore ?? 10;
+
+  const traccia = () => {
+    ctx.beginPath();
+    pts.forEach((p, i) => {
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
   };
 
-  const proiettati = punti.map((p, i) => proietta(p, altSmussate[i]));
-
-  // ombra del percorso sul "terreno" (le basi senza sollevamento), molto tenue
-  ctx.strokeStyle = 'rgba(0,0,0,0.18)';
-  ctx.lineWidth = opt.compatto ? 7 : 9;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
-  ctx.beginPath();
-  proiettati.forEach((p, i) => {
-    if (i === 0) ctx.moveTo(p.x, p.base);
-    else ctx.lineTo(p.x, p.base);
-  });
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = spessore + 8;
+  traccia();
   ctx.stroke();
 
-  // linea del percorso sollevata
   ctx.strokeStyle = opt.segnale;
-  ctx.lineWidth = opt.compatto ? 8 : 11;
-  ctx.shadowColor = 'rgba(0,0,0,0.3)';
-  ctx.shadowBlur = 10;
-  ctx.beginPath();
-  proiettati.forEach((p, i) => {
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
-  });
+  ctx.lineWidth = spessore;
+  ctx.shadowColor = 'rgba(0,0,0,0.35)';
+  ctx.shadowBlur = 14;
+  traccia();
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // sottile lumeggiatura bianca sopra la linea (dà volume)
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-  ctx.lineWidth = opt.compatto ? 2 : 3;
-  ctx.beginPath();
-  proiettati.forEach((p, i) => {
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
-  });
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = Math.max(2, spessore * 0.25);
+  traccia();
   ctx.stroke();
 
-  // punto di partenza (anello) e arrivo (pieno)
-  const start = proiettati[0];
-  const end = proiettati[proiettati.length - 1];
-  ctx.fillStyle = opt.compatto ? opt.cemento : '#0E1012';
+  const start = pts[0];
+  const end = pts[pts.length - 1];
+
+  ctx.fillStyle = '#22c55e';
   ctx.beginPath();
-  ctx.arc(start.x, start.y, opt.compatto ? 6 : 9, 0, Math.PI * 2);
+  ctx.arc(start.x, start.y, spessore * 0.55, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = opt.segnale;
-  ctx.lineWidth = opt.compatto ? 2.5 : 4;
+  ctx.strokeStyle = opt.cemento;
+  ctx.lineWidth = 3;
   ctx.stroke();
 
   ctx.fillStyle = opt.segnale;
   ctx.beginPath();
-  ctx.arc(end.x, end.y, opt.compatto ? 6 : 9, 0, Math.PI * 2);
+  ctx.arc(end.x, end.y, spessore * 0.55, 0, Math.PI * 2);
   ctx.fill();
+}
+
+async function disegnaLogoAltoSinistra(
+  ctx: CanvasRenderingContext2D,
+  fontDisplay: string,
+  testoColor: string,
+  conFoto: boolean,
+) {
+  const x = 56;
+  const y = 52;
+  const logoH = 46;
+  ctx.save();
+  if (conFoto) {
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 14;
+  }
+  try {
+    const logo = await caricaImmagine('/logo-motogarage.png');
+    const logoW = (logo.width / logo.height) * logoH;
+    ctx.drawImage(logo, x, y, logoW, logoH);
+    ctx.font = `700 34px ${fontDisplay}`;
+    ctx.fillStyle = testoColor;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('MOTO GARAGE', x + logoW + 12, y + logoH - 6);
+  } catch {
+    ctx.font = `700 38px ${fontDisplay}`;
+    ctx.fillStyle = testoColor;
+    ctx.textAlign = 'left';
+    ctx.fillText('MOTO GARAGE', x, y + logoH);
+  }
+  ctx.restore();
+}
+
+function areaTracciatoConOffset(
+  base: AreaTracciato,
+  offsetX: number | undefined,
+  offsetY: number | undefined,
+  panX: number,
+  panY: number,
+): AreaTracciato {
+  const ox = ((offsetX ?? 0.5) - 0.5) * panX;
+  const oy = ((offsetY ?? 0.5) - 0.5) * panY;
+  return { x: base.x + ox, y: base.y + oy, w: base.w, h: base.h };
 }
 
 export async function generaCardGiro(dati: DatiCard): Promise<string> {
@@ -336,21 +302,24 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
 
   ctx.textBaseline = 'alphabetic';
 
-  // ===== TEMA "FOTO" (stile Strava): tracciato piccolo + stats in colonna =====
+  await disegnaLogoAltoSinistra(ctx, fontDisplay, TESTO_PRIMARIO, conFoto);
+
+  const tracciatoOpt = { segnale: TRACCIATO_COLORE, cemento: TESTO_PRIMARIO };
+
+  // ===== TEMA "FOTO" (laterale): stats a destra, tracciato 2D spostabile =====
   if (tema === 'foto') {
-    const offsetX = ((dati.tracciatoOffsetX ?? 0) - 0.5) * LARGHEZZA * 0.6;
-    const offsetY = ((dati.tracciatoOffsetY ?? 0) - 0.5) * ALTEZZA * 0.15;
     if (dati.punti.length > 1) {
-      disegnaTracciato3D(
+      const areaBase: AreaTracciato = { x: 48, y: 180, w: LARGHEZZA * 0.58, h: ALTEZZA * 0.42 };
+      disegnaTracciato2D(
         ctx,
         dati.punti,
-        { x: 64 + offsetX, y: 140 + offsetY, w: LARGHEZZA * 0.42, h: ALTEZZA * 0.18 },
-        { compatto: true, segnale: TRACCIATO_COLORE, cemento: TESTO_PRIMARIO }
+        areaTracciatoConOffset(areaBase, dati.tracciatoOffsetX, dati.tracciatoOffsetY, LARGHEZZA * 0.38, ALTEZZA * 0.28),
+        { ...tracciatoOpt, spessore: 9 },
       );
     }
 
-    const statX = LARGHEZZA - 64;
-    let statY = 300;
+    const statX = LARGHEZZA - 56;
+    let statY = 220;
     ctx.textAlign = 'right';
     const blocchi: Array<{ label: string; valore: string }> = [
       { label: 'DISTANZA', valore: `${dati.km} km` },
@@ -368,68 +337,58 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     for (const b of blocchi) {
       ctx.shadowBlur = conFoto ? 8 : 0;
       ctx.fillStyle = TESTO_SECONDARIO;
-      ctx.font = `500 28px ${fontMono}`;
+      ctx.font = `500 26px ${fontMono}`;
       ctx.fillText(b.label, statX, statY);
       ctx.fillStyle = TESTO_PRIMARIO;
-      ctx.font = `700 70px ${fontDisplay}`;
-      ctx.fillText(b.valore, statX, statY + 70);
-      statY += 150;
+      ctx.font = `700 64px ${fontDisplay}`;
+      ctx.fillText(b.valore, statX, statY + 64);
+      statY += 138;
     }
     ctx.shadowBlur = 0;
     ctx.textAlign = 'left';
 
-    // luogo + data in basso a sinistra
     ctx.fillStyle = TESTO_PRIMARIO;
     ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
     ctx.shadowBlur = conFoto ? 10 : 0;
-    ctx.font = `700 60px ${fontDisplay}`;
+    ctx.font = `700 56px ${fontDisplay}`;
     const luogo = (dati.luogo || dati.titolo).toUpperCase();
-    scriviTestoMultilinea(ctx, luogo, 64, ALTEZZA - 200, LARGHEZZA - 128, 66);
+    scriviTestoMultilinea(ctx, luogo, 56, ALTEZZA - 180, LARGHEZZA * 0.55, 62);
     ctx.shadowBlur = 0;
     ctx.fillStyle = SEGNALE_CARD;
-    ctx.font = `600 46px ${fontHand}`;
-    ctx.fillText(dati.data, 64, ALTEZZA - 140);
+    ctx.font = `600 42px ${fontHand}`;
+    ctx.fillText(dati.data, 56, ALTEZZA - 120);
   } else {
-    // ===== TEMA "TRACCIATO": 3D grande + griglia stats =====
-    const offX = ((dati.tracciatoOffsetX ?? 0.5) - 0.5) * LARGHEZZA * 0.5;
-    const offY = ((dati.tracciatoOffsetY ?? 0.5) - 0.5) * ALTEZZA * 0.2;
+    // ===== TEMA "TRACCIATO" (in basso): tracciato 2D grande + stats sotto =====
+    const statsH = 460;
+    const areaBase: AreaTracciato = {
+      x: 56,
+      y: 130,
+      w: LARGHEZZA - 112,
+      h: ALTEZZA - statsH - 150,
+    };
     if (dati.punti.length > 1) {
-      disegnaTracciato3D(
+      disegnaTracciato2D(
         ctx,
         dati.punti,
-        { x: 110 + offX, y: 170 + offY, w: LARGHEZZA - 220, h: ALTEZZA * 0.32 },
-        { compatto: false, segnale: TRACCIATO_COLORE, cemento: TESTO_PRIMARIO }
+        areaTracciatoConOffset(areaBase, dati.tracciatoOffsetX, dati.tracciatoOffsetY, LARGHEZZA * 0.42, areaBase.h * 0.35),
+        { ...tracciatoOpt, spessore: 11 },
       );
     }
 
-    // luogo come titolo
     ctx.fillStyle = TESTO_PRIMARIO;
     ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
     ctx.shadowBlur = conFoto ? 10 : 0;
-    ctx.font = `700 64px ${fontDisplay}`;
+    ctx.font = `700 58px ${fontDisplay}`;
     const luogo = (dati.luogo || dati.titolo).toUpperCase();
-    scriviTestoMultilinea(ctx, luogo, 64, ALTEZZA - 560, LARGHEZZA - 128, 70);
+    scriviTestoMultilinea(ctx, luogo, 56, ALTEZZA - statsH + 20, LARGHEZZA - 112, 64);
     ctx.shadowBlur = 0;
 
-    // Profilo altimetrico
-    const haProfilo = disegnaProfiloAltimetrico(
-      ctx,
-      dati.punti,
-      { x: 64, y: ALTEZZA - 700, w: LARGHEZZA - 128, h: 120 },
-      TRACCIATO_COLORE
-    );
-    if (haProfilo) {
-      ctx.fillStyle = TESTO_SECONDARIO;
-      ctx.font = `500 26px ${fontMono}`;
-      ctx.fillText('ALTIMETRIA', 64, ALTEZZA - 715);
-    }
-
-    const linaY = ALTEZZA - 470;
+    const linaY = ALTEZZA - statsH + 100;
     ctx.strokeStyle = chiaro ? 'rgba(21,24,26,0.15)' : 'rgba(240,241,242,0.15)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(64, linaY);
-    ctx.lineTo(LARGHEZZA - 64, linaY);
+    ctx.moveTo(56, linaY);
+    ctx.lineTo(LARGHEZZA - 56, linaY);
     ctx.stroke();
 
     const disegnaStat = (
@@ -438,26 +397,24 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       x: number,
       y: number,
       grande: boolean,
-      giallo: boolean
+      giallo: boolean,
     ) => {
       if (conFoto) {
         ctx.shadowColor = 'rgba(0,0,0,0.5)';
         ctx.shadowBlur = 8;
       }
       ctx.fillStyle = TESTO_SECONDARIO;
-      ctx.font = `500 28px ${fontMono}`;
+      ctx.font = `500 26px ${fontMono}`;
       ctx.fillText(label, x, y);
       ctx.fillStyle = giallo ? SEGNALE_CARD : TESTO_PRIMARIO;
-      ctx.font = `700 ${grande ? 72 : 50}px ${fontDisplay}`;
-      ctx.fillText(valore, x, y + (grande ? 72 : 54));
+      ctx.font = `700 ${grande ? 68 : 48}px ${fontDisplay}`;
+      ctx.fillText(valore, x, y + (grande ? 68 : 50));
       ctx.shadowBlur = 0;
     };
 
-    // riga alta: km + tempo
-    disegnaStat('DISTANZA', `${dati.km} km`, 64, linaY + 50, true, false);
-    disegnaStat('DURATA', dati.durata, LARGHEZZA / 2 + 20, linaY + 50, true, false);
+    disegnaStat('DISTANZA', `${dati.km} km`, 56, linaY + 48, true, false);
+    disegnaStat('DURATA', dati.durata, LARGHEZZA / 2 + 16, linaY + 48, true, false);
 
-    // riga bassa: stat selezionate dall'utente
     const rigaBassa: Array<{ label: string; valore: string; giallo: boolean }> = [];
     if (dati.velMediaKmh != null && dati.velMediaKmh > 0)
       rigaBassa.push({ label: 'MEDIA', valore: `${dati.velMediaKmh} km/h`, giallo: false });
@@ -468,18 +425,18 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     if (dati.dislivelloM != null && dati.dislivelloM > 0)
       rigaBassa.push({ label: 'DISLIVELLO', valore: `+${dati.dislivelloM} m`, giallo: true });
 
-    const yBassa = linaY + 200;
-    const larghColonna = (LARGHEZZA - 128) / Math.max(rigaBassa.length, 1);
+    const yBassa = linaY + 190;
+    const larghColonna = (LARGHEZZA - 112) / Math.max(rigaBassa.length, 1);
     rigaBassa.forEach((s, i) => {
-      disegnaStat(s.label, s.valore, 64 + i * larghColonna, yBassa, false, s.giallo);
+      disegnaStat(s.label, s.valore, 56 + i * larghColonna, yBassa, false, s.giallo);
     });
 
     ctx.fillStyle = SEGNALE_CARD;
-    ctx.font = `600 46px ${fontHand}`;
-    ctx.fillText(dati.data, 64, ALTEZZA - 150);
+    ctx.font = `600 42px ${fontHand}`;
+    ctx.fillText(dati.data, 56, ALTEZZA - 100);
   }
 
-  // Marchio in basso a destra: logo + MOTO GARAGE
+  // Marchio discreto in basso a destra
   const margine = 64;
   const baseY = ALTEZZA - 64;
   const testoMarchio = 'MOTO GARAGE';
