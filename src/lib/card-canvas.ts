@@ -63,6 +63,10 @@ interface DatiCard {
   mostraTracciatoSuFoto?: boolean;
   /** Zoom tracciato mini sulla foto */
   tracciatoScala?: number;
+  /** Rotazione foto in gradi */
+  fotoRotazione?: number;
+  /** Rotazione tracciato in gradi */
+  tracciatoRotazione?: number;
   /** Mostra data del giro (default on) */
   mostraData?: boolean;
 }
@@ -256,41 +260,47 @@ function disegnaPannelloBasso(ctx: CanvasRenderingContext2D, altezza: number) {
   ctx.fillRect(0, y - 120, LARGHEZZA, altezza + 120);
 }
 
-/** Badge data in alto a destra — sempre leggibile */
-function disegnaBadgeData(
+/** Data discreta sotto al luogo — niente badge in alto */
+function disegnaDataDiscreta(
   ctx: CanvasRenderingContext2D,
   data: string,
   fontHand: string,
-  fontMono: string,
-  segnale: string,
+  x: number,
+  y: number,
+  conFoto: boolean,
 ) {
   ctx.save();
-  ctx.font = `600 38px ${fontHand}`;
-  const testoW = ctx.measureText(data).width;
-  const padX = 28;
-  const padY = 18;
-  const badgeW = testoW + padX * 2;
-  const badgeH = 56;
-  const x = LARGHEZZA - 56 - badgeW;
-  const y = 44;
-
-  ctx.fillStyle = 'rgba(8,9,11,0.82)';
-  ctx.strokeStyle = 'rgba(242,183,5,0.45)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(x, y, badgeW, badgeH, 14);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.font = `700 20px ${fontMono}`;
-  ctx.fillStyle = 'rgba(242,183,5,0.85)';
+  ctx.font = `600 32px ${fontHand}`;
+  ctx.fillStyle = conFoto ? 'rgba(240,241,242,0.5)' : 'rgba(240,241,242,0.45)';
   ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('GIRO DEL', x + padX, y + badgeH * 0.38);
+  ctx.textBaseline = 'alphabetic';
+  if (conFoto) {
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 8;
+  }
+  ctx.fillText(data, x, y);
+  ctx.restore();
+}
 
-  ctx.font = `600 34px ${fontHand}`;
-  ctx.fillStyle = segnale;
-  ctx.fillText(data, x + padX, y + badgeH * 0.72);
+function disegnaTracciatoRotato(
+  ctx: CanvasRenderingContext2D,
+  punti: Punto[],
+  area: AreaTracciato,
+  rotazioneGradi: number | undefined,
+  opt: { segnale: string; cemento: string; spessore?: number },
+) {
+  const rot = rotazioneGradi ?? 0;
+  if (Math.abs(rot) < 0.01) {
+    disegnaTracciato2D(ctx, punti, area, opt);
+    return;
+  }
+  const cx = area.x + area.w / 2;
+  const cy = area.y + area.h / 2;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate((rot * Math.PI) / 180);
+  ctx.translate(-cx, -cy);
+  disegnaTracciato2D(ctx, punti, area, opt);
   ctx.restore();
 }
 
@@ -299,10 +309,11 @@ function disegnaTracciatoMini(
   punti: Punto[],
   area: AreaTracciato,
   opt: { segnale: string; cemento: string },
+  rotazioneGradi?: number,
 ) {
   ctx.save();
   ctx.globalAlpha = 0.92;
-  disegnaTracciato2D(ctx, punti, area, { ...opt, spessore: 2.5 });
+  disegnaTracciatoRotato(ctx, punti, area, rotazioneGradi, { ...opt, spessore: 2.5 });
   ctx.restore();
 }
 
@@ -339,7 +350,7 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
   if (dati.fotoDataUrl) {
     try {
       const foto = await caricaImmagine(dati.fotoDataUrl);
-      const zoom = Math.min(2, Math.max(0.6, dati.fotoScala ?? 1));
+      const zoom = Math.min(3, Math.max(0.5, dati.fotoScala ?? 1));
       const luminosita = Math.min(1.5, Math.max(0.5, dati.fotoLuminosita ?? 1));
       const contrasto = Math.min(1.4, Math.max(0.75, dati.fotoContrasto ?? 1));
       const saturazione = Math.min(1.5, Math.max(0.5, dati.fotoSaturazione ?? 1));
@@ -350,10 +361,15 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       const h = foto.height * scalaBase * zoom;
       const panX = offsetX * LARGHEZZA * 0.8;
       const panY = offsetY * ALTEZZA * 0.8;
+      const rot = ((dati.fotoRotazione ?? 0) * Math.PI) / 180;
+      const cx = LARGHEZZA / 2 + panX;
+      const cy = ALTEZZA / 2 + panY;
 
       ctx.save();
       ctx.filter = filtriFotoCss(luminosita, contrasto, saturazione, dati.filtroFoto ?? 'none');
-      ctx.drawImage(foto, (LARGHEZZA - w) / 2 + panX, (ALTEZZA - h) / 2 + panY, w, h);
+      ctx.translate(cx, cy);
+      ctx.rotate(rot);
+      ctx.drawImage(foto, -w / 2, -h / 2, w, h);
       ctx.restore();
 
       const velo = ctx.createLinearGradient(0, 0, 0, ALTEZZA);
@@ -395,10 +411,8 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
 
   await disegnaLogoAltoSinistra(ctx, fontDisplay, TESTO_PRIMARIO, conFoto);
 
-  const mostraData = dati.mostraData !== false;
-  if (mostraData) {
-    disegnaBadgeData(ctx, dati.data, fontHand, fontMono, SEGNALE_CARD);
-  }
+  const mostraData = dati.mostraData === true;
+  // niente badge "Giro del" in alto — data opzionale e discreta in basso
 
   const tracciatoOpt = { segnale: TRACCIATO_COLORE, cemento: TESTO_PRIMARIO };
   const tracciaSuFoto = conFoto && dati.mostraTracciatoSuFoto !== false;
@@ -410,7 +424,7 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
 
   // Tracciato mini in alto a sinistra — sempre sulla foto
   if (tracciaSuFoto && dati.punti.length > 1) {
-    const trZoom = Math.min(2.2, Math.max(0.45, dati.tracciatoScala ?? 1));
+    const trZoom = Math.min(3, Math.max(0.5, dati.tracciatoScala ?? 1));
     const baseW = 200 * trZoom;
     const baseH = 155 * trZoom;
     disegnaTracciatoMini(
@@ -424,6 +438,7 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
         80 * trZoom,
       ),
       tracciatoOpt,
+      dati.tracciatoRotazione,
     );
   }
 
@@ -431,10 +446,11 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
   if (tema === 'foto') {
     if (tracciaGrande && !conFoto && dati.punti.length > 1) {
       const areaBase: AreaTracciato = { x: 48, y: 180, w: LARGHEZZA * 0.58, h: ALTEZZA * 0.42 };
-      disegnaTracciato2D(
+      disegnaTracciatoRotato(
         ctx,
         dati.punti,
         areaTracciatoConOffset(areaBase, dati.tracciatoOffsetX, dati.tracciatoOffsetY, LARGHEZZA * 0.38, ALTEZZA * 0.28),
+        dati.tracciatoRotazione,
         { ...tracciatoOpt, spessore: 5 },
       );
     }
@@ -473,7 +489,11 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     ctx.shadowBlur = conFoto ? 14 : 0;
     ctx.font = `700 ${conFoto ? 52 : 56}px ${fontDisplay}`;
     const luogo = (dati.luogo || dati.titolo).toUpperCase();
-    scriviTestoMultilinea(ctx, luogo, 56, conFoto ? ALTEZZA - 130 : ALTEZZA - 180, LARGHEZZA * 0.62, conFoto ? 58 : 62);
+    const luogoY = conFoto ? ALTEZZA - 130 : ALTEZZA - 180;
+    scriviTestoMultilinea(ctx, luogo, 56, luogoY, LARGHEZZA * 0.62, conFoto ? 58 : 62);
+    if (mostraData && dati.data) {
+      disegnaDataDiscreta(ctx, dati.data, fontHand, 56, luogoY - 44, conFoto);
+    }
     ctx.shadowBlur = 0;
   } else {
     // ===== TEMA "TRACCIATO" (in basso): tracciato grande solo senza foto =====
@@ -485,10 +505,11 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       h: ALTEZZA - statsH - 150,
     };
     if (tracciaGrande && !conFoto && dati.punti.length > 1) {
-      disegnaTracciato2D(
+      disegnaTracciatoRotato(
         ctx,
         dati.punti,
         areaTracciatoConOffset(areaBase, dati.tracciatoOffsetX, dati.tracciatoOffsetY, LARGHEZZA * 0.42, areaBase.h * 0.35),
+        dati.tracciatoRotazione,
         { ...tracciatoOpt, spessore: 6 },
       );
     }
@@ -498,7 +519,11 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     ctx.shadowBlur = conFoto ? 14 : 0;
     ctx.font = `700 ${conFoto ? 54 : 58}px ${fontDisplay}`;
     const luogo = (dati.luogo || dati.titolo).toUpperCase();
-    scriviTestoMultilinea(ctx, luogo, 56, ALTEZZA - statsH + (conFoto ? 8 : 20), LARGHEZZA - 112, conFoto ? 60 : 64);
+    const luogoY = ALTEZZA - statsH + (conFoto ? 8 : 20);
+    scriviTestoMultilinea(ctx, luogo, 56, luogoY, LARGHEZZA - 112, conFoto ? 60 : 64);
+    if (mostraData && dati.data) {
+      disegnaDataDiscreta(ctx, dati.data, fontHand, 56, luogoY - 40, conFoto);
+    }
     ctx.shadowBlur = 0;
 
     const linaY = ALTEZZA - statsH + (conFoto ? 88 : 100);

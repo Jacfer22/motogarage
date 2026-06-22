@@ -33,6 +33,8 @@ interface Props {
   tracciatoX?: number;
   tracciatoY?: number;
   tracciatoZoom?: number;
+  fotoRotazione?: number;
+  tracciatoRotazione?: number;
   selezione?: SelezioneCard | null;
   className?: string;
 }
@@ -69,7 +71,7 @@ export default function AnteprimaCardLive({
   filtroFoto = 'none',
   luogo,
   data,
-  mostraData = true,
+  mostraData = false,
   stats,
   layout,
   punti = [],
@@ -77,35 +79,41 @@ export default function AnteprimaCardLive({
   tracciatoX = 0.35,
   tracciatoY = 0.22,
   tracciatoZoom = 1,
+  fotoRotazione = 0,
+  tracciatoRotazione = 0,
   selezione = null,
   className = '',
 }: Props) {
   const traccia = punti.length >= 2 ? tracciatoSvgPath(punti) : null;
-  const panX = (fotoOffsetX - 0.5) * 24;
-  const panY = (fotoOffsetY - 0.5) * 24;
   const trPanX = (tracciatoX - 0.5) * 36;
   const trPanY = (tracciatoY - 0.5) * 36;
   const filtroCss = cssFiltroFoto(fotoLuminosita, fotoContrasto, fotoSaturazione, filtroFoto);
+  const panFotoX = (fotoOffsetX - 0.5) * 100;
+  const panFotoY = (fotoOffsetY - 0.5) * 100;
 
   return (
     <div className={`relative aspect-[4/5] overflow-hidden bg-[#15181a] ${className}`}>
       {fotoUrl ? (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
-          src={fotoUrl}
-          alt=""
-          draggable={false}
-          className={`pointer-events-none absolute left-1/2 top-1/2 max-w-none select-none ${selezione === 'foto' ? 'ring-2 ring-brand/70 ring-offset-0' : ''}`}
-          style={{
-            filter: filtroCss,
-            minWidth: `${fotoZoom * 100}%`,
-            minHeight: `${fotoZoom * 100}%`,
-            width: 'auto',
-            height: 'auto',
-            transform: `translate(calc(-50% + ${panX}%), calc(-50% + ${panY}%))`,
-            transition: 'filter 0.15s ease',
-          }}
-        />
+        <div
+          className={`absolute inset-0 overflow-hidden ${selezione === 'foto' ? 'ring-2 ring-inset ring-brand/70' : ''}`}
+        >
+          <div
+            className="absolute inset-0 h-full w-full"
+            style={{
+              transform: `translate(${panFotoX}%, ${panFotoY}%) scale(${fotoZoom}) rotate(${fotoRotazione}deg)`,
+              transformOrigin: 'center center',
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={fotoUrl}
+              alt=""
+              draggable={false}
+              className="pointer-events-none h-full w-full select-none object-cover"
+              style={{ filter: filtroCss, transition: 'filter 0.15s ease' }}
+            />
+          </div>
+        </div>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a2228] via-[#15181a] to-[#0e1012]" />
       )}
@@ -123,18 +131,11 @@ export default function AnteprimaCardLive({
         <span className="font-display text-[9px] font-bold uppercase tracking-wide text-white">Moto Garage</span>
       </div>
 
-      {mostraData && data && (
-        <div className="absolute right-3 top-3 z-10 rounded-xl border border-segnale/40 bg-black/75 px-2.5 py-1.5 backdrop-blur-sm">
-          <p className="font-mono text-[7px] font-bold uppercase tracking-wider text-segnale/90">Giro del</p>
-          <p className="font-hand text-sm leading-tight text-segnale">{data}</p>
-        </div>
-      )}
-
       {traccia && tracciatoGrande && (
         <div
           className={`absolute inset-x-[12%] top-[14%] bottom-[32%] z-10 drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] ${selezione === 'percorso' ? 'rounded-lg ring-2 ring-brand/80' : ''}`}
           style={{
-            transform: `translate(${(tracciatoX - 0.5) * 40}px, ${(tracciatoY - 0.5) * 40}px) scale(${tracciatoZoom})`,
+            transform: `translate(${(tracciatoX - 0.5) * 40}px, ${(tracciatoY - 0.5) * 40}px) scale(${tracciatoZoom}) rotate(${tracciatoRotazione}deg)`,
             transformOrigin: 'center center',
           }}
         >
@@ -148,8 +149,8 @@ export default function AnteprimaCardLive({
           style={{
             left: `calc(7% + ${trPanX}px)`,
             top: `calc(13% + ${trPanY}px)`,
-            transform: `scale(${tracciatoZoom})`,
-            transformOrigin: 'top left',
+            transform: `scale(${tracciatoZoom}) rotate(${tracciatoRotazione}deg)`,
+            transformOrigin: 'center center',
           }}
         >
           <TracciaSvg traccia={traccia} snello />
@@ -169,6 +170,9 @@ export default function AnteprimaCardLive({
         </div>
       ) : (
         <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-3 pt-10">
+          {mostraData && data && layout === 'basso' && (
+            <p className="mb-1 font-hand text-xs text-white/45 drop-shadow-sm">{data}</p>
+          )}
           <p className="font-display text-lg font-black uppercase leading-tight tracking-tight text-white drop-shadow-md">
             {luogo}
           </p>
@@ -184,6 +188,10 @@ export default function AnteprimaCardLive({
             ))}
           </div>
         </div>
+      )}
+
+      {layout === 'laterale' && mostraData && data && (
+        <p className="absolute bottom-[4.25rem] left-4 z-10 font-hand text-xs text-white/45 drop-shadow-sm">{data}</p>
       )}
 
       {layout === 'laterale' && luogo && (
