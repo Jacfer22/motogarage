@@ -1433,6 +1433,73 @@ body {
   cursor: grabbing;
 }
 
+/* ── Logo home (header + flottante su pagine immersive) ── */
+.logo-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(135deg, rgba(40, 40, 43, 0.88) 0%, rgba(15, 11, 10, 0.72) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.logo-home-link:hover {
+  border-color: rgba(237, 33, 0, 0.42);
+  background: linear-gradient(135deg, rgba(40, 40, 43, 0.96) 0%, rgba(27, 24, 19, 0.88) 100%);
+  box-shadow: 0 4px 20px rgba(237, 33, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.logo-home-link:active {
+  transform: scale(0.98);
+}
+.logo-home-link--header {
+  padding: 0.3rem 0.85rem 0.3rem 0.35rem;
+}
+.logo-home-link--floating {
+  position: fixed;
+  z-index: 510;
+  left: max(0.75rem, env(safe-area-inset-left));
+  top: max(0.75rem, env(safe-area-inset-top));
+  padding: 0.28rem 0.7rem 0.28rem 0.32rem;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.logo-home-link-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.12rem;
+}
+.logo-home-link-img {
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+.logo-home-link-text {
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: #f0f1f2;
+  white-space: nowrap;
+}
+.logo-home-link-text--floating {
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+@media (max-width: 380px) {
+  .logo-home-link-text--floating {
+    display: none;
+  }
+  .logo-home-link--floating {
+    padding: 0.32rem;
+  }
+}
+
 /* ── App immersiva ── */
 body.app-immersive-mobile {
   background: var(--notte) !important;

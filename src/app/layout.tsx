@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Archivo, Barlow_Condensed, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/Header';
+import LogoHomeShell from '@/components/LogoHomeShell';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
 import InstallaPwa from '@/components/InstallaPwa';
@@ -98,6 +99,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <AuthProvider>
             <FeedbackProvider>
               <Header />
+              <LogoHomeShell />
               <MainShell>{children}</MainShell>
               <Footer />
               <InstallaPwa />

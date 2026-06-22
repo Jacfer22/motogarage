@@ -1,7 +1,8 @@
-type Variante = 'header' | 'footer' | 'hero' | 'icon' | 'card';
+type Variante = 'header' | 'footer' | 'hero' | 'icon' | 'card' | 'compact';
 
 const DIMENSIONI: Record<Variante, string> = {
-  header: 'h-11 w-auto sm:h-12',
+  header: 'h-10 w-auto sm:h-11',
+  compact: 'h-8 w-auto sm:h-9',
   footer: 'h-14 w-auto',
   hero: 'h-28 w-auto sm:h-36',
   icon: 'h-14 w-auto',
