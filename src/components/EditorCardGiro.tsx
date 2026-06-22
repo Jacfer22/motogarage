@@ -7,6 +7,14 @@ import { PRESET_LOOK, type FiltroFoto, type PresetLook } from '@/lib/card-foto-f
 import type { GiroUtente } from '@/lib/giri-store';
 import { useFeedback } from '@/components/FeedbackProvider';
 import AnteprimaCardLive, { type LayoutCard, type SelezioneCard } from '@/components/AnteprimaCardLive';
+import ModalSalvaImmagine from '@/components/ModalSalvaImmagine';
+import {
+  condividiImmagineSocial,
+  isDispositivoMobile,
+  preparaImmagineStory,
+  salvaInGalleria,
+  scaricaBlob,
+} from '@/lib/condividi-immagine';
 
 function formattaDataBreve(iso: string): string {
   return new Date(iso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -228,6 +236,12 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   const [cardUrl, setCardUrl] = useState<string | null>(null);
   const [generandoCard, setGenerandoCard] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
+  const [mobile, setMobile] = useState(false);
+  const [modalSalvaUrl, setModalSalvaUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMobile(isDispositivoMobile());
+  }, []);
 
   const dataBreve = formattaDataBreve(giro.data);
   const luogo = (luogoCard.trim() || giro.nome).toUpperCase();
@@ -499,47 +513,53 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     }
   }
 
-  async function scaricaCard() {
+  async function ottieniImmagineStory() {
     const url = cardUrl ?? (await esportaCard());
-    if (!url) return;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'motogarage-giro.png';
-    a.click();
+    if (!url) return null;
+    return preparaImmagineStory(url, { nomeBase: 'motogarage-giro' });
+  }
+
+  async function scaricaCard() {
+    const immagine = await ottieniImmagineStory();
+    if (!immagine) return;
+
+    if (mobile) {
+      const esito = await salvaInGalleria(immagine.file);
+      if (esito === 'ok') {
+        toast('Scegli «Salva immagine» o «Foto» per aggiungerla in galleria');
+        return;
+      }
+      if (esito === 'annullato') return;
+      setModalSalvaUrl(immagine.anteprimaUrl);
+      return;
+    }
+
+    scaricaBlob(immagine.blob, `motogarage-giro.${immagine.estensione}`);
     toast('Card salvata');
   }
 
-  function testoDidascalia() {
-    const titolo = luogoCard.trim() || giro.nome;
-    return (
-      `${titolo !== 'Giro libero' ? `${titolo} · ` : ''}` +
-      `${formattaKm(giro.km)} km in moto\nIl mio giro su MotoGarage`
-    );
-  }
-
   async function condividiCard() {
-    const url = cardUrl ?? (await esportaCard());
-    if (!url) return;
-    const testo = testoDidascalia();
+    const immagine = await ottieniImmagineStory();
+    if (!immagine) return;
     if (onNomeChange && luogoCard.trim() && luogoCard.trim() !== giro.nome) {
       onNomeChange(luogoCard.trim());
     }
     try {
-      const res = await fetch(url);
-      const blob = await res.blob();
-      const file = new File([blob], 'motogarage-giro.png', { type: 'image/png' });
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Il mio giro su MotoGarage', text: testo });
+      const esito = await condividiImmagineSocial(immagine.file);
+      if (esito === 'ok') return;
+      if (esito === 'annullato') return;
+
+      if (mobile) {
+        setModalSalvaUrl(immagine.anteprimaUrl);
         return;
       }
-      if (navigator.share) {
-        await navigator.share({ title: 'MotoGarage', text: testo });
-        return;
-      }
+
+      scaricaBlob(immagine.blob, `motogarage-giro.${immagine.estensione}`);
+      toast('Condivisione non disponibile — immagine scaricata');
     } catch {
-      // fallback
+      scaricaBlob(immagine.blob, `motogarage-giro.${immagine.estensione}`);
+      toast('Condivisione non riuscita — immagine scaricata');
     }
-    scaricaCard();
   }
 
   return (
@@ -758,12 +778,16 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
 
       <div className="flex flex-col gap-2 border-t border-white/8 pt-4 sm:flex-row">
         <button type="button" onClick={() => void condividiCard()} disabled={generandoCard} className="tap btn-primary flex-1">
-          {generandoCard ? 'Preparo…' : 'Condividi'}
+          {generandoCard ? 'Preparo…' : mobile ? 'Condividi story' : 'Condividi'}
         </button>
         <button type="button" onClick={() => void scaricaCard()} disabled={generandoCard} className="tap editor-card-btn-secondary flex-1">
-          Salva PNG
+          {mobile ? 'Salva in galleria' : 'Salva immagine'}
         </button>
       </div>
+
+      {modalSalvaUrl && (
+        <ModalSalvaImmagine url={modalSalvaUrl} onChiudi={() => setModalSalvaUrl(null)} />
+      )}
     </div>
   );
 }
