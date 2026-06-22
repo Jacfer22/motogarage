@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GarageMoto } from '@/lib/garage';
 import { urlModello } from '@/lib/garage';
+import { posizioneCameraReelGarage, REEL_GARAGE_LOOK_AT } from '@/lib/reel-garage-camera';
 
 interface Props {
   moto: GarageMoto[];
   selezionataId?: string | null;
   modalitaViewer?: boolean;
   modalitaHero?: boolean;
+  /** Cattura reel: camera più lontana, moto intera in frame */
+  modalitaReel?: boolean;
 }
 
 function posizione(index: number, totale: number): [number, number, number] {
@@ -34,8 +37,9 @@ function disabilitaTastieraViewer(viewer: import('@mkkellogg/gaussian-splats-3d'
   }
 }
 
-export default function GaussianGarage({ moto, selezionataId, modalitaViewer = false, modalitaHero = false }: Props) {
+export default function GaussianGarage({ moto, selezionataId, modalitaViewer = false, modalitaHero = false, modalitaReel = false }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const viewerRef = useRef<import('@mkkellogg/gaussian-splats-3d').Viewer | null>(null);
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState<string | null>(null);
 
@@ -67,11 +71,12 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
         if (annullato || !host) return;
 
         const hero = modalitaHero && scene.length === 1;
+        const reel = hero && modalitaReel;
         viewer = new GaussianSplats3D.Viewer({
           rootElement: host,
           cameraUp: [0, -1, -0.6],
-          initialCameraPosition: hero ? [0, -2.4, 2.6] : [0, -4.2, 4.8],
-          initialCameraLookAt: [0, 0, 0],
+          initialCameraPosition: reel ? [6.2, -4.35, 0.12] : hero ? [0, -2.4, 2.6] : [0, -4.2, 4.8],
+          initialCameraLookAt: reel ? [0, 0.38, 0] : [0, 0, 0],
           sharedMemoryForWorkers: false,
           gpuAcceleratedSort: false,
           ignoreDevicePixelRatio: window.devicePixelRatio > 1.5,
@@ -89,7 +94,7 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
               ? GaussianSplats3D.SceneFormat.Splat
               : GaussianSplats3D.SceneFormat.Ply;
           const [x, y, z] = posizione(index, scene.length);
-          const scala = hero ? 3.4 : scene.length === 1 ? 1.7 : 1.15;
+          const scala = reel ? 2.85 : hero ? 3.4 : scene.length === 1 ? 1.7 : 1.15;
           return {
             path: urlModello(item)!,
             format,
@@ -104,6 +109,7 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
         if (annullato) return;
         viewer.start();
         disabilitaTastieraViewer(viewer);
+        viewerRef.current = viewer;
         setCaricamento(false);
       } catch (error) {
         if (!annullato) {
@@ -116,10 +122,42 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
     avvia();
     return () => {
       annullato = true;
+      viewerRef.current = null;
       viewer?.dispose();
       host.replaceChildren();
     };
-  }, [sceneKey, modalitaHero]);
+  }, [sceneKey, modalitaHero, modalitaReel]);
+
+  /** Reel: camera guidata da evento frame (sync Playwright) */
+  useEffect(() => {
+    if (!modalitaReel || caricamento) return;
+    const target = REEL_GARAGE_LOOK_AT;
+
+    function onFrame(e: Event) {
+      const { frame, total } = (e as CustomEvent<{ frame: number; total: number }>).detail;
+      const t = total <= 1 ? 0 : frame / (total - 1);
+      const viewer = viewerRef.current as import('@mkkellogg/gaussian-splats-3d').Viewer & {
+        camera: import('three').PerspectiveCamera;
+        perspectiveControls?: import('three/examples/jsm/controls/OrbitControls.js').OrbitControls;
+      } | null;
+      if (!viewer?.camera) return;
+
+      const cam = viewer.camera;
+      const controls = viewer.perspectiveControls;
+      if (controls) {
+        controls.enabled = false;
+        controls.target.set(target.x, target.y, target.z);
+      }
+
+      const pos = posizioneCameraReelGarage(t);
+      cam.position.set(pos.x, pos.y, pos.z);
+      cam.lookAt(target.x, target.y, target.z);
+      controls?.update();
+    }
+
+    window.addEventListener('reel-garage-frame', onFrame);
+    return () => window.removeEventListener('reel-garage-frame', onFrame);
+  }, [modalitaReel, caricamento]);
 
   async function fullscreen() {
     const host = hostRef.current;

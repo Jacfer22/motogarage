@@ -1,0 +1,26 @@
+MotoGarage Instagram Reel — Audio Credits
+Generated: 2026-06-21
+
+BACKGROUND MUSIC
+  Track: "Need for speed" by Arulo
+  Source: Mixkit (ID 369)
+  License: Mixkit License — free for commercial use, no attribution required (mixkit.co/license)
+  Vibe: Aggressive trap/drift beat — Tokyo Drift energy, royalty-free (NOT Teriyaki Boyz)
+
+SOUND EFFECT (transition accent)
+  SFX: "Racing motorcycle engine"
+  Source: Mixkit (ID 2722)
+  License: Mixkit License — free for commercial use
+  Usage: Used sparingly on garage 3D reveal transition only
+
+NOT USED: Teriyaki Boyz "Tokyo Drift" (copyrighted). Style reference only.
+
+Scenes (6):
+  1. Landing hero — brand intro — http://127.0.0.1:3002/
+  2. Platform features grid — http://127.0.0.1:3002/
+  3. Traccia un giro — GPS tracking — http://127.0.0.1:3002/traccia
+  4. Garage 3D — jacfer22 motorcycle — http://127.0.0.1:3002/garage/jacfer22
+  5. Community & shareable ride cards — http://127.0.0.1:3002/community
+  6. CTA — Pronto a partire? — http://127.0.0.1:3002/
+
+Output: public/reels/motogarage-instagram-reel.mp4

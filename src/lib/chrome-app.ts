@@ -8,13 +8,14 @@ export const APP_MOBILE_SENZA_CHROME = [
   '/community',
 ];
 
-export const APP_SEMPRE_SENZA_FOOTER = ['/naviga', '/traccia'];
+export const APP_SEMPRE_SENZA_FOOTER = ['/naviga', '/traccia', '/reel'];
 
 export function footerNascosto(pathname: string): boolean {
   return APP_SEMPRE_SENZA_FOOTER.some((p) => pathname.startsWith(p));
 }
 
 export function chromeMobileNascosto(pathname: string, loggato: boolean): boolean {
+  if (pathname.startsWith('/reel')) return true;
   if (!loggato) {
     return APP_SEMPRE_SENZA_FOOTER.some((p) => pathname.startsWith(p));
   }

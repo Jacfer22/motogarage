@@ -383,6 +383,47 @@ body {
   transform: rotate(45deg);
 }
 
+.reel-marker-wrap {
+  background: transparent !important;
+  border: none !important;
+}
+
+.marker-neon-reel {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.marker-neon-reel-core {
+  position: absolute;
+  inset: 5px;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
+}
+
+.marker-neon-reel-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(239, 27, 36, 0.95) 0%, rgba(220, 38, 38, 0.55) 55%, rgba(180, 0, 0, 0.15) 100%);
+  box-shadow:
+    0 0 10px 3px rgba(239, 27, 36, 0.85),
+    0 0 22px 6px rgba(239, 27, 36, 0.45);
+  animation: neon-pulse-reel 1.2s ease-in-out infinite;
+}
+
+@keyframes neon-pulse-reel {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.12); opacity: 0.92; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marker-neon-reel-pulse {
+    animation: none;
+  }
+}
+
 /* ============ APP-GRADE UI ============ */
 
 html {
@@ -1293,24 +1334,24 @@ body {
   display: block;
   margin-bottom: 0;
   font-family: var(--font-mono), monospace;
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(240, 241, 242, 0.42);
+  color: rgba(240, 241, 242, 0.72);
 }
 .editor-card-input {
   width: 100%;
   min-height: 48px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
   padding: 0.75rem 0.9rem;
   font-size: 1rem;
   color: #f0f1f2;
 }
 .editor-card-input::placeholder {
-  color: rgba(240, 241, 242, 0.35);
+  color: rgba(240, 241, 242, 0.38);
 }
 .editor-card-input:focus {
   outline: none;
@@ -1323,35 +1364,63 @@ body {
   justify-content: center;
   min-height: 48px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   padding: 0.75rem 1.25rem;
   font-family: var(--font-mono), monospace;
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(240, 241, 242, 0.85);
-  background: rgba(255, 255, 255, 0.04);
+  color: rgba(240, 241, 242, 0.92);
+  background: rgba(255, 255, 255, 0.06);
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 .editor-card-btn-secondary:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.1);
 }
 .editor-card-range {
   -webkit-appearance: none;
   appearance: none;
-  background: rgba(255, 255, 255, 0.12);
+  height: 6px;
+  background: rgba(255, 255, 255, 0.16);
   border-radius: 999px;
 }
 .editor-card-range::-webkit-slider-thumb {
   -webkit-appearance: none;
-  height: 18px;
-  width: 18px;
+  height: 20px;
+  width: 20px;
   border-radius: 50%;
   background: #d11919;
   border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   cursor: pointer;
+}
+.editor-card-range::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #d11919;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.editor-card-tools {
+  border-color: rgba(242, 183, 5, 0.12);
+}
+.editor-card-preview {
+  padding: 0.75rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.editor-card-preview-canvas {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.editor-card-preview-canvas:active {
+  cursor: grabbing;
 }
 
 /* ── App immersiva ── */
@@ -1404,6 +1473,21 @@ body.nav-fullscreen-active.con-bottomnav {
 .nav-overlay-top {
   background: linear-gradient(180deg, rgba(5, 6, 8, 0.92) 0%, rgba(5, 6, 8, 0.55) 70%, transparent 100%);
   padding: calc(env(safe-area-inset-top) + 0.75rem) 0.75rem 2.5rem;
+}
+
+/* Reel marketing: leggero enfasi overlay navigatore */
+.reel-nav-capture .nav-overlay-top {
+  background: linear-gradient(180deg, rgba(5, 6, 8, 0.94) 0%, rgba(5, 6, 8, 0.62) 75%, transparent 100%);
+  padding-top: 3.25rem;
+  padding-bottom: 2rem;
+}
+.reel-nav-capture .nav-overlay-top .font-display.text-xl {
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+.reel-nav-capture .nav-stat-box {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.62);
 }
 .nav-overlay-btn {
   border-radius: 10px;

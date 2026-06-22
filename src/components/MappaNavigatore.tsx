@@ -15,6 +15,13 @@ interface Props {
   onSeguiChange: (segui: boolean) => void;
   ricentraTick: number;
   fullscreen?: boolean;
+  /** HTML custom per marker posizione (es. avatar cartoon reel) */
+  markerPosizioneHtml?: string;
+  zoomMinimo?: number;
+  /** Adatta zoom al percorso (tick incrementale) */
+  adattaPercorsoTick?: number;
+  /** false = pan istantaneo (reel fluido) */
+  seguiAnimato?: boolean;
 }
 
 export default function MappaNavigatore({
@@ -26,6 +33,10 @@ export default function MappaNavigatore({
   onSeguiChange,
   ricentraTick,
   fullscreen = false,
+  markerPosizioneHtml,
+  zoomMinimo = 16,
+  adattaPercorsoTick = 0,
+  seguiAnimato = true,
 }: Props) {
   const contenitore = useRef<HTMLDivElement>(null);
   const mappaRef = useRef<unknown>(null);
@@ -154,21 +165,50 @@ export default function MappaNavigatore({
     const latlng: [number, number] = [posizione.lat, posizione.lng];
 
     if (!markerRef.current) {
+      const neon = markerPosizioneHtml?.includes('marker-neon-reel');
       const icona = L.divIcon({
-        className: '',
-        html: '<div class="marker-posizione"></div>',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
+        className: neon ? 'reel-marker-wrap' : markerPosizioneHtml ? 'reel-marker-wrap' : '',
+        html: markerPosizioneHtml ?? '<div class="marker-posizione"></div>',
+        iconSize: neon ? [24, 24] : markerPosizioneHtml ? [52, 36] : [20, 20],
+        iconAnchor: neon ? [12, 12] : markerPosizioneHtml ? [26, 18] : [10, 10],
       });
       markerRef.current = L.marker(latlng, { icon: icona, zIndexOffset: 1000 }).addTo(mappa);
     } else {
-      (markerRef.current as { setLatLng: (l: [number, number]) => void }).setLatLng(latlng);
+      const m = markerRef.current as {
+        setLatLng: (l: [number, number]) => void;
+        setIcon: (i: unknown) => void;
+      };
+      m.setLatLng(latlng);
+      if (markerPosizioneHtml) {
+        const neon = markerPosizioneHtml.includes('marker-neon-reel');
+        m.setIcon(
+          L.divIcon({
+            className: 'reel-marker-wrap',
+            html: markerPosizioneHtml,
+            iconSize: neon ? [24, 24] : [52, 36],
+            iconAnchor: neon ? [12, 12] : [26, 18],
+          }),
+        );
+      }
     }
 
     if (segui) {
-      mappa.setView(latlng, Math.max(mappa.getZoom(), 16), { animate: true });
+      mappa.setView(latlng, Math.max(mappa.getZoom(), zoomMinimo), { animate: seguiAnimato });
     }
-  }, [posizione, segui]);
+  }, [posizione, segui, markerPosizioneHtml, zoomMinimo, seguiAnimato]);
+
+  useEffect(() => {
+    const L = leafletRef.current;
+    const mappa = mappaRef.current as {
+      fitBounds: (b: unknown, o?: object) => void;
+    } | null;
+    const lineaNav = lineaNavRef.current as { setLatLngs: (l: [number, number][]) => void } | null;
+    if (!L || !mappa || !lineaNav || !adattaPercorsoTick) return;
+    const navLatlngs = (percorsoNav ?? []).map((p) => [p.lat, p.lng] as [number, number]);
+    if (navLatlngs.length > 1) {
+      mappa.fitBounds(L.latLngBounds(navLatlngs), { padding: [56, 56], maxZoom: 16 });
+    }
+  }, [adattaPercorsoTick, percorsoNav]);
 
   useEffect(() => {
     const mappa = mappaRef.current as {
@@ -177,8 +217,8 @@ export default function MappaNavigatore({
     } | null;
     if (!mappa || !posizione || ricentraTick === 0) return;
     const latlng: [number, number] = [posizione.lat, posizione.lng];
-    mappa.setView(latlng, Math.max(mappa.getZoom(), 16), { animate: true });
-  }, [ricentraTick, posizione]);
+    mappa.setView(latlng, Math.max(mappa.getZoom(), zoomMinimo), { animate: true });
+  }, [ricentraTick, posizione, zoomMinimo]);
 
   return (
     <div

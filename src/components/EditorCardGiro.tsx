@@ -31,6 +31,8 @@ async function scegliFotoCard(file: File): Promise<string> {
   return c.toDataURL('image/jpeg', 0.85);
 }
 
+type FiltroFoto = 'none' | 'cinema' | 'caldo' | 'bw';
+
 interface Props {
   giro: GiroUtente;
   onNomeChange?: (nome: string) => void;
@@ -65,10 +67,12 @@ function Chip({
 
 function StatChip({
   label,
+  hint,
   attivo,
   onToggle,
 }: {
   label: string;
+  hint?: string;
   attivo: boolean;
   onToggle: () => void;
 }) {
@@ -76,40 +80,67 @@ function StatChip({
     <button
       type="button"
       onClick={onToggle}
-      className={`tap flex items-center justify-between gap-2 rounded-app border px-3 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wide transition-colors ${
+      className={`tap flex flex-col gap-0.5 rounded-app border px-3 py-2.5 text-left transition-colors ${
         attivo
-          ? 'border-brand/50 bg-brand/10 text-white'
-          : 'border-white/10 bg-transparent text-cemento/40'
+          ? 'border-brand/50 bg-brand/10'
+          : 'border-white/10 bg-transparent hover:border-white/18'
       }`}
     >
-      <span>{label}</span>
-      <span className={`h-2 w-2 rounded-full ${attivo ? 'bg-brand' : 'bg-white/20'}`} />
+      <span className="flex items-center justify-between gap-2">
+        <span className={`font-mono text-[10px] font-bold uppercase tracking-wide ${attivo ? 'text-white' : 'text-cemento/45'}`}>
+          {label}
+        </span>
+        <span className={`h-2 w-2 shrink-0 rounded-full ${attivo ? 'bg-brand' : 'bg-white/20'}`} />
+      </span>
+      {hint && (
+        <span className={`font-mono text-[9px] leading-snug ${attivo ? 'text-cemento/55' : 'text-cemento/30'}`}>
+          {hint}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function ToolBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="tap rounded-app border border-white/12 bg-white/[0.04] px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-wide text-cemento/70 hover:border-white/22 hover:text-white"
+    >
+      {children}
     </button>
   );
 }
 
 export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }: Props) {
   const { toast } = useFeedback();
+  const stat = statisticheGiro(giro.punti, giro.durataSec, giro.km);
+  const giroMontagna = (stat.dislivelloPositivoM || giro.dislivelloM) >= 150;
+
   const [temaCard, setTemaCard] = useState<'tracciato' | 'foto'>('tracciato');
   const [paletteCard, setPaletteCard] = useState<'scuro' | 'chiaro'>('scuro');
   const [luogoCard, setLuogoCard] = useState(giro.nome === 'Giro libero' ? '' : giro.nome);
   const [mostraMedia, setMostraMedia] = useState(true);
   const [mostraMax, setMostraMax] = useState(false);
   const [mostraCurve, setMostraCurve] = useState(true);
-  const [mostraDislivello, setMostraDislivello] = useState(true);
+  const [mostraDislivello, setMostraDislivello] = useState(false);
+  const [mostraData, setMostraData] = useState(true);
+  const [mostraTracciatoSuFoto, setMostraTracciatoSuFoto] = useState(false);
   const [tracciatoX, setTracciatoX] = useState(0.5);
   const [tracciatoY, setTracciatoY] = useState(0.5);
-  const [modalitaEdit, setModalitaEdit] = useState<'foto' | 'tracciato'>('foto');
+  const [elementoTrascina, setElementoTrascina] = useState<'foto' | 'tracciato'>('foto');
   const [fotoSalvata, setFotoSalvata] = useState<string | null>(null);
   const [preferFoto, setPreferFoto] = useState(false);
   const [fotoZoom, setFotoZoom] = useState(1);
   const [fotoLuminosita, setFotoLuminosita] = useState(1);
+  const [fotoContrasto, setFotoContrasto] = useState(1);
+  const [fotoSaturazione, setFotoSaturazione] = useState(1);
+  const [filtroFoto, setFiltroFoto] = useState<FiltroFoto>('none');
   const [fotoOffsetX, setFotoOffsetX] = useState(0.5);
   const [fotoOffsetY, setFotoOffsetY] = useState(0.5);
-  const panRef = useRef<HTMLDivElement>(null);
   const anteprimaRef = useRef<HTMLDivElement>(null);
-  const trascinaRef = useRef({ attivo: false, x: 0, y: 0, offX: 0.5, offY: 0.5 });
-  const touchRef = useRef({
+  const gestiRef = useRef({
     tipo: 'none' as 'none' | 'pan' | 'pinch',
     x: 0,
     y: 0,
@@ -135,6 +166,17 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     preferFotoRef.current = preferFoto;
   }, [preferFoto]);
 
+  function resetFotoPosizione() {
+    setFotoOffsetX(0.5);
+    setFotoOffsetY(0.5);
+    setFotoZoom(1);
+    setFotoLuminosita(1);
+    setFotoContrasto(1);
+    setFotoSaturazione(1);
+    setFiltroFoto('none');
+    toast('Foto ripristinata');
+  }
+
   const creaCard = useCallback(
     async (foto?: string | null) => {
       if (giro.punti.length < 2) {
@@ -144,7 +186,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       setGenerandoCard(true);
       setErrore(null);
       try {
-        const stat = statisticheGiro(giro.punti, giro.durataSec, giro.km);
+        const statLocal = statisticheGiro(giro.punti, giro.durataSec, giro.km);
         const titolo = luogoCard.trim() || giro.nome;
         if (onNomeChange && titolo !== giro.nome) onNomeChange(titolo);
 
@@ -161,16 +203,21 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
           palette: paletteCard,
           luogo: luogoCard.trim() || null,
           fotoDataUrl,
-          dislivelloM: mostraDislivello ? (stat.dislivelloPositivoM || giro.dislivelloM) : null,
-          velMediaKmh: mostraMedia ? (stat.velMediaKmh || giro.velMediaKmh) : null,
-          velMaxKmh: mostraMax ? (stat.velMaxKmh || giro.velMaxKmh) : null,
-          curve: mostraCurve ? (stat.curve || giro.curve) : null,
+          dislivelloM: mostraDislivello ? (statLocal.dislivelloPositivoM || giro.dislivelloM) : null,
+          velMediaKmh: mostraMedia ? (statLocal.velMediaKmh || giro.velMediaKmh) : null,
+          velMaxKmh: mostraMax ? (statLocal.velMaxKmh || giro.velMaxKmh) : null,
+          curve: mostraCurve ? (statLocal.curve || giro.curve) : null,
           tracciatoOffsetX: tracciatoX,
           tracciatoOffsetY: tracciatoY,
           fotoScala: preferFotoRef.current || foto !== undefined ? fotoZoom : undefined,
           fotoLuminosita: preferFotoRef.current || foto !== undefined ? fotoLuminosita : undefined,
+          fotoContrasto: preferFotoRef.current || foto !== undefined ? fotoContrasto : undefined,
+          fotoSaturazione: preferFotoRef.current || foto !== undefined ? fotoSaturazione : undefined,
+          filtroFoto: preferFotoRef.current || foto !== undefined ? filtroFoto : undefined,
           fotoOffsetX: preferFotoRef.current || foto !== undefined ? fotoOffsetX : undefined,
           fotoOffsetY: preferFotoRef.current || foto !== undefined ? fotoOffsetY : undefined,
+          mostraTracciatoSuFoto: preferFotoRef.current ? mostraTracciatoSuFoto : undefined,
+          mostraData,
         });
         setCardUrl(url);
         rigeneraAbilitato.current = true;
@@ -190,10 +237,15 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       mostraMedia,
       mostraMax,
       mostraCurve,
+      mostraData,
+      mostraTracciatoSuFoto,
       tracciatoX,
       tracciatoY,
       fotoZoom,
       fotoLuminosita,
+      fotoContrasto,
+      fotoSaturazione,
+      filtroFoto,
       fotoOffsetX,
       fotoOffsetY,
     ],
@@ -203,7 +255,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     if (!rigeneraAbilitato.current && !fotoSalvata) return;
     const timer = setTimeout(() => {
       void creaCard();
-    }, 400);
+    }, 180);
     return () => clearTimeout(timer);
   }, [
     temaCard,
@@ -213,10 +265,15 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     mostraMax,
     mostraCurve,
     mostraDislivello,
+    mostraData,
+    mostraTracciatoSuFoto,
     tracciatoX,
     tracciatoY,
     fotoZoom,
     fotoLuminosita,
+    fotoContrasto,
+    fotoSaturazione,
+    filtroFoto,
     fotoOffsetX,
     fotoOffsetY,
     creaCard,
@@ -270,32 +327,9 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     scaricaCard();
   }
 
-  function iniziaTrascina(clientX: number, clientY: number) {
-    trascinaRef.current = {
-      attivo: true,
-      x: clientX,
-      y: clientY,
-      offX: fotoOffsetX,
-      offY: fotoOffsetY,
-    };
-  }
-
-  function muoviTrascina(clientX: number, clientY: number) {
-    if (!trascinaRef.current.attivo || !panRef.current) return;
-    const rect = panRef.current.getBoundingClientRect();
-    const dx = clientX - trascinaRef.current.x;
-    const dy = clientY - trascinaRef.current.y;
-    const sens = 0.85;
-    setFotoOffsetX(
-      Math.min(1, Math.max(0, trascinaRef.current.offX + (dx / rect.width) * sens)),
-    );
-    setFotoOffsetY(
-      Math.min(1, Math.max(0, trascinaRef.current.offY + (dy / rect.height) * sens)),
-    );
-  }
-
-  function terminaTrascina() {
-    trascinaRef.current.attivo = false;
+  function cosaTrascina(): 'foto' | 'tracciato' {
+    if (preferFoto) return mostraTracciatoSuFoto ? elementoTrascina : 'foto';
+    return 'tracciato';
   }
 
   function distanzaDita(touches: React.TouchList | TouchList) {
@@ -304,62 +338,98 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     return Math.hypot(dx, dy);
   }
 
-  function iniziaTouchMobile(e: React.TouchEvent) {
-    if (e.touches.length === 2 && preferFoto && modalitaEdit === 'foto') {
-      touchRef.current = {
+  function applicaPan(dx: number, dy: number, rect: DOMRect) {
+    const sens = 0.95;
+    const st = gestiRef.current;
+    if (cosaTrascina() === 'foto') {
+      setFotoOffsetX(Math.min(1, Math.max(0, st.offX + (dx / rect.width) * sens)));
+      setFotoOffsetY(Math.min(1, Math.max(0, st.offY + (dy / rect.height) * sens)));
+    } else {
+      setTracciatoX(Math.min(1, Math.max(0, st.trX + (dx / rect.width) * sens)));
+      setTracciatoY(Math.min(1, Math.max(0, st.trY + (dy / rect.height) * sens)));
+    }
+  }
+
+  function iniziaPan(clientX: number, clientY: number) {
+    gestiRef.current = {
+      ...gestiRef.current,
+      tipo: 'pan',
+      x: clientX,
+      y: clientY,
+      offX: fotoOffsetX,
+      offY: fotoOffsetY,
+      trX: tracciatoX,
+      trY: tracciatoY,
+    };
+  }
+
+  function muoviPan(clientX: number, clientY: number) {
+    const st = gestiRef.current;
+    const rect = anteprimaRef.current?.getBoundingClientRect();
+    if (!rect || st.tipo !== 'pan') return;
+    applicaPan(clientX - st.x, clientY - st.y, rect);
+  }
+
+  function terminaGesto() {
+    gestiRef.current.tipo = 'none';
+  }
+
+  function iniziaTouch(e: React.TouchEvent) {
+    if (e.touches.length === 2 && preferFoto && cosaTrascina() === 'foto') {
+      gestiRef.current = {
+        ...gestiRef.current,
         tipo: 'pinch',
-        x: 0,
-        y: 0,
-        offX: fotoOffsetX,
-        offY: fotoOffsetY,
-        trX: tracciatoX,
-        trY: tracciatoY,
         zoom: fotoZoom,
         dist: distanzaDita(e.touches),
       };
     } else if (e.touches.length === 1) {
-      touchRef.current = {
-        tipo: 'pan',
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-        offX: fotoOffsetX,
-        offY: fotoOffsetY,
-        trX: tracciatoX,
-        trY: tracciatoY,
-        zoom: fotoZoom,
-        dist: 0,
-      };
+      iniziaPan(e.touches[0].clientX, e.touches[0].clientY);
     }
   }
 
-  function muoviTouchMobile(e: React.TouchEvent) {
-    const st = touchRef.current;
-    const rect = anteprimaRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    if (st.tipo === 'pinch' && e.touches.length === 2 && preferFoto && modalitaEdit === 'foto') {
+  function muoviTouch(e: React.TouchEvent) {
+    const st = gestiRef.current;
+    if (st.tipo === 'pinch' && e.touches.length === 2 && preferFoto && cosaTrascina() === 'foto') {
+      e.preventDefault();
       const ratio = distanzaDita(e.touches) / st.dist;
       setFotoZoom(Math.min(2, Math.max(0.6, st.zoom * ratio)));
       return;
     }
-
     if (st.tipo === 'pan' && e.touches.length === 1) {
-      const dx = e.touches[0].clientX - st.x;
-      const dy = e.touches[0].clientY - st.y;
-      const sens = 0.95;
-      if (modalitaEdit === 'foto' && preferFoto) {
-        setFotoOffsetX(Math.min(1, Math.max(0, st.offX + (dx / rect.width) * sens)));
-        setFotoOffsetY(Math.min(1, Math.max(0, st.offY + (dy / rect.height) * sens)));
-      } else {
-        setTracciatoX(Math.min(1, Math.max(0, st.trX + (dx / rect.width) * sens)));
-        setTracciatoY(Math.min(1, Math.max(0, st.trY + (dy / rect.height) * sens)));
-      }
+      e.preventDefault();
+      muoviPan(e.touches[0].clientX, e.touches[0].clientY);
     }
   }
 
-  function terminaTouchMobile() {
-    touchRef.current.tipo = 'none';
+  function onPointerDownAnteprima(e: React.PointerEvent) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    iniziaPan(e.clientX, e.clientY);
   }
+
+  function onPointerMoveAnteprima(e: React.PointerEvent) {
+    if (gestiRef.current.tipo === 'pan') muoviPan(e.clientX, e.clientY);
+  }
+
+  function onWheelAnteprima(e: React.WheelEvent) {
+    if (!preferFoto || cosaTrascina() !== 'foto') return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.04 : 0.04;
+    setFotoZoom((z) => Math.min(2, Math.max(0.6, z + delta)));
+  }
+
+  const hintTrascina = preferFoto
+    ? cosaTrascina() === 'foto'
+      ? 'Trascina l\'anteprima per spostare la foto · 2 dita o rotella per lo zoom'
+      : 'Trascina l\'anteprima per spostare il mini tracciato'
+    : 'Trascina l\'anteprima per spostare il tracciato';
+
+  const filtri: { id: FiltroFoto; label: string }[] = [
+    { id: 'none', label: 'Originale' },
+    { id: 'cinema', label: 'Cinema' },
+    { id: 'caldo', label: 'Caldo' },
+    { id: 'bw', label: 'B/N' },
+  ];
 
   return (
     <div className="editor-card space-y-5 rounded-app-lg border border-white/10 bg-[#0e1012] p-4 text-cemento shadow-app-lg sm:p-5">
@@ -368,7 +438,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
         <h2 className="mt-1 font-display text-xl font-black uppercase leading-tight tracking-tight text-white sm:text-2xl">
           Personalizza e condividi
         </h2>
-        <p className="mt-2 font-mono text-[11px] uppercase tracking-wide text-cemento/45">
+        <p className="mt-2 font-mono text-[11px] uppercase tracking-wide text-cemento/55">
           {formattaKm(giro.km)} km · {formattaDurata(giro.durataSec)} · {formattaDataBreve(giro.data)}
         </p>
       </header>
@@ -397,25 +467,145 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
         </button>
       )}
 
-      <section className="space-y-4">
-        <div>
-          <p className="editor-card-label">Tema colore</p>
-          <div className="mt-2 flex gap-2">
-            <Chip attivo={paletteCard === 'scuro'} onClick={() => setPaletteCard('scuro')}>Scuro</Chip>
-            <Chip attivo={paletteCard === 'chiaro'} onClick={() => setPaletteCard('chiaro')}>Chiaro</Chip>
-          </div>
-        </div>
+      {/* Foto + anteprima in cima */}
+      <div className="flex flex-wrap gap-2">
+        <label className="tap btn-primary cursor-pointer flex-1 sm:flex-none">
+          {generandoCard ? 'Genero…' : preferFoto ? 'Cambia foto' : 'Aggiungi foto'}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              const foto = await scegliFotoCard(f);
+              setFotoSalvata(foto);
+              setPreferFoto(true);
+              setTemaCard('tracciato');
+              setMostraTracciatoSuFoto(false);
+              setFotoZoom(1);
+              setFotoLuminosita(1);
+              setFotoContrasto(1);
+              setFotoSaturazione(1);
+              setFiltroFoto('none');
+              setFotoOffsetX(0.5);
+              setFotoOffsetY(0.5);
+              setElementoTrascina('foto');
+              rigeneraAbilitato.current = true;
+              await creaCard(foto);
+            }}
+          />
+        </label>
+        {preferFoto && (
+          <button
+            type="button"
+            onClick={() => {
+              setPreferFoto(false);
+              setMostraTracciatoSuFoto(false);
+              void creaCard(null);
+            }}
+            disabled={generandoCard}
+            className="tap editor-card-btn-secondary flex-1 sm:flex-none disabled:opacity-50"
+          >
+            Solo tracciato
+          </button>
+        )}
+        {!cardUrl && !preferFoto && (
+          <button
+            type="button"
+            onClick={() => {
+              rigeneraAbilitato.current = true;
+              void creaCard(null);
+            }}
+            disabled={generandoCard}
+            className="tap editor-card-btn-secondary flex-1 sm:flex-none disabled:opacity-50"
+          >
+            Genera card
+          </button>
+        )}
+      </div>
 
-        <div>
-          <p className="editor-card-label">Layout stats</p>
-          <div className="mt-2 flex gap-2">
-            <Chip attivo={temaCard === 'tracciato'} onClick={() => setTemaCard('tracciato')}>In basso</Chip>
-            <Chip attivo={temaCard === 'foto'} onClick={() => setTemaCard('foto')}>Laterale</Chip>
+      {cardUrl && (
+        <section className="editor-card-preview space-y-3">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <p className="editor-card-label mb-0">Anteprima</p>
+            {preferFoto && mostraTracciatoSuFoto && (
+              <div className="flex gap-2">
+                <Chip attivo={elementoTrascina === 'foto'} onClick={() => setElementoTrascina('foto')} className="flex-none px-2.5">
+                  Sposta foto
+                </Chip>
+                <Chip attivo={elementoTrascina === 'tracciato'} onClick={() => setElementoTrascina('tracciato')} className="flex-none px-2.5">
+                  Sposta tracciato
+                </Chip>
+              </div>
+            )}
           </div>
-        </div>
+          <p className="font-mono text-[9px] uppercase tracking-wide text-cemento/50">
+            {hintTrascina}
+          </p>
+          <div className="mx-auto w-full max-w-[280px] rounded-[18px] border border-white/12 bg-[#08090b] p-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)] sm:max-w-[260px]">
+            <div
+              ref={anteprimaRef}
+              className={`editor-card-preview-canvas aspect-[4/5] overflow-hidden rounded-[12px] bg-black ${generandoCard ? 'opacity-70' : ''} touch-none`}
+              onTouchStart={iniziaTouch}
+              onTouchMove={muoviTouch}
+              onTouchEnd={terminaGesto}
+              onTouchCancel={terminaGesto}
+              onPointerDown={onPointerDownAnteprima}
+              onPointerMove={onPointerMoveAnteprima}
+              onPointerUp={terminaGesto}
+              onPointerCancel={terminaGesto}
+              onWheel={onWheelAnteprima}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={cardUrl} alt="Anteprima card" className="pointer-events-none h-full w-full select-none object-cover" draggable={false} />
+            </div>
+          </div>
+        </section>
+      )}
 
+      {preferFoto && (
+        <section className="editor-card-tools space-y-4 rounded-app border border-white/10 bg-black/30 p-4">
+          <div>
+            <p className="editor-card-label">Regola foto</p>
+            <p className="mt-1 font-mono text-[9px] uppercase tracking-wide text-cemento/38">
+              Trascina l&apos;anteprima sopra per posizionare la foto — stesso gesto su mobile e desktop
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <ToolBtn onClick={() => { setFotoOffsetX(0.5); setFotoOffsetY(0.5); }}>Centra</ToolBtn>
+            <ToolBtn onClick={resetFotoPosizione}>Reset</ToolBtn>
+          </div>
+
+          <div>
+            <p className="editor-card-label mb-2">Filtro</p>
+            <div className="flex flex-wrap gap-2">
+              {filtri.map((f) => (
+                <Chip
+                  key={f.id}
+                  attivo={filtroFoto === f.id}
+                  onClick={() => setFiltroFoto(f.id)}
+                  className="flex-none px-3"
+                >
+                  {f.label}
+                </Chip>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SliderFoto etichetta="Luminosità" valore={Math.round(fotoLuminosita * 100)} min={50} max={150} onChange={(v) => setFotoLuminosita(v / 100)} />
+            <SliderFoto etichetta="Contrasto" valore={Math.round(fotoContrasto * 100)} min={75} max={140} onChange={(v) => setFotoContrasto(v / 100)} />
+            <SliderFoto etichetta="Saturazione" valore={Math.round(fotoSaturazione * 100)} min={50} max={150} onChange={(v) => setFotoSaturazione(v / 100)} />
+            <SliderFoto etichetta="Zoom" valore={Math.round(fotoZoom * 100)} min={60} max={200} onChange={(v) => setFotoZoom(v / 100)} />
+          </div>
+        </section>
+      )}
+
+      <section className="space-y-4 border-t border-white/8 pt-4">
         <div>
-          <label className="editor-card-label" htmlFor="luogo-card">Luogo</label>
+          <label className="editor-card-label" htmlFor="luogo-card">Luogo del giro</label>
           <input
             id="luogo-card"
             type="text"
@@ -427,138 +617,67 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
           />
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="editor-card-label">Stile card</p>
+            <div className="mt-2 flex gap-2">
+              <Chip attivo={paletteCard === 'scuro'} onClick={() => setPaletteCard('scuro')}>Scuro</Chip>
+              <Chip attivo={paletteCard === 'chiaro'} onClick={() => setPaletteCard('chiaro')}>Chiaro</Chip>
+            </div>
+          </div>
+          <div>
+            <p className="editor-card-label">Posizione stats</p>
+            <div className="mt-2 flex gap-2">
+              <Chip attivo={temaCard === 'tracciato'} onClick={() => setTemaCard('tracciato')}>In basso</Chip>
+              <Chip attivo={temaCard === 'foto'} onClick={() => setTemaCard('foto')}>Laterale</Chip>
+            </div>
+          </div>
+        </div>
+
         <div>
-          <p className="editor-card-label">Statistiche</p>
+          <p className="editor-card-label">Cosa mostrare</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
+            <StatChip label="Data giro" attivo={mostraData} onToggle={() => setMostraData((v) => !v)} hint="Badge in alto a destra" />
             <StatChip label="Vel. media" attivo={mostraMedia} onToggle={() => setMostraMedia((v) => !v)} />
             <StatChip label="Vel. max" attivo={mostraMax} onToggle={() => setMostraMax((v) => !v)} />
             <StatChip label="Curve" attivo={mostraCurve} onToggle={() => setMostraCurve((v) => !v)} />
-            <StatChip label="Dislivello" attivo={mostraDislivello} onToggle={() => setMostraDislivello((v) => !v)} />
+            <StatChip
+              label="Dislivello"
+              attivo={mostraDislivello}
+              onToggle={() => setMostraDislivello((v) => !v)}
+              hint={giroMontagna ? `+${stat.dislivelloPositivoM || giro.dislivelloM} m · per giri in montagna` : 'Per passi e salite'}
+            />
+            {preferFoto && (
+              <StatChip
+                label="Mini tracciato"
+                attivo={mostraTracciatoSuFoto}
+                onToggle={() => {
+                  setMostraTracciatoSuFoto((v) => {
+                    const next = !v;
+                    if (next) setElementoTrascina('foto');
+                    return next;
+                  });
+                }}
+                hint="Piccolo in basso · trascinalo sull'anteprima"
+              />
+            )}
           </div>
         </div>
+
+        {giroMontagna && !mostraDislivello && (
+          <button
+            type="button"
+            onClick={() => setMostraDislivello(true)}
+            className="tap w-full rounded-app border border-segnale/35 bg-segnale/10 px-3 py-2.5 text-left font-mono text-[10px] uppercase tracking-wide text-segnale hover:bg-segnale/15"
+          >
+            Giro in montagna — mostra +{stat.dislivelloPositivoM || giro.dislivelloM} m dislivello?
+          </button>
+        )}
       </section>
 
-      <div className="flex flex-wrap gap-2 border-t border-white/8 pt-4">
-        <label className="tap btn-primary cursor-pointer">
-          {generandoCard ? 'Genero…' : 'Aggiungi foto'}
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              const foto = await scegliFotoCard(f);
-              setFotoSalvata(foto);
-              setPreferFoto(true);
-              setFotoZoom(1);
-              setFotoLuminosita(1);
-              setFotoOffsetX(0.5);
-              setFotoOffsetY(0.5);
-              rigeneraAbilitato.current = true;
-              await creaCard(foto);
-            }}
-          />
-        </label>
-        <button
-          type="button"
-          onClick={() => {
-            setPreferFoto(false);
-            void creaCard(null);
-          }}
-          disabled={generandoCard}
-          className="tap editor-card-btn-secondary disabled:opacity-50"
-        >
-          Solo tracciato
-        </button>
-      </div>
-
-      {fotoSalvata && preferFoto && (
-        <section className="hidden space-y-4 rounded-app border border-white/10 bg-black/35 p-4 md:block">
-          <p className="editor-card-label">Regola foto di sfondo (desktop)</p>
-          <div
-            ref={panRef}
-            className="relative mx-auto aspect-[9/16] w-full max-w-[220px] cursor-grab overflow-hidden rounded-app border border-white/15 bg-black touch-none active:cursor-grabbing"
-            onPointerDown={(e) => {
-              e.currentTarget.setPointerCapture(e.pointerId);
-              iniziaTrascina(e.clientX, e.clientY);
-            }}
-            onPointerMove={(e) => muoviTrascina(e.clientX, e.clientY)}
-            onPointerUp={terminaTrascina}
-            onPointerCancel={terminaTrascina}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={fotoSalvata}
-              alt="Anteprima posizione foto"
-              draggable={false}
-              className="pointer-events-none absolute left-1/2 top-1/2 max-w-none select-none"
-              style={{
-                filter: `brightness(${fotoLuminosita})`,
-                minWidth: `${fotoZoom * 100}%`,
-                minHeight: `${fotoZoom * 100}%`,
-                width: 'auto',
-                height: 'auto',
-                transform: `translate(calc(-50% + ${(fotoOffsetX - 0.5) * 80}%), calc(-50% + ${(fotoOffsetY - 0.5) * 80}%))`,
-              }}
-            />
-            <p className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 py-2 text-center font-mono text-[9px] font-bold uppercase tracking-wide text-cemento/70">
-              Trascina per spostare
-            </p>
-          </div>
-          <SliderFoto etichetta="Luminosità" valore={Math.round(fotoLuminosita * 100)} min={50} max={150} onChange={(v) => setFotoLuminosita(v / 100)} />
-          <SliderFoto etichetta="Zoom" valore={Math.round(fotoZoom * 100)} min={60} max={200} onChange={(v) => setFotoZoom(v / 100)} />
-        </section>
-      )}
-
-      {cardUrl && (
-        <section className="space-y-3 border-t border-white/8 pt-4">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <p className="editor-card-label mb-0">Anteprima card</p>
-            <div className="flex gap-2 md:hidden">
-              {preferFoto && (
-                <Chip attivo={modalitaEdit === 'foto'} onClick={() => setModalitaEdit('foto')} className="flex-none px-2.5">
-                  Foto
-                </Chip>
-              )}
-              <Chip attivo={modalitaEdit === 'tracciato'} onClick={() => setModalitaEdit('tracciato')} className="flex-none px-2.5">
-                Tracciato
-              </Chip>
-            </div>
-          </div>
-          <p className="font-mono text-[9px] uppercase tracking-wide text-cemento/40 md:hidden">
-            {modalitaEdit === 'foto' && preferFoto
-              ? '1 dito sposta · 2 dita zoom'
-              : '1 dito sposta il tracciato sulla card'}
-          </p>
-          {preferFoto && (
-            <div className="md:hidden">
-              <SliderFoto etichetta="Luminosità" valore={Math.round(fotoLuminosita * 100)} min={50} max={150} onChange={(v) => setFotoLuminosita(v / 100)} />
-            </div>
-          )}
-          <div className="mx-auto w-full max-w-[300px] rounded-[18px] border border-white/10 bg-[#08090b] p-2 md:max-w-[260px]">
-            <div className="hidden items-center gap-2 px-1 py-1 md:flex">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-[9px] font-bold text-white">MG</div>
-              <span className="font-mono text-[9px] font-bold uppercase text-cemento/70">motogarage</span>
-            </div>
-            <div
-              ref={anteprimaRef}
-              className={`aspect-[4/5] overflow-hidden rounded-[12px] bg-black md:touch-auto ${generandoCard ? 'opacity-70' : ''} touch-none`}
-              onTouchStart={iniziaTouchMobile}
-              onTouchMove={muoviTouchMobile}
-              onTouchEnd={terminaTouchMobile}
-              onTouchCancel={terminaTouchMobile}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={cardUrl} alt="Anteprima card" className="h-full w-full select-none object-cover" draggable={false} />
-            </div>
-          </div>
-        </section>
-      )}
-
-      {cardUrl && (
+      {cardUrl && !preferFoto && (
         <section className="hidden space-y-3 border-t border-white/8 pt-4 md:block">
-          <p className="editor-card-label">Posizione tracciato (desktop)</p>
+          <p className="editor-card-label">Posizione tracciato (slider)</p>
           <SliderFoto etichetta="Orizzontale" valore={Math.round(tracciatoX * 100)} min={0} max={100} onChange={(v) => setTracciatoX(v / 100)} />
           <SliderFoto etichetta="Verticale" valore={Math.round(tracciatoY * 100)} min={0} max={100} onChange={(v) => setTracciatoY(v / 100)} />
         </section>
@@ -602,7 +721,7 @@ function SliderFoto({
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
         <span className="editor-card-label mb-0">{etichetta}</span>
-        <span className="font-mono text-xs tabular-nums text-cemento/70">{valore}%</span>
+        <span className="font-mono text-xs tabular-nums text-cemento/75">{valore}%</span>
       </div>
       <input
         type="range"

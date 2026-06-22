@@ -13,9 +13,10 @@ interface Props {
   onSeleziona: (id: string) => void;
   modalitaViewer?: boolean;
   modalitaHero?: boolean;
+  modalitaReel?: boolean;
 }
 
-export default function GarageModelViewer({ moto, selezionataId, onSeleziona, modalitaViewer = false, modalitaHero = false }: Props) {
+export default function GarageModelViewer({ moto, selezionataId, onSeleziona, modalitaViewer = false, modalitaHero = false, modalitaReel = false }: Props) {
   const selezionata = moto.find((item) => item.id === selezionataId) ?? moto[0] ?? null;
   const splat = selezionata && isGaussianSplat(selezionata);
 
@@ -27,6 +28,7 @@ export default function GarageModelViewer({ moto, selezionataId, onSeleziona, mo
         selezionataId={selezionata.id}
         modalitaViewer={modalitaViewer}
         modalitaHero={modalitaHero}
+        modalitaReel={modalitaReel}
       />
     );
   }
@@ -38,6 +40,7 @@ export default function GarageModelViewer({ moto, selezionataId, onSeleziona, mo
       onSeleziona={onSeleziona}
       modalitaViewer={modalitaViewer}
       modalitaHero={modalitaHero}
+      modalitaReel={modalitaReel}
     />
   );
 }

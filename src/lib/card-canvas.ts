@@ -52,6 +52,16 @@ interface DatiCard {
   /** Centro foto 0–1 (0.5 = centrata) */
   fotoOffsetX?: number;
   fotoOffsetY?: number;
+  /** Contrasto foto: 1 = normale */
+  fotoContrasto?: number;
+  /** Saturazione foto: 1 = normale */
+  fotoSaturazione?: number;
+  /** Filtro colore rapido */
+  filtroFoto?: 'none' | 'cinema' | 'caldo' | 'bw';
+  /** Tracciato GPS sopra la foto (default off: foto pulita) */
+  mostraTracciatoSuFoto?: boolean;
+  /** Mostra data del giro (default on) */
+  mostraData?: boolean;
 }
 
 function caricaImmagine(src: string): Promise<HTMLImageElement> {
@@ -222,6 +232,80 @@ function areaTracciatoConOffset(
   return { x: base.x + ox, y: base.y + oy, w: base.w, h: base.h };
 }
 
+function filtriFotoCss(
+  luminosita: number,
+  contrasto: number,
+  saturazione: number,
+  filtro: DatiCard['filtroFoto'],
+): string {
+  const base = `brightness(${luminosita}) contrast(${contrasto}) saturate(${saturazione})`;
+  if (filtro === 'cinema') return `${base} saturate(0.88) contrast(1.08)`;
+  if (filtro === 'caldo') return `${base} sepia(0.12) saturate(1.18) brightness(1.04)`;
+  if (filtro === 'bw') return `${base} grayscale(1) contrast(1.12)`;
+  return base;
+}
+
+/** Striscia scura in basso per testi leggibili sulla foto */
+function disegnaPannelloBasso(ctx: CanvasRenderingContext2D, altezza: number) {
+  const y = ALTEZZA - altezza;
+  const grad = ctx.createLinearGradient(0, y - 120, 0, ALTEZZA);
+  grad.addColorStop(0, 'rgba(8,9,11,0)');
+  grad.addColorStop(0.35, 'rgba(8,9,11,0.72)');
+  grad.addColorStop(1, 'rgba(8,9,11,0.94)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, y - 120, LARGHEZZA, altezza + 120);
+}
+
+/** Badge data in alto a destra — sempre leggibile */
+function disegnaBadgeData(
+  ctx: CanvasRenderingContext2D,
+  data: string,
+  fontHand: string,
+  fontMono: string,
+  segnale: string,
+) {
+  ctx.save();
+  ctx.font = `600 38px ${fontHand}`;
+  const testoW = ctx.measureText(data).width;
+  const padX = 28;
+  const padY = 18;
+  const badgeW = testoW + padX * 2;
+  const badgeH = 56;
+  const x = LARGHEZZA - 56 - badgeW;
+  const y = 44;
+
+  ctx.fillStyle = 'rgba(8,9,11,0.82)';
+  ctx.strokeStyle = 'rgba(242,183,5,0.45)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(x, y, badgeW, badgeH, 14);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = `700 20px ${fontMono}`;
+  ctx.fillStyle = 'rgba(242,183,5,0.85)';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('GIRO DEL', x + padX, y + badgeH * 0.38);
+
+  ctx.font = `600 34px ${fontHand}`;
+  ctx.fillStyle = segnale;
+  ctx.fillText(data, x + padX, y + badgeH * 0.72);
+  ctx.restore();
+}
+
+function disegnaTracciatoMini(
+  ctx: CanvasRenderingContext2D,
+  punti: Punto[],
+  area: AreaTracciato,
+  opt: { segnale: string; cemento: string },
+) {
+  ctx.save();
+  ctx.globalAlpha = 0.92;
+  disegnaTracciato2D(ctx, punti, area, { ...opt, spessore: 5 });
+  ctx.restore();
+}
+
 export async function generaCardGiro(dati: DatiCard): Promise<string> {
   const fontDisplay = leggiFont('--font-display', 'Arial');
   const fontHand = leggiFont('--font-hand', 'cursive');
@@ -241,13 +325,13 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
 
   const tema = dati.tema ?? 'tracciato';
   const palette = dati.palette ?? 'scuro';
-  const chiaro = palette === 'scuro';
+  const paletteChiara = palette === 'chiaro';
 
-  // Colori in base alla palette
-  const SFONDO_CARD = chiaro ? '#f0f1f2' : ASFALTO;
-  const TESTO_PRIMARIO = chiaro ? ASFALTO : CEMENTO;
-  const TESTO_SECONDARIO = chiaro ? 'rgba(21,24,26,0.55)' : 'rgba(240,241,242,0.6)';
-  const SEGNALE_CARD = chiaro ? '#c49200' : SEGNALE; // giallo più scuro su bianco per contrasto
+  // Colori in base alla palette (senza foto)
+  let SFONDO_CARD = paletteChiara ? '#f0f1f2' : ASFALTO;
+  let TESTO_PRIMARIO = paletteChiara ? ASFALTO : CEMENTO;
+  let TESTO_SECONDARIO = paletteChiara ? 'rgba(21,24,26,0.55)' : 'rgba(240,241,242,0.6)';
+  let SEGNALE_CARD = paletteChiara ? '#c49200' : SEGNALE;
   const TRACCIATO_COLORE = SEGNALE;
 
   // Sfondo: foto (se presente, su entrambi i temi) oppure gradiente
@@ -257,6 +341,8 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       const foto = await caricaImmagine(dati.fotoDataUrl);
       const zoom = Math.min(2, Math.max(0.6, dati.fotoScala ?? 1));
       const luminosita = Math.min(1.5, Math.max(0.5, dati.fotoLuminosita ?? 1));
+      const contrasto = Math.min(1.4, Math.max(0.75, dati.fotoContrasto ?? 1));
+      const saturazione = Math.min(1.5, Math.max(0.5, dati.fotoSaturazione ?? 1));
       const offsetX = (dati.fotoOffsetX ?? 0.5) - 0.5;
       const offsetY = (dati.fotoOffsetY ?? 0.5) - 0.5;
       const scalaBase = Math.max(LARGHEZZA / foto.width, ALTEZZA / foto.height);
@@ -266,25 +352,30 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       const panY = offsetY * ALTEZZA * 0.8;
 
       ctx.save();
-      ctx.filter = `brightness(${luminosita})`;
+      ctx.filter = filtriFotoCss(luminosita, contrasto, saturazione, dati.filtroFoto ?? 'none');
       ctx.drawImage(foto, (LARGHEZZA - w) / 2 + panX, (ALTEZZA - h) / 2 + panY, w, h);
       ctx.restore();
 
       const velo = ctx.createLinearGradient(0, 0, 0, ALTEZZA);
-      velo.addColorStop(0, 'rgba(14,16,18,0.55)');
-      velo.addColorStop(0.4, 'rgba(14,16,18,0.18)');
-      velo.addColorStop(0.7, 'rgba(14,16,18,0.45)');
-      velo.addColorStop(1, 'rgba(14,16,18,0.9)');
+      velo.addColorStop(0, 'rgba(8,9,11,0.62)');
+      velo.addColorStop(0.18, 'rgba(8,9,11,0.12)');
+      velo.addColorStop(0.55, 'rgba(8,9,11,0.08)');
+      velo.addColorStop(0.78, 'rgba(8,9,11,0.55)');
+      velo.addColorStop(1, 'rgba(8,9,11,0.92)');
       ctx.fillStyle = velo;
       ctx.fillRect(0, 0, LARGHEZZA, ALTEZZA);
       conFoto = true;
+      // Sulla foto: testo chiaro sempre, indipendentemente dalla palette
+      TESTO_PRIMARIO = CEMENTO;
+      TESTO_SECONDARIO = 'rgba(240,241,242,0.78)';
+      SEGNALE_CARD = SEGNALE;
     } catch {
       conFoto = false;
     }
   }
 
   if (!conFoto) {
-    if (chiaro) {
+    if (paletteChiara) {
       ctx.fillStyle = '#f0f1f2';
     } else if (tema === 'foto') {
       const sfondo = ctx.createLinearGradient(0, 0, 0, ALTEZZA);
@@ -304,11 +395,38 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
 
   await disegnaLogoAltoSinistra(ctx, fontDisplay, TESTO_PRIMARIO, conFoto);
 
-  const tracciatoOpt = { segnale: TRACCIATO_COLORE, cemento: TESTO_PRIMARIO };
+  const mostraData = dati.mostraData !== false;
+  if (mostraData) {
+    disegnaBadgeData(ctx, dati.data, fontHand, fontMono, SEGNALE_CARD);
+  }
 
-  // ===== TEMA "FOTO" (laterale): stats a destra, tracciato 2D spostabile =====
+  const tracciatoOpt = { segnale: TRACCIATO_COLORE, cemento: TESTO_PRIMARIO };
+  const tracciaSuFoto = conFoto && (dati.mostraTracciatoSuFoto ?? false);
+  const tracciaGrande = !conFoto || tracciaSuFoto;
+
+  if (conFoto) {
+    disegnaPannelloBasso(ctx, tema === 'foto' ? 520 : 480);
+  }
+
+  // Tracciato mini in angolo — solo se richiesto esplicitamente sulla foto
+  if (tracciaSuFoto && dati.punti.length > 1) {
+    disegnaTracciatoMini(
+      ctx,
+      dati.punti,
+      areaTracciatoConOffset(
+        { x: 48, y: ALTEZZA - 620, w: 220, h: 180 },
+        dati.tracciatoOffsetX,
+        dati.tracciatoOffsetY,
+        80,
+        60,
+      ),
+      tracciatoOpt,
+    );
+  }
+
+  // ===== TEMA "FOTO" (laterale): stats a destra =====
   if (tema === 'foto') {
-    if (dati.punti.length > 1) {
+    if (tracciaGrande && !conFoto && dati.punti.length > 1) {
       const areaBase: AreaTracciato = { x: 48, y: 180, w: LARGHEZZA * 0.58, h: ALTEZZA * 0.42 };
       disegnaTracciato2D(
         ctx,
@@ -319,7 +437,7 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     }
 
     const statX = LARGHEZZA - 56;
-    let statY = 220;
+    let statY = conFoto ? ALTEZZA - 480 : 220;
     ctx.textAlign = 'right';
     const blocchi: Array<{ label: string; valore: string }> = [
       { label: 'DISTANZA', valore: `${dati.km} km` },
@@ -333,40 +451,37 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       blocchi.push({ label: 'DISLIVELLO', valore: `+${dati.dislivelloM} m` });
     if (dati.curve != null && dati.curve > 0)
       blocchi.push({ label: 'CURVE', valore: `${dati.curve}` });
-    ctx.shadowColor = 'rgba(0,0,0,0.45)';
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
     for (const b of blocchi) {
-      ctx.shadowBlur = conFoto ? 8 : 0;
+      ctx.shadowBlur = conFoto ? 12 : 0;
       ctx.fillStyle = TESTO_SECONDARIO;
-      ctx.font = `500 26px ${fontMono}`;
+      ctx.font = `500 24px ${fontMono}`;
       ctx.fillText(b.label, statX, statY);
       ctx.fillStyle = TESTO_PRIMARIO;
-      ctx.font = `700 64px ${fontDisplay}`;
-      ctx.fillText(b.valore, statX, statY + 64);
-      statY += 138;
+      ctx.font = `700 ${conFoto ? 56 : 64}px ${fontDisplay}`;
+      ctx.fillText(b.valore, statX, statY + (conFoto ? 58 : 64));
+      statY += conFoto ? 118 : 138;
     }
     ctx.shadowBlur = 0;
     ctx.textAlign = 'left';
 
     ctx.fillStyle = TESTO_PRIMARIO;
-    ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
-    ctx.shadowBlur = conFoto ? 10 : 0;
-    ctx.font = `700 56px ${fontDisplay}`;
+    ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.65)' : 'transparent';
+    ctx.shadowBlur = conFoto ? 14 : 0;
+    ctx.font = `700 ${conFoto ? 52 : 56}px ${fontDisplay}`;
     const luogo = (dati.luogo || dati.titolo).toUpperCase();
-    scriviTestoMultilinea(ctx, luogo, 56, ALTEZZA - 180, LARGHEZZA * 0.55, 62);
+    scriviTestoMultilinea(ctx, luogo, 56, conFoto ? ALTEZZA - 130 : ALTEZZA - 180, LARGHEZZA * 0.62, conFoto ? 58 : 62);
     ctx.shadowBlur = 0;
-    ctx.fillStyle = SEGNALE_CARD;
-    ctx.font = `600 42px ${fontHand}`;
-    ctx.fillText(dati.data, 56, ALTEZZA - 120);
   } else {
-    // ===== TEMA "TRACCIATO" (in basso): tracciato 2D grande + stats sotto =====
-    const statsH = 460;
+    // ===== TEMA "TRACCIATO" (in basso): tracciato grande solo senza foto =====
+    const statsH = conFoto ? 420 : 460;
     const areaBase: AreaTracciato = {
       x: 56,
       y: 130,
       w: LARGHEZZA - 112,
       h: ALTEZZA - statsH - 150,
     };
-    if (dati.punti.length > 1) {
+    if (tracciaGrande && !conFoto && dati.punti.length > 1) {
       disegnaTracciato2D(
         ctx,
         dati.punti,
@@ -376,15 +491,15 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     }
 
     ctx.fillStyle = TESTO_PRIMARIO;
-    ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.5)' : 'transparent';
-    ctx.shadowBlur = conFoto ? 10 : 0;
-    ctx.font = `700 58px ${fontDisplay}`;
+    ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.65)' : 'transparent';
+    ctx.shadowBlur = conFoto ? 14 : 0;
+    ctx.font = `700 ${conFoto ? 54 : 58}px ${fontDisplay}`;
     const luogo = (dati.luogo || dati.titolo).toUpperCase();
-    scriviTestoMultilinea(ctx, luogo, 56, ALTEZZA - statsH + 20, LARGHEZZA - 112, 64);
+    scriviTestoMultilinea(ctx, luogo, 56, ALTEZZA - statsH + (conFoto ? 8 : 20), LARGHEZZA - 112, conFoto ? 60 : 64);
     ctx.shadowBlur = 0;
 
-    const linaY = ALTEZZA - statsH + 100;
-    ctx.strokeStyle = chiaro ? 'rgba(21,24,26,0.15)' : 'rgba(240,241,242,0.15)';
+    const linaY = ALTEZZA - statsH + (conFoto ? 88 : 100);
+    ctx.strokeStyle = paletteChiara ? 'rgba(21,24,26,0.15)' : 'rgba(240,241,242,0.22)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(56, linaY);
@@ -400,20 +515,20 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       giallo: boolean,
     ) => {
       if (conFoto) {
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 8;
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 10;
       }
       ctx.fillStyle = TESTO_SECONDARIO;
-      ctx.font = `500 26px ${fontMono}`;
+      ctx.font = `500 24px ${fontMono}`;
       ctx.fillText(label, x, y);
       ctx.fillStyle = giallo ? SEGNALE_CARD : TESTO_PRIMARIO;
-      ctx.font = `700 ${grande ? 68 : 48}px ${fontDisplay}`;
-      ctx.fillText(valore, x, y + (grande ? 68 : 50));
+      ctx.font = `700 ${grande ? (conFoto ? 62 : 68) : conFoto ? 44 : 48}px ${fontDisplay}`;
+      ctx.fillText(valore, x, y + (grande ? (conFoto ? 62 : 68) : conFoto ? 44 : 50));
       ctx.shadowBlur = 0;
     };
 
-    disegnaStat('DISTANZA', `${dati.km} km`, 56, linaY + 48, true, false);
-    disegnaStat('DURATA', dati.durata, LARGHEZZA / 2 + 16, linaY + 48, true, false);
+    disegnaStat('DISTANZA', `${dati.km} km`, 56, linaY + 44, true, false);
+    disegnaStat('DURATA', dati.durata, LARGHEZZA / 2 + 16, linaY + 44, true, false);
 
     const rigaBassa: Array<{ label: string; valore: string; giallo: boolean }> = [];
     if (dati.velMediaKmh != null && dati.velMediaKmh > 0)
@@ -425,15 +540,11 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     if (dati.dislivelloM != null && dati.dislivelloM > 0)
       rigaBassa.push({ label: 'DISLIVELLO', valore: `+${dati.dislivelloM} m`, giallo: true });
 
-    const yBassa = linaY + 190;
+    const yBassa = linaY + (conFoto ? 168 : 190);
     const larghColonna = (LARGHEZZA - 112) / Math.max(rigaBassa.length, 1);
     rigaBassa.forEach((s, i) => {
       disegnaStat(s.label, s.valore, 56 + i * larghColonna, yBassa, false, s.giallo);
     });
-
-    ctx.fillStyle = SEGNALE_CARD;
-    ctx.font = `600 42px ${fontHand}`;
-    ctx.fillText(dati.data, 56, ALTEZZA - 100);
   }
 
   // Marchio discreto in basso a destra

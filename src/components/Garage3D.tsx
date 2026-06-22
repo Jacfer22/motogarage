@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { GarageMoto } from '@/lib/garage';
+import { posizioneCameraReelGarage, REEL_GARAGE_LOOK_AT } from '@/lib/reel-garage-camera';
 
 interface Props {
   moto: GarageMoto[];
@@ -12,6 +13,7 @@ interface Props {
   onSeleziona: (id: string) => void;
   modalitaViewer?: boolean;
   modalitaHero?: boolean;
+  modalitaReel?: boolean;
 }
 
 function posizioniMoto(numero: number): THREE.Vector3[] {
@@ -103,7 +105,7 @@ function preparaModello(root: THREE.Group, index: number, posizione: THREE.Vecto
   });
 }
 
-export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaViewer = false, modalitaHero = false }: Props) {
+export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaViewer = false, modalitaHero = false, modalitaReel = false }: Props) {
   const contenitoreRef = useRef<HTMLDivElement>(null);
   const controlliRef = useRef<OrbitControls | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -271,9 +273,32 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
   useEffect(() => {
     const controls = controlliRef.current;
     if (!controls) return;
-    controls.autoRotate = autoRotate;
+    controls.autoRotate = autoRotate && !modalitaReel;
     controls.autoRotateSpeed = 1.4;
-  }, [autoRotate]);
+  }, [autoRotate, modalitaReel]);
+
+  /** Reel GLB: sync frame Playwright */
+  useEffect(() => {
+    if (!modalitaReel || !modalitaHero || caricati === 0) return;
+    const controls = controlliRef.current;
+    if (!controls) return;
+    controls.enabled = false;
+    const target = new THREE.Vector3(REEL_GARAGE_LOOK_AT.x, REEL_GARAGE_LOOK_AT.y + 0.65, REEL_GARAGE_LOOK_AT.z);
+    controls.target.copy(target);
+
+    function onFrame(e: Event) {
+      const cam = cameraRef.current;
+      if (!cam) return;
+      const { frame, total } = (e as CustomEvent<{ frame: number; total: number }>).detail;
+      const t = total <= 1 ? 0 : frame / (total - 1);
+      const pos = posizioneCameraReelGarage(t);
+      cam.position.set(pos.x + target.x, pos.y + target.y, pos.z + target.z);
+      cam.lookAt(target);
+    }
+
+    window.addEventListener('reel-garage-frame', onFrame);
+    return () => window.removeEventListener('reel-garage-frame', onFrame);
+  }, [modalitaReel, modalitaHero, caricati]);
 
   useEffect(() => {
     const id = selezionataId;
