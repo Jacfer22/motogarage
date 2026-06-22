@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from './AuthProvider';
+import { useChecklistVisibile } from './ChecklistHub';
+import { Button } from './Button';
 
 const CHIAVE = 'motogarage-tutorial-v1';
 
@@ -33,16 +35,20 @@ const PASSI = [
 ];
 
 export default function TutorialPrimoAccesso() {
-  const { user, loading } = useAuth();
+  const { user, profilo, loading } = useAuth();
+  const profiloOk = Boolean(profilo?.username && profilo?.avatar_url);
+  const checklistVisibile = useChecklistVisibile(user?.id, profiloOk);
   const [visibile, setVisibile] = useState(false);
   const [passo, setPasso] = useState(0);
 
   useEffect(() => {
     if (typeof window === 'undefined' || loading || !user) return;
     if (localStorage.getItem(CHIAVE)) return;
-    const timer = window.setTimeout(() => setVisibile(true), 900);
+    if (checklistVisibile) return;
+
+    const timer = window.setTimeout(() => setVisibile(true), 2200);
     return () => window.clearTimeout(timer);
-  }, [loading, user]);
+  }, [loading, user, checklistVisibile]);
 
   function chiudiPermanente() {
     localStorage.setItem(CHIAVE, '1');
@@ -101,21 +107,13 @@ export default function TutorialPrimoAccesso() {
 
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center">
           {passo > 0 && (
-            <button
-              type="button"
-              onClick={() => setPasso((p) => p - 1)}
-              className="tap rounded-app border border-white/15 px-5 py-3 font-mono text-xs font-bold uppercase text-cemento/70 hover:border-white/30"
-            >
+            <Button variant="ghost" onClick={() => setPasso((p) => p - 1)}>
               Indietro
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
-            onClick={avanti}
-            className="tap flex-1 rounded-app bg-brand px-5 py-3 font-mono text-xs font-bold uppercase text-white shadow-brand hover:bg-brand-chiaro"
-          >
+          <Button onClick={avanti} className="flex-1">
             {ultimo ? 'Ho capito' : 'Continua'}
-          </button>
+          </Button>
         </div>
 
         <button

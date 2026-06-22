@@ -222,7 +222,7 @@ export default function PaginaGarage() {
         <button type="button" onClick={() => setVista('garage')} className="absolute left-4 top-4 z-20 rounded-full border border-white/15 bg-black/70 px-4 py-3 font-mono text-xs font-bold uppercase text-white backdrop-blur">
           ← Chiudi viewer
         </button>
-        <a href={urlModello(selezionata)!} download className="absolute bottom-4 right-4 z-20 rounded-app bg-brand px-5 py-3 font-mono text-xs font-bold uppercase text-white">
+        <a href={urlModello(selezionata)!} download className="btn-primary tap absolute bottom-4 right-4 z-20">
           Scarica {selezionata.model_format?.toUpperCase() ?? 'modello'}
         </a>
       </main>
@@ -287,7 +287,7 @@ export default function PaginaGarage() {
             <button
               type="button"
               onClick={() => setVista(vista === 'crea' ? 'garage' : 'crea')}
-              className="shrink-0 rounded-app bg-brand px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wide text-white shadow-brand"
+              className="btn-primary tap shrink-0 !min-h-[44px] !px-4 !py-3 !text-[10px]"
             >
               {vista === 'crea' ? '← Garage' : '＋ Avatar della tua moto'}
             </button>

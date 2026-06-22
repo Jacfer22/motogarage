@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { caricaClassificaKm, type RigaClassifica } from '@/lib/classifica';
+import { ButtonLink } from '@/components/Button';
 
 function iniziali(username: string) {
   return username.slice(0, 2).toUpperCase();
@@ -46,9 +47,9 @@ export default function ClassificaKm() {
           {errore || 'Traccia un giro con GPS: i km compariranno qui appena registrati.'}
         </p>
         {!errore && (
-          <Link href="/traccia" className="tap mt-4 inline-block rounded-app bg-brand px-5 py-3 font-mono text-xs font-bold uppercase text-white">
+          <ButtonLink href="/traccia" className="mt-4">
             Traccia un giro
-          </Link>
+          </ButtonLink>
         )}
       </div>
     );

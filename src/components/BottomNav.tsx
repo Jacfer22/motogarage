@@ -15,6 +15,17 @@ function IconaBussola({ attiva }: { attiva: boolean }) {
   );
 }
 
+function IconaGarage({ attiva }: { attiva: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={attiva ? 2.4 : 2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <path d="M8 21V10c0-1 .5-2 2-2h4c1.5 0 2 1 2 2v11" />
+      <circle cx="12" cy="15" r="1.5" fill={attiva ? 'currentColor' : 'none'} />
+    </svg>
+  );
+}
+
 function IconaTraccia({ attiva }: { attiva: boolean }) {
   return (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -22,17 +33,6 @@ function IconaTraccia({ attiva }: { attiva: boolean }) {
       <circle cx="6" cy="18" r="2" fill={attiva ? 'currentColor' : 'none'} />
       <circle cx="18" cy="6" r="2" fill={attiva ? 'currentColor' : 'none'} />
       <path d="M8 16c3-4 5-6 10-8" />
-    </svg>
-  );
-}
-
-function IconaFoto({ attiva }: { attiva: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={attiva ? 2.4 : 2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <circle cx="8.5" cy="10" r="1.5" />
-      <path d="m21 16-4.5-4.5L7 21" />
     </svg>
   );
 }
@@ -65,7 +65,7 @@ export default function BottomNav() {
 
   const vociLaterali = [
     { href: '/naviga', label: 'Naviga', Icona: IconaBussola, match: (p: string) => p.startsWith('/naviga') },
-    { href: '/community', label: 'Community', Icona: IconaFoto, match: (p: string) => (p.startsWith('/community') && !p.startsWith('/community/classifica')) || p.startsWith('/foto') },
+    { href: '/garage', label: 'Garage', Icona: IconaGarage, match: (p: string) => p.startsWith('/garage') },
     { href: '/giri', label: 'Giri', Icona: IconaGiri, match: (p: string) => p.startsWith('/giri') },
     {
       href: loggato ? '/hub' : '/accedi',
@@ -97,7 +97,7 @@ export default function BottomNav() {
             className={`flex h-14 w-14 items-center justify-center rounded-full border-2 shadow-lg transition-colors ${
               tracciaAttiva
                 ? 'border-brand bg-brand text-white shadow-brand'
-                : 'border-white/20 bg-brand text-white'
+                : 'border-white/25 bg-asfalto/80 text-cemento shadow-app-sm'
             }`}
           >
             <IconaTraccia attiva={tracciaAttiva} />

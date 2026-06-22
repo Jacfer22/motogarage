@@ -7,6 +7,9 @@ import Image from 'next/image';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAuth } from '@/components/AuthProvider';
 import { CATEGORIE_MOTO } from '@/lib/categorie-moto';
+import AppPageShell from '@/components/AppPageShell';
+import AuthWall, { AuthWallLoading } from '@/components/AuthWall';
+import { Button, ButtonLink } from '@/components/Button';
 
 const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/;
 
@@ -109,43 +112,44 @@ export default function PaginaAccount() {
 
   if (nonConfigurato) {
     return (
-      <section className="mx-auto max-w-md px-4 py-14">
-        <h1 className="font-display text-4xl font-bold uppercase tracking-tight">
+      <AppPageShell width="narrow">
+        <h1 className="font-display text-4xl font-bold uppercase tracking-tight text-white">
           Account non disponibile
         </h1>
-        <p className="mt-3 text-asfalto/70">
+        <p className="mt-3 text-cemento/65">
           Il sito non è ancora collegato a Supabase in questo ambiente.
         </p>
-      </section>
+      </AppPageShell>
     );
   }
 
   if (loading) {
     return (
-      <section className="mx-auto max-w-md px-4 py-14">
-        <p className="font-mono text-sm uppercase text-asfalto/50">Caricamento…</p>
-      </section>
+      <AppPageShell width="narrow">
+        <AuthWallLoading />
+      </AppPageShell>
     );
   }
 
   if (!user) {
     return (
-      <section className="mx-auto max-w-md px-4 py-14">
-        <h1 className="font-display text-4xl font-bold uppercase tracking-tight">
+      <AppPageShell width="narrow">
+        <h1 className="font-display text-4xl font-bold uppercase tracking-tight text-white">
           Non hai effettuato l’accesso
         </h1>
-        <Link
-          href="/accedi"
-          className="mt-4 inline-block bg-segnale px-5 py-2.5 font-mono font-medium uppercase text-asfalto hover:bg-white"
-        >
-          Vai al login
-        </Link>
-      </section>
+        <div className="mt-6">
+          <AuthWall
+            titolo="Il tuo profilo"
+            descrizione="Accedi per gestire username, foto e dati della moto."
+            invitaRegistrazione={false}
+          />
+        </div>
+      </AppPageShell>
     );
   }
 
   return (
-    <section className="mx-auto max-w-md px-4 py-14">
+    <AppPageShell width="narrow">
       <p className="font-mono text-sm uppercase tracking-widest text-cartello">Account</p>
       <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight">
         Il tuo profilo
@@ -278,28 +282,21 @@ export default function PaginaAccount() {
         <button
           type="submit"
           disabled={salvataggio}
-          className="w-full bg-segnale px-5 py-2.5 font-mono font-medium uppercase text-asfalto hover:bg-white disabled:opacity-60"
+          className="btn-primary tap w-full disabled:opacity-60"
         >
           {salvataggio ? 'Salvo…' : 'Salva profilo'}
         </button>
       </form>
 
       {profilo?.is_admin && (
-        <Link
-          href="/admin"
-          className="mt-4 inline-block border-2 border-cartello px-5 py-2.5 font-mono text-sm font-medium uppercase text-cartello hover:bg-cartello hover:text-cemento"
-        >
+        <ButtonLink href="/admin" variant="ghost" className="mt-4">
           Pannello admin
-        </Link>
+        </ButtonLink>
       )}
 
-      <button
-        type="button"
-        onClick={logout}
-        className="mt-4 block border-2 border-asfalto px-5 py-2.5 font-mono font-medium uppercase hover:bg-asfalto hover:text-cemento"
-      >
+      <Button variant="ghost" fullWidth onClick={logout} className="mt-4">
         Esci
-      </button>
-    </section>
+      </Button>
+    </AppPageShell>
   );
 }

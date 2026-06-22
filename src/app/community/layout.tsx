@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import CercaUtenti from '@/components/CercaUtenti';
+import AppPageShell from '@/components/AppPageShell';
 
 const TAB = [
   { href: '/community', label: 'Attività', match: (p: string) => p === '/community' },
@@ -13,12 +14,12 @@ export default function LayoutCommunity({ children }: { children: React.ReactNod
   const pathname = usePathname();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <AppPageShell>
       <p className="font-mono text-sm uppercase tracking-[0.2em] text-cartello">In sella ora</p>
-      <h1 className="mt-1 font-display text-5xl font-bold uppercase leading-none tracking-tight sm:text-6xl">
+      <h1 className="mt-1 font-display text-4xl font-bold uppercase leading-none tracking-tight text-white sm:text-5xl">
         Community
       </h1>
-      <p className="mt-4 text-lg text-asfalto/75">
+      <p className="mt-4 text-lg text-cemento/70">
         Foto dei giri, classifica chilometri e ricerca rider.
       </p>
 
@@ -26,7 +27,7 @@ export default function LayoutCommunity({ children }: { children: React.ReactNod
         <CercaUtenti />
       </div>
 
-      <nav className="mt-6 flex gap-2 border-b border-asfalto/12 pb-px" aria-label="Sezioni community">
+      <nav className="mt-6 flex gap-2 border-b border-white/10 pb-px" aria-label="Sezioni community">
         {TAB.map((tab) => {
           const attivo = tab.match(pathname);
           return (
@@ -36,7 +37,7 @@ export default function LayoutCommunity({ children }: { children: React.ReactNod
               className={`tap rounded-t-app px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wide transition-colors ${
                 attivo
                   ? 'border-b-2 border-brand bg-brand/10 text-brand'
-                  : 'text-asfalto/50 hover:text-asfalto'
+                  : 'text-cemento/50 hover:text-cemento'
               }`}
             >
               {tab.label}
@@ -46,6 +47,6 @@ export default function LayoutCommunity({ children }: { children: React.ReactNod
       </nav>
 
       <div className="mt-8">{children}</div>
-    </div>
+    </AppPageShell>
   );
 }

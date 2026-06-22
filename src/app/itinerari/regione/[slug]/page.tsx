@@ -85,7 +85,7 @@ export default async function PaginaRegione({
           </p>
           <a
             href="mailto:info@motogarage.it?subject=Proposta%20itinerario%20MotoGarage"
-            className="mt-4 inline-block bg-segnale px-5 py-2.5 font-mono text-sm font-medium uppercase text-asfalto hover:bg-asfalto hover:text-cemento"
+            className="btn-primary tap mt-4 inline-block"
           >
             Proponi un giro
           </a>
@@ -124,7 +124,7 @@ export default async function PaginaRegione({
                 </div>
                 <Link
                   href="/pro"
-                  className="tap shrink-0 rounded-app bg-segnale px-4 py-2 font-mono text-xs font-medium uppercase tracking-wide text-asfalto hover:bg-asfalto hover:text-cemento"
+                  className="btn-primary tap shrink-0 !min-h-[40px] !px-4 !py-2 !text-xs"
                 >
                   Pre-iscriviti →
                 </Link>

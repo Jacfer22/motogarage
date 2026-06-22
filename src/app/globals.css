@@ -240,8 +240,9 @@ body {
   color: #f0f1f2;
 }
 
-/* Card regione itinerari */
-.card-regione {
+/* Card regione itinerari — base condivisa con card-feature */
+.card-regione,
+.card-feature {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -254,7 +255,8 @@ body {
     box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.2s ease;
 }
-.card-regione:hover {
+.card-regione:hover,
+.card-feature:hover {
   transform: translateY(-3px);
   border-color: rgba(220, 38, 38, 0.25);
   box-shadow: 0 8px 16px rgba(21, 24, 26, 0.08), 0 16px 40px rgba(21, 24, 26, 0.12);
@@ -262,11 +264,13 @@ body {
 .card-regione-vuota {
   opacity: 0.55;
 }
-.dark .card-regione {
+.dark .card-regione,
+.dark .card-feature {
   background: var(--carbone);
   border-color: rgba(240, 241, 242, 0.08);
 }
-.dark .card-regione:hover {
+.dark .card-regione:hover,
+.dark .card-feature:hover {
   border-color: rgba(220, 38, 38, 0.35);
 }
 
@@ -275,7 +279,8 @@ body {
   .mezzeria-animata {
     animation: none;
   }
-  .card-regione:hover {
+  .card-regione:hover,
+  .card-feature:hover {
     transform: none;
   }
 }
@@ -458,24 +463,7 @@ body {
   transform: translateY(0);
 }
 
-/* Card feature — testo sempre leggibile su sfondo bianco */
-.card-feature {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 1.25rem;
-  border-radius: 14px;
-  border: 1px solid rgba(21, 24, 26, 0.08);
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(21, 24, 26, 0.06), 0 1px 3px rgba(21, 24, 26, 0.08);
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.2s ease;
-}
-.card-feature:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(21, 24, 26, 0.08), 0 16px 40px rgba(21, 24, 26, 0.12);
-}
+/* Card feature — estende card-regione con varianti testo */
 .card-feature-evidenza {
   border-left: 4px solid var(--brand);
   border-color: rgba(237, 33, 0, 0.2);
@@ -485,10 +473,6 @@ body {
 }
 .card-feature p {
   color: rgba(21, 24, 26, 0.68);
-}
-.dark .card-feature {
-  background: var(--carbone);
-  border-color: rgba(240, 241, 242, 0.1);
 }
 .dark .card-feature h3 {
   color: #f0f1f2;
@@ -1251,6 +1235,9 @@ body {
   color: #f0f1f2;
 }
 .btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #b91c1c;
   color: #fff;
   border-radius: 14px;
@@ -1259,7 +1246,16 @@ body {
   font-family: var(--font-mono), monospace;
   font-size: 0.75rem;
   font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+.btn-danger:hover:not(:disabled) {
+  background: #991b1b;
+}
+.btn-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* ── Toast ── */

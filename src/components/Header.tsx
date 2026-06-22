@@ -56,7 +56,7 @@ export default function Header() {
               type="button"
               onClick={logout}
               disabled={esce}
-              className="tap rounded-app border border-white/15 px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-cemento/75 transition-colors hover:border-brand/40 hover:text-brand-chiaro disabled:opacity-50"
+              className="btn-ghost tap !min-h-[40px] !px-3 !py-2 !text-xs text-cemento/75 hover:text-brand-chiaro disabled:opacity-50"
             >
               {esce ? 'Uscita…' : 'Esci'}
             </button>
@@ -90,7 +90,7 @@ export default function Header() {
               type="button"
               onClick={logout}
               disabled={esce}
-              className="mt-2 w-full rounded-app border border-white/15 py-4 font-mono text-sm font-bold uppercase tracking-wide text-cemento/80 hover:text-brand-chiaro disabled:opacity-50"
+              className="btn-ghost tap mt-2 w-full !text-sm text-cemento/80 hover:text-brand-chiaro disabled:opacity-50"
             >
               {esce ? 'Uscita…' : 'Esci'}
             </button>

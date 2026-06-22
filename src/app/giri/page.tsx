@@ -14,6 +14,9 @@ import {
 } from '@/lib/giri-store';
 import EditorCardGiro from '@/components/EditorCardGiro';
 import { useFeedback } from '@/components/FeedbackProvider';
+import AppPageShell from '@/components/AppPageShell';
+import AuthWall, { AuthWallLoading } from '@/components/AuthWall';
+import { Button, ButtonLink } from '@/components/Button';
 
 const MappaTraccia = dynamic(() => import('@/components/MappaTraccia'), { ssr: false });
 
@@ -110,60 +113,71 @@ export default function PaginaMieiGiri() {
   }
 
   if (loading) {
-    return <section className="mx-auto max-w-2xl px-4 py-14"><p className="font-mono text-sm uppercase text-asfalto/40">Caricamento…</p></section>;
+    return (
+      <AppPageShell>
+        <AuthWallLoading />
+      </AppPageShell>
+    );
   }
 
   if (!user) {
     return (
-      <section className="mx-auto max-w-2xl px-4 py-14">
-        <h1 className="font-display text-5xl font-bold uppercase leading-none tracking-tight">I miei giri</h1>
-        <p className="mt-4 text-asfalto/70">Accedi per vedere i giri salvati nel cloud e creare le card da qualsiasi dispositivo.</p>
-        <Link href="/accedi" className="mt-6 inline-block rounded-app bg-brand px-5 py-3 font-mono text-xs font-bold uppercase text-white">Accedi</Link>
-      </section>
+      <AppPageShell>
+        <h1 className="font-display text-4xl font-bold uppercase leading-none tracking-tight text-white">I miei giri</h1>
+        <div className="mt-6">
+          <AuthWall
+            titolo="I tuoi percorsi salvati"
+            descrizione="Accedi per vedere i giri salvati nel cloud e creare le card da qualsiasi dispositivo."
+            invitaRegistrazione={false}
+          />
+        </div>
+      </AppPageShell>
     );
   }
 
   return (
-    <section className="mx-auto max-w-2xl px-4 py-14">
+    <AppPageShell>
       <p className="font-mono text-sm uppercase tracking-widest text-cartello">MotoGarage</p>
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-display text-5xl font-bold uppercase leading-none tracking-tight">I miei giri</h1>
-        <Link href="/traccia" className="btn-primary text-center">
+        <h1 className="font-display text-4xl font-bold uppercase leading-none tracking-tight text-white md:text-5xl">I miei giri</h1>
+        <ButtonLink href="/traccia" className="!min-h-[44px]">
           + Traccia giro
-        </Link>
+        </ButtonLink>
       </div>
-      <p className="mt-3 text-asfalto/70">
+      <p className="mt-3 text-cemento/65">
         Tutti i percorsi GPS salvati nel tuo account. Apri da qualsiasi telefono e crea la card quando vuoi.
       </p>
 
-      {errore && <p className="mt-4 rounded-app border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300">{errore}</p>}
+      {errore && <p className="mt-4 rounded-app border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{errore}</p>}
 
       {giri === null ? (
         <div className="mt-8 space-y-2">
           {[0, 1, 2].map((i) => <div key={i} className="skeleton h-16 rounded-app" />)}
         </div>
       ) : giri.length === 0 ? (
-        <div className="mt-8 rounded-app-lg border border-dashed border-asfalto/25 p-8 text-center">
-          <p className="font-display text-2xl font-bold uppercase text-asfalto/40">Nessun giro ancora</p>
-          <p className="mt-2 text-sm text-asfalto/60">Traccia il primo percorso con GPS: comparirà qui automaticamente.</p>
-          <Link href="/traccia" className="tap mt-4 inline-block rounded-app bg-brand px-5 py-3 font-mono text-xs font-bold uppercase text-white">Traccia un giro</Link>
+        <div className="mt-8 rounded-app-lg border border-dashed border-white/15 p-8 text-center">
+          <p className="font-display text-2xl font-bold uppercase text-cemento/40">Nessun giro ancora</p>
+          <p className="mt-2 text-sm text-cemento/55">Traccia il primo percorso con GPS: comparirà qui automaticamente.</p>
+          <ButtonLink href="/traccia" className="mt-4">
+            Traccia un giro
+          </ButtonLink>
         </div>
       ) : (
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
           <ul className="space-y-2">
             {giri.map((giro) => (
               <li key={giro.id}>
-                <div className={`card-app flex items-stretch gap-2 p-0 overflow-hidden ${selezionatoId === giro.id ? 'ring-2 ring-brand' : ''}`}>
+                <div className={`card-app flex items-stretch gap-2 overflow-hidden p-0 ${selezionatoId === giro.id ? 'ring-2 ring-brand' : ''}`}>
                   <button
                     type="button"
                     onClick={() => setSelezionatoId(giro.id)}
                     className="min-w-0 flex-1 p-4 text-left"
                   >
-                    <p className="font-display text-lg font-bold uppercase leading-tight">{giro.nome}</p>
-                    <p className="mt-0.5 font-mono text-[11px] uppercase text-asfalto/50">
+                    <p className="font-display text-lg font-bold uppercase leading-tight text-white">{giro.nome}</p>
+                    <p className="mt-0.5 font-mono text-[11px] uppercase text-cemento/50">
                       {formattaDataBreve(giro.data)} · {formattaKm(giro.km)} km · {formattaDurata(giro.durataSec)}
                     </p>
-                    <p className="mt-1 font-mono text-[10px] uppercase text-asfalto/40">
+                    <p className="mt-1 font-mono text-[10px] uppercase text-cemento/40">
                       {giro.pubblico ? 'In community' : 'Privato'}
                       {giro.soloLocale ? ' · Solo locale (in sync…)' : ' · Nel cloud'}
                     </p>
@@ -173,7 +187,7 @@ export default function PaginaMieiGiri() {
                     title="Elimina giro"
                     disabled={salvando}
                     onClick={() => eliminaGiro(giro)}
-                    className="shrink-0 border-l border-asfalto/10 px-3 font-mono text-lg text-red-500/80 hover:bg-red-500/10 disabled:opacity-40"
+                    className="shrink-0 border-l border-white/10 px-3 font-mono text-lg text-red-400/80 hover:bg-red-500/10 disabled:opacity-40"
                   >
                     ×
                   </button>
@@ -185,7 +199,7 @@ export default function PaginaMieiGiri() {
           {selezionato && (
             <div className="space-y-4">
               {selezionato.punti.length > 1 && (
-                <div className="overflow-hidden rounded-app-lg border border-asfalto/12">
+                <div className="overflow-hidden rounded-app-lg border border-white/10">
                   <MappaTraccia punti={selezionato.punti} inCorso={false} />
                 </div>
               )}
@@ -194,22 +208,24 @@ export default function PaginaMieiGiri() {
                 onNomeChange={cambiaNome}
                 onPubblicoChange={selezionato.cloudId ? cambiaPubblico : undefined}
               />
-              <button
-                type="button"
+              <Button
+                variant="danger"
+                fullWidth
                 disabled={salvando}
                 onClick={() => eliminaGiro(selezionato)}
-                className="w-full rounded-app border border-red-500/35 bg-red-500/10 px-4 py-3 font-mono text-xs font-bold uppercase text-red-600 hover:bg-red-500/15 disabled:opacity-40"
               >
                 Elimina questo giro
-              </button>
+              </Button>
             </div>
           )}
         </div>
       )}
 
       <p className="mt-10">
-        <Link href="/hub" className="font-mono text-sm uppercase text-asfalto/60 underline hover:text-asfalto">← Torna all&apos;hub</Link>
+        <Link href="/hub" className="font-mono text-sm uppercase text-cemento/50 underline hover:text-brand">
+          ← Torna all&apos;hub
+        </Link>
       </p>
-    </section>
+    </AppPageShell>
   );
 }
