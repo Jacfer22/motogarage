@@ -42,7 +42,7 @@ export default function MappaFoto({ foto }: { foto: Foto[] }) {
 
         const icona = L.divIcon({
           className: '',
-          html: `<div style="width:18px;height:18px;border-radius:50%;background:#F2B705;border:3px solid #15181A;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
+          html: `<div style="width:18px;height:18px;border-radius:50%;background:#F2B705;border:3px solid #28282B;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
           iconSize: [18, 18],
           iconAnchor: [9, 9],
         });

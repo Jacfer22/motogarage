@@ -105,7 +105,7 @@ export default function PannelloNavigazione({
   const distanzaMano = passo && posizione ? distanzaAlPasso(posizione, passo) : null;
 
   return (
-    <div className="overflow-hidden rounded-app-lg border-2 border-brand/35 bg-gradient-to-br from-asfalto via-asfalto to-[#1e2428] p-5 shadow-[0_12px_40px_rgba(237,33,0,0.18)] sm:p-6">
+    <div className="overflow-hidden rounded-app-lg border-2 border-brand/35 bg-gradient-to-br from-asfalto via-carbone to-notte p-5 shadow-[0_12px_40px_rgba(237,33,0,0.18)] sm:p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-brand">Navigatore integrato</p>

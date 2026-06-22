@@ -98,7 +98,7 @@ export default function PaginaPro() {
             </li>
           ))}
         </ul>
-        <div className="overflow-hidden rounded-app-lg bg-[#08090d] text-cemento shadow-app">
+        <div className="overflow-hidden rounded-app-lg bg-notte text-cemento shadow-app">
           <img src="/og-motogarage.png" alt="" className="aspect-video w-full object-cover object-[50%_68%]" />
           <div className="p-5">
             <p className="font-mono text-xs uppercase tracking-wide text-red-400">Avatar 3D incluso</p>

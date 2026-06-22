@@ -43,7 +43,7 @@ export default function MappaItinerario({ tappe, tracciato }: Props) {
           : tappe.map((t) => [t.lat, t.lng] as [number, number]);
 
       L.polyline(lineaPunti, {
-        color: '#15181A',
+        color: '#28282B',
         weight: 4,
         opacity: 0.85,
         lineJoin: 'round',

@@ -20,7 +20,7 @@ export default function GaragePubblico({ username, moto }: { username: string; m
 
   return (
     <main className="min-h-[100dvh] bg-[#07080a] pb-20 text-cemento">
-      <section className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(220,38,38,0.18),transparent_32%),linear-gradient(135deg,#050608,#15181a)]">
+      <section className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(220,38,38,0.18),transparent_32%),linear-gradient(135deg,#0F0B0A,#1B1813_55%,#28282B)]">
         <div className="mx-auto max-w-7xl px-4 py-9">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-red-400">Garage pubblico</p>
           <h1 className="mt-2 font-display text-5xl font-black uppercase tracking-tight sm:text-7xl">{username}</h1>

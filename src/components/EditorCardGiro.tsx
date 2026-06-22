@@ -563,7 +563,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   }
 
   return (
-    <div className="editor-card space-y-4 rounded-app-lg border border-white/10 bg-[#0e1012] p-4 text-cemento shadow-app-lg sm:p-5">
+    <div className="editor-card space-y-4 rounded-app-lg border border-white/10 bg-notte p-4 text-cemento shadow-app-lg sm:p-5">
       <header>
         <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand">Condividi il giro</p>
         <h2 className="mt-1 font-display text-xl font-black uppercase leading-tight text-white">

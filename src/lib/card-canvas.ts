@@ -6,7 +6,8 @@ import { filtriFotoCanvas, type FiltroFoto } from '@/lib/card-foto-filtri';
 const LARGHEZZA = 1080;
 const ALTEZZA = 1920;
 
-const ASFALTO = '#15181A';
+const NOTTE = '#0F0B0A';
+const ASFALTO = '#28282B';
 const SEGNALE = '#F2B705';
 const CEMENTO = '#F0F1F2';
 
@@ -339,7 +340,7 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
   const paletteChiara = palette === 'chiaro';
 
   // Colori in base alla palette (senza foto)
-  let SFONDO_CARD = paletteChiara ? '#f0f1f2' : ASFALTO;
+  let SFONDO_CARD = paletteChiara ? '#f0f1f2' : NOTTE;
   let TESTO_PRIMARIO = paletteChiara ? ASFALTO : CEMENTO;
   let TESTO_SECONDARIO = paletteChiara ? 'rgba(21,24,26,0.55)' : 'rgba(240,241,242,0.6)';
   let SEGNALE_CARD = paletteChiara ? '#c49200' : SEGNALE;
@@ -398,11 +399,11 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
       sfondo.addColorStop(0, '#cfe3d6');
       sfondo.addColorStop(0.45, '#9fc1ad');
       sfondo.addColorStop(0.62, '#5b7a64');
-      sfondo.addColorStop(0.62, ASFALTO);
-      sfondo.addColorStop(1, ASFALTO);
+      sfondo.addColorStop(0.62, NOTTE);
+      sfondo.addColorStop(1, NOTTE);
       ctx.fillStyle = sfondo;
     } else {
-      ctx.fillStyle = ASFALTO;
+      ctx.fillStyle = NOTTE;
     }
     ctx.fillRect(0, 0, LARGHEZZA, ALTEZZA);
   }

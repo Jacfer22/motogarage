@@ -48,7 +48,7 @@ export default function MappaNavigazione({ tappe, tracciato, posizione, segui }:
 
       if (lineaPunti.length > 0) {
         L.polyline(lineaPunti, {
-          color: '#15181A',
+          color: '#28282B',
           weight: 4,
           opacity: 0.85,
           lineJoin: 'round',

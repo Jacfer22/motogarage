@@ -21,7 +21,7 @@ export default function ReelGarageCapture({ moto }: Props) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#050608]">
+    <div className="fixed inset-0 z-50 flex flex-col bg-notte">
       <div className="relative min-h-0 flex-1">
         <GarageModelViewer
           moto={moto}

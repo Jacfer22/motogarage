@@ -84,7 +84,7 @@ export default function CreaGemello({ onInviato }: Props) {
           stato: 'in_attesa',
           progress: 0,
           colore_primario: '#d91414',
-          colore_secondario: '#15181a',
+          colore_secondario: '#28282b',
           model_format: 'ply',
           is_public: false,
         })
@@ -229,7 +229,7 @@ export default function CreaGemello({ onInviato }: Props) {
         )}
       </section>
 
-      <aside className="rounded-[30px] border border-white/10 bg-[#08090d] p-5 text-cemento shadow-app-lg sm:p-6">
+      <aside className="rounded-[30px] border border-white/10 bg-notte p-5 text-cemento shadow-app-lg sm:p-6">
         <Logo variante="card" className="mx-auto mb-5" />
         <p className="font-mono text-xs uppercase tracking-[0.24em] text-brand-chiaro">Come fotografarla</p>
         <h2 className="mt-2 font-display text-3xl font-black uppercase leading-none">Una foto pulita basta</h2>

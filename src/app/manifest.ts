@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Garage digitale, avatar moto 3D, itinerari, GPS e community per motociclisti.',
     start_url: '/traccia',
     display: 'standalone',
-    background_color: '#08090b',
+    background_color: '#0F0B0A',
     theme_color: '#ED2100',
     orientation: 'any',
     lang: 'it',

@@ -31,7 +31,7 @@ async function blobToJpeg(blob: Blob, quality = 0.92): Promise<Blob> {
     bitmap.close();
     throw new Error('Canvas non disponibile');
   }
-  ctx.fillStyle = '#15181A';
+  ctx.fillStyle = '#0F0B0A';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();

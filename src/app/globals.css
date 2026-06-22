@@ -3,7 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --asfalto: #15181a;
+  /* Palette neri MotoGarage */
+  --notte: #0f0b0a;
+  --asfalto: #28282b;
+  --carbone: #232323;
+  --abisso: #121213;
+  --notte-calda: #1b1813;
   --cemento: #f0f1f2;
   --rosso-scarlet: #ed2100;
   --rosso-cherry: #d20a2e;
@@ -13,12 +18,12 @@
   --brand-scuro: var(--rosso-crimson);
   --segnale: var(--rosso-scarlet);
   --sfondo-pagina: #f0f1f2;
-  --testo-pagina: #15181a;
+  --testo-pagina: var(--asfalto);
 }
 
 .dark {
-  /* tema scuro: sfondi profondi, testo chiaro */
-  --sfondo-pagina: #0e1012;
+  /* #0F0B0A — nero profondo su body e schermate immersive */
+  --sfondo-pagina: var(--notte);
   --testo-pagina: #f0f1f2;
 }
 
@@ -32,19 +37,19 @@ body {
 /* Il sito usa bg-white / bg-cemento per i pannelli chiari: in dark li scurisco
    mantenendo la leggibilità, senza toccare ogni singolo componente. */
 .dark .bg-white {
-  background-color: #1c2024 !important;
+  background-color: var(--carbone) !important;
 }
 .dark .bg-white\/80 {
-  background-color: rgba(28, 32, 36, 0.92) !important;
+  background-color: rgba(35, 35, 35, 0.92) !important;
 }
 .dark .bg-white\/95 {
-  background-color: rgba(28, 32, 36, 0.97) !important;
+  background-color: rgba(35, 35, 35, 0.97) !important;
 }
 .dark .bg-cemento {
-  background-color: #15181a !important;
+  background-color: var(--asfalto) !important;
 }
 .dark .bg-nebbia {
-  background-color: #1c2024 !important;
+  background-color: var(--carbone) !important;
 }
 /* testo scuro -> chiaro */
 .dark .text-asfalto {
@@ -68,7 +73,7 @@ body {
 .dark .border-asfalto\/25 { border-color: rgba(240,241,242,0.18) !important; }
 /* la card app in dark */
 .dark .card-app {
-  background: #1c2024;
+  background: var(--carbone);
   border-color: rgba(240,241,242,0.1);
 }
 /* Card/form su mobile: pannello leggibile opzionale */
@@ -76,13 +81,13 @@ body {
   .dark .pannello-leggibile.card-app,
   .pannello-leggibile {
     background: #f0f1f2 !important;
-    color: #15181a !important;
-    border-color: rgba(21, 24, 26, 0.1) !important;
+    color: var(--asfalto) !important;
+    border-color: rgba(40, 40, 43, 0.1) !important;
   }
 }
 /* il vetro chiaro in dark diventa scuro */
 .dark .vetro {
-  background: rgba(14, 16, 18, 0.8);
+  background: rgba(15, 11, 10, 0.82);
 }
 /* skeleton in dark */
 .dark .skeleton {
@@ -93,36 +98,36 @@ body {
 /* Pannelli sempre leggibili (anche in dark mode) — form, navigatore, card editor */
 .pannello-leggibile {
   background: #f0f1f2 !important;
-  color: #15181a !important;
+  color: var(--asfalto) !important;
 }
 .pannello-leggibile .text-asfalto,
 .pannello-leggibile strong {
-  color: #15181a !important;
+  color: var(--asfalto) !important;
 }
 .pannello-leggibile .testo-secondario {
-  color: rgba(21, 24, 26, 0.72);
+  color: rgba(40, 40, 43, 0.72);
 }
 .pannello-leggibile .input-app {
   background: #fff;
-  color: #15181a;
-  border-color: rgba(21, 24, 26, 0.15);
+  color: var(--asfalto);
+  border-color: rgba(40, 40, 43, 0.15);
 }
 .pannello-leggibile .input-app::placeholder {
-  color: rgba(21, 24, 26, 0.4);
+  color: rgba(40, 40, 43, 0.4);
 }
 
 .input-app {
   width: 100%;
   min-height: 48px;
   border-radius: 14px;
-  border: 1px solid rgba(21, 24, 26, 0.15);
+  border: 1px solid rgba(40, 40, 43, 0.15);
   background: #fff;
   padding: 0.75rem 0.9rem;
   font-size: 1rem;
-  color: #15181a;
+  color: var(--asfalto);
 }
 .input-app::placeholder {
-  color: rgba(21, 24, 26, 0.42);
+  color: rgba(40, 40, 43, 0.42);
 }
 .label-app {
   display: block;
@@ -141,8 +146,8 @@ body {
 /* FAB mappa: icona sempre visibile */
 .btn-ricentra {
   background: #fff !important;
-  color: #15181a !important;
-  border-color: rgba(21, 24, 26, 0.18) !important;
+  color: var(--asfalto) !important;
+  border-color: rgba(40, 40, 43, 0.18) !important;
 }
 .btn-ricentra-attivo {
   background: #ED2100 !important;
@@ -157,7 +162,7 @@ body {
   position: relative;
   height: 16px;
   overflow: hidden;
-  background-color: #181b1f;
+  background-color: var(--abisso);
   background-image:
     /* mezzeria tratteggiata */
     repeating-linear-gradient(
@@ -177,7 +182,7 @@ body {
       rgba(0, 0, 0, 0.12) 2px 3px
     ),
     /* sfumatura profondità */
-    linear-gradient(180deg, #23282e 0%, #1a1e23 45%, #12151a 100%);
+    linear-gradient(180deg, var(--carbone) 0%, var(--notte-calda) 45%, var(--abisso) 100%);
   background-size:
     var(--strada-larghezza-tratto) 3px,
     100% 100%,
@@ -231,7 +236,7 @@ body {
 .hero-asfalto {
   background:
     radial-gradient(ellipse 100% 80% at 50% -20%, rgba(220, 38, 38, 0.08), transparent 50%),
-    linear-gradient(165deg, #0a0c0e 0%, #111418 40%, #0d0f12 100%);
+    linear-gradient(165deg, var(--notte-calda) 0%, var(--asfalto) 42%, var(--notte) 100%);
   color: #f0f1f2;
 }
 
@@ -258,7 +263,7 @@ body {
   opacity: 0.55;
 }
 .dark .card-regione {
-  background: #1c2024;
+  background: var(--carbone);
   border-color: rgba(240, 241, 242, 0.08);
 }
 .dark .card-regione:hover {
@@ -297,9 +302,9 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 9999px;
-  border: 2px solid #15181a;
+  border: 2px solid var(--asfalto);
   background: #f2b705;
-  color: #15181a;
+  color: var(--asfalto);
   font-family: var(--font-mono);
   font-weight: 500;
   font-size: 13px;
@@ -308,7 +313,7 @@ body {
 
 /* Etichetta nome tappa sulla mappa */
 .etichetta-tappa {
-  background: #15181a;
+  background: var(--asfalto);
   color: #f0f1f2;
   border: none;
   border-radius: 0;
@@ -325,7 +330,7 @@ body {
 
 /* Bussola */
 .bussola-mappa {
-  background: #15181a;
+  background: var(--asfalto);
   color: #f0f1f2;
   width: 30px;
   height: 30px;
@@ -337,7 +342,7 @@ body {
   font-size: 11px;
   font-weight: 500;
   line-height: 1;
-  border: 2px solid #15181a;
+  border: 2px solid var(--asfalto);
 }
 .bussola-mappa span {
   color: #f2b705;
@@ -482,7 +487,7 @@ body {
   color: rgba(21, 24, 26, 0.68);
 }
 .dark .card-feature {
-  background: #1c2024;
+  background: var(--carbone);
   border-color: rgba(240, 241, 242, 0.1);
 }
 .dark .card-feature h3 {
@@ -587,7 +592,7 @@ body {
 
 .garage-ambiente-loader {
   min-height: 100dvh;
-  background: #050608;
+  background: var(--notte);
 }
 
 .garage-ambiente {
@@ -604,7 +609,7 @@ body {
   background:
     radial-gradient(ellipse 70% 45% at 50% 18%, rgba(237, 33, 0, 0.22), transparent 60%),
     radial-gradient(ellipse 90% 60% at 50% 100%, rgba(0, 0, 0, 0.85), transparent 55%),
-    linear-gradient(180deg, #0a0c10 0%, #12151a 38%, #08090c 100%);
+    linear-gradient(180deg, var(--notte-calda) 0%, var(--abisso) 38%, var(--notte) 100%);
   transform: translate3d(var(--px, 0), var(--py, 0), 0) scale(1.04);
   transition: transform 0.35s ease-out;
   will-change: transform;
@@ -623,7 +628,7 @@ body {
   inset: 0;
   background:
     radial-gradient(ellipse 55% 40% at 50% 55%, transparent 20%, rgba(0, 0, 0, 0.55) 100%),
-    linear-gradient(180deg, rgba(5, 6, 8, 0.35) 0%, transparent 30%, rgba(5, 6, 8, 0.75) 100%);
+    linear-gradient(180deg, rgba(15, 11, 10, 0.35) 0%, transparent 30%, rgba(15, 11, 10, 0.75) 100%);
   pointer-events: none;
 }
 
@@ -1008,7 +1013,7 @@ body {
 .tuning-cta-finale {
   background:
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(237, 33, 0, 0.12), transparent 55%),
-    linear-gradient(180deg, #12151a, #08090b);
+    linear-gradient(180deg, var(--abisso), var(--notte));
   color: #f0f1f2;
 }
 
@@ -1017,7 +1022,7 @@ body {
   position: relative;
   min-height: 100dvh;
   overflow-x: hidden;
-  background: #080706;
+  background: var(--notte);
   color: #f0f1f2;
   padding-bottom: 0;
 }
@@ -1278,7 +1283,7 @@ body {
 .toast-item {
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(21, 24, 26, 0.94);
+  background: rgba(40, 40, 43, 0.94);
   padding: 0.85rem 1rem;
   font-family: var(--font-mono), monospace;
   font-size: 0.7rem;
@@ -1310,7 +1315,7 @@ body {
 .auth-hero {
   display: none;
   background: radial-gradient(circle at 20% 20%, rgba(237, 33, 0, 0.22), transparent 42%),
-    linear-gradient(145deg, #08090b, #15181a);
+    linear-gradient(145deg, var(--notte), var(--notte-calda) 55%, var(--asfalto));
   color: #f0f1f2;
   padding: 3rem 2.5rem;
 }
@@ -1430,7 +1435,7 @@ body {
 
 /* ── App immersiva ── */
 body.app-immersive-mobile {
-  background: #0e1012 !important;
+  background: var(--notte) !important;
 }
 @media (max-width: 767px) {
   body.app-immersive-mobile .app-chrome-header,
@@ -1459,7 +1464,7 @@ body.app-immersive-footer .app-chrome-footer {
 }
 body.nav-fullscreen-active {
   overflow: hidden;
-  background: #050608 !important;
+  background: var(--notte) !important;
 }
 body.nav-fullscreen-active .app-chrome-header,
 body.nav-fullscreen-active .app-chrome-footer,
@@ -1473,16 +1478,16 @@ body.nav-fullscreen-active.con-bottomnav {
   position: fixed;
   inset: 0;
   z-index: 35;
-  background: #050608;
+  background: var(--notte);
 }
 .nav-overlay-top {
-  background: linear-gradient(180deg, rgba(5, 6, 8, 0.92) 0%, rgba(5, 6, 8, 0.55) 70%, transparent 100%);
+  background: linear-gradient(180deg, rgba(15, 11, 10, 0.92) 0%, rgba(15, 11, 10, 0.55) 70%, transparent 100%);
   padding: calc(env(safe-area-inset-top) + 0.75rem) 0.75rem 2.5rem;
 }
 
 /* Reel marketing: leggero enfasi overlay navigatore */
 .reel-nav-capture .nav-overlay-top {
-  background: linear-gradient(180deg, rgba(5, 6, 8, 0.94) 0%, rgba(5, 6, 8, 0.62) 75%, transparent 100%);
+  background: linear-gradient(180deg, rgba(15, 11, 10, 0.94) 0%, rgba(15, 11, 10, 0.62) 75%, transparent 100%);
   padding-top: 3.25rem;
   padding-bottom: 2rem;
 }
@@ -1526,12 +1531,12 @@ body.nav-fullscreen-active.con-bottomnav {
 .safe-left { padding-left: env(safe-area-inset-left); }
 
 .app-pagina {
-  background: #0e1012;
+  background: var(--notte);
   color: #f0f1f2;
   min-height: calc(100dvh - 4rem);
 }
 .app-shell-loggato {
-  background: #0e1012;
+  background: var(--notte);
 }
 .page-enter {
   animation: page-enter 0.28s ease;

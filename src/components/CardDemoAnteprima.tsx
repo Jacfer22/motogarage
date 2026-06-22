@@ -30,7 +30,7 @@ export default function CardDemoAnteprima({
           <span className="font-mono text-xs font-bold text-cemento">motogarage</span>
         </div>
 
-        <div className="relative aspect-[4/5] overflow-hidden rounded-[16px] bg-[#15181a]">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-[16px] bg-asfalto">
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: 'url(/og-motogarage.png)' }}

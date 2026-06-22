@@ -188,7 +188,7 @@ export default function PaginaNavigatore() {
 
   return (
     <div className="app-pagina pagina-immersiva flex min-h-[calc(100dvh-4rem)] flex-col">
-      <div className="border-b border-white/10 bg-[#0e1012] px-4 py-5 text-cemento">
+      <div className="border-b border-white/10 bg-notte px-4 py-5 text-cemento">
         <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand">Navigatore</p>
         <h1 className="mt-1 font-display text-2xl font-black uppercase leading-tight tracking-tight text-white">
           Dove vuoi andare?

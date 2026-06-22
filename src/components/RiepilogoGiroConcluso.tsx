@@ -46,7 +46,7 @@ export default function RiepilogoGiroConcluso({
 
   return (
     <div className="mt-4 space-y-4 animate-scale-in">
-      <div className="rounded-app-lg border border-white/10 bg-[#12151a] p-4 text-cemento shadow-app sm:p-5">
+      <div className="rounded-app-lg border border-white/10 bg-carbone p-4 text-cemento shadow-app sm:p-5">
         {info && (
           <p className="mb-3 rounded-app border border-cartello/30 bg-cartello/10 px-3 py-2 text-sm text-cemento/85">
             {info}

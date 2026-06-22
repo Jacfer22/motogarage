@@ -71,7 +71,7 @@ export default function GenerazioneProgress({
 
   if (completato) {
     return (
-      <main className="grid min-h-[100dvh] place-items-center bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.24),transparent_34%),linear-gradient(135deg,#030405,#15181a)] px-4 py-12 text-center text-cemento">
+      <main className="grid min-h-[100dvh] place-items-center bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.24),transparent_34%),linear-gradient(135deg,#0F0B0A,#1B1813_50%,#28282B)] px-4 py-12 text-center text-cemento">
         <div className="w-full max-w-xl rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-[0_30px_100px_rgba(0,0,0,0.48)] backdrop-blur">
           <div className="mx-auto grid h-24 w-24 place-items-center rounded-[28px] border border-red-400/30 bg-red-600 text-5xl shadow-[0_0_44px_rgba(220,38,38,0.42)]">🏁</div>
           <p className="mt-7 font-mono text-xs uppercase tracking-[0.28em] text-red-400">MotoGarage</p>
@@ -97,9 +97,9 @@ export default function GenerazioneProgress({
         </p>
         <p className="mt-2 font-mono text-xs uppercase tracking-wide text-asfalto/35 dark:text-cemento/35">{nome}</p>
 
-        <section className="mt-10 w-full overflow-hidden rounded-[32px] border border-white/15 bg-[#090b0e] shadow-[0_28px_90px_rgba(21,24,26,0.28)]">
+        <section className="mt-10 w-full overflow-hidden rounded-[32px] border border-white/15 bg-notte shadow-[0_28px_90px_rgba(15,11,10,0.28)]">
           <div className="relative h-64 sm:h-72">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(220,38,38,0.18),transparent_30%),linear-gradient(180deg,#15181a,#07080a)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(220,38,38,0.18),transparent_30%),linear-gradient(180deg,#28282B,#0F0B0A)]" />
             <div className="absolute inset-x-0 bottom-0 h-28 bg-[#101217]" />
             <div className="absolute inset-x-8 bottom-14 flex justify-between overflow-hidden">
               {[0, 1, 2, 3, 4, 5].map((indice) => (

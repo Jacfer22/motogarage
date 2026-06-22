@@ -92,7 +92,7 @@ export default function AnteprimaCardLive({
   const panFotoY = (fotoOffsetY - 0.5) * 100;
 
   return (
-    <div className={`relative aspect-[9/16] overflow-hidden bg-[#15181a] ${className}`}>
+    <div className={`relative aspect-[9/16] overflow-hidden bg-asfalto ${className}`}>
       {fotoUrl ? (
         <div
           className={`absolute inset-0 overflow-hidden ${selezione === 'foto' ? 'ring-2 ring-inset ring-brand/70' : ''}`}
@@ -115,7 +115,7 @@ export default function AnteprimaCardLive({
           </div>
         </div>
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1a2228] via-[#15181a] to-[#0e1012]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-notte-calda via-asfalto to-notte" />
       )}
 
       <div

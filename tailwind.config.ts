@@ -6,9 +6,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        asfalto: '#15181A',
-        notte: '#0E1012',
-        carbone: '#1C2024',
+        asfalto: '#28282B',
+        notte: '#0F0B0A',
+        carbone: '#232323',
+        abisso: '#121213',
+        'notte-calda': '#1B1813',
         cemento: '#F0F1F2',
         nebbia: '#FBFBFC',
         brand: '#ED2100',
@@ -35,11 +37,11 @@ const config: Config = {
       },
       boxShadow: {
         // ombre stratificate, morbide, da interfaccia app
-        'app-sm': '0 1px 2px rgba(21,24,26,0.06), 0 1px 3px rgba(21,24,26,0.08)',
-        app: '0 2px 4px rgba(21,24,26,0.06), 0 4px 12px rgba(21,24,26,0.08)',
-        'app-md': '0 4px 8px rgba(21,24,26,0.07), 0 8px 24px rgba(21,24,26,0.10)',
-        'app-lg': '0 8px 16px rgba(21,24,26,0.08), 0 16px 40px rgba(21,24,26,0.14)',
-        'app-up': '0 -4px 16px rgba(21,24,26,0.10)',
+        'app-sm': '0 1px 2px rgba(15,11,10,0.06), 0 1px 3px rgba(15,11,10,0.08)',
+        app: '0 2px 4px rgba(15,11,10,0.06), 0 4px 12px rgba(15,11,10,0.08)',
+        'app-md': '0 4px 8px rgba(15,11,10,0.07), 0 8px 24px rgba(15,11,10,0.10)',
+        'app-lg': '0 8px 16px rgba(15,11,10,0.08), 0 16px 40px rgba(15,11,10,0.14)',
+        'app-up': '0 -4px 16px rgba(15,11,10,0.10)',
         segnale: '0 4px 16px rgba(237,33,0,0.35)',
         brand: '0 4px 16px rgba(237,33,0,0.35)',
       },
