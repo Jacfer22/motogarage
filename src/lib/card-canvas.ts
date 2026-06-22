@@ -2,9 +2,16 @@
 
 import { Punto } from '@/lib/geo';
 import { filtriFotoCanvas, type FiltroFoto } from '@/lib/card-foto-filtri';
+import {
+  CARD_ALTEZZA,
+  CARD_LARGHEZZA,
+  rectTracciatoGrande,
+  rectTracciatoMiniFoto,
+  spessoreLineaTracciato,
+} from '@/lib/card-tracciato-layout';
 
-const LARGHEZZA = 1080;
-const ALTEZZA = 1920;
+const LARGHEZZA = CARD_LARGHEZZA;
+const ALTEZZA = CARD_ALTEZZA;
 
 const NOTTE = '#0F0B0A';
 const ASFALTO = '#28282B';
@@ -229,18 +236,6 @@ async function disegnaLogoAltoSinistra(
   ctx.restore();
 }
 
-function areaTracciatoConOffset(
-  base: AreaTracciato,
-  offsetX: number | undefined,
-  offsetY: number | undefined,
-  panX: number,
-  panY: number,
-): AreaTracciato {
-  const ox = ((offsetX ?? 0.5) - 0.5) * panX;
-  const oy = ((offsetY ?? 0.5) - 0.5) * panY;
-  return { x: base.x + ox, y: base.y + oy, w: base.w, h: base.h };
-}
-
 function filtriFotoCss(
   luminosita: number,
   contrasto: number,
@@ -311,10 +306,11 @@ function disegnaTracciatoMini(
   area: AreaTracciato,
   opt: { segnale: string; cemento: string },
   rotazioneGradi?: number,
+  spessore?: number,
 ) {
   ctx.save();
   ctx.globalAlpha = 0.92;
-  disegnaTracciatoRotato(ctx, punti, area, rotazioneGradi, { ...opt, spessore: 2.5 });
+  disegnaTracciatoRotato(ctx, punti, area, rotazioneGradi, { ...opt, spessore: spessore ?? 2.5 });
   ctx.restore();
 }
 
@@ -426,36 +422,40 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
   // Tracciato mini in alto a sinistra — sempre sulla foto
   if (tracciaSuFoto && dati.punti.length > 1) {
     const trZoom = Math.min(3, Math.max(0.5, dati.tracciatoScala ?? 1));
-    const baseW = 200 * trZoom;
-    const baseH = 155 * trZoom;
+    const rect = rectTracciatoMiniFoto(
+      dati.tracciatoOffsetX ?? 0.35,
+      dati.tracciatoOffsetY ?? 0.22,
+      trZoom,
+    );
     disegnaTracciatoMini(
       ctx,
       dati.punti,
-      areaTracciatoConOffset(
-        { x: 48, y: 128, w: baseW, h: baseH },
-        dati.tracciatoOffsetX,
-        dati.tracciatoOffsetY,
-        100 * trZoom,
-        80 * trZoom,
-      ),
+      { x: rect.x, y: rect.y, w: rect.w, h: rect.h },
       tracciatoOpt,
       dati.tracciatoRotazione,
+      spessoreLineaTracciato(rect.h, true),
+    );
+  }
+
+  // Tracciato grande (solo senza foto) — stessa geometria dell'anteprima
+  if (tracciaGrande && !conFoto && dati.punti.length > 1) {
+    const trZoom = Math.min(3, Math.max(0.5, dati.tracciatoScala ?? 1));
+    const rect = rectTracciatoGrande(
+      dati.tracciatoOffsetX ?? 0.35,
+      dati.tracciatoOffsetY ?? 0.22,
+      trZoom,
+    );
+    disegnaTracciatoRotato(
+      ctx,
+      dati.punti,
+      { x: rect.x, y: rect.y, w: rect.w, h: rect.h },
+      dati.tracciatoRotazione,
+      { ...tracciatoOpt, spessore: spessoreLineaTracciato(rect.h, false) },
     );
   }
 
   // ===== TEMA "FOTO" (laterale): stats a destra =====
   if (tema === 'foto') {
-    if (tracciaGrande && !conFoto && dati.punti.length > 1) {
-      const areaBase: AreaTracciato = { x: 48, y: 180, w: LARGHEZZA * 0.58, h: ALTEZZA * 0.42 };
-      disegnaTracciatoRotato(
-        ctx,
-        dati.punti,
-        areaTracciatoConOffset(areaBase, dati.tracciatoOffsetX, dati.tracciatoOffsetY, LARGHEZZA * 0.38, ALTEZZA * 0.28),
-        dati.tracciatoRotazione,
-        { ...tracciatoOpt, spessore: 5 },
-      );
-    }
-
     const statX = LARGHEZZA - 56;
     let statY = conFoto ? ALTEZZA - 480 : 220;
     ctx.textAlign = 'right';
@@ -497,24 +497,8 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
     }
     ctx.shadowBlur = 0;
   } else {
-    // ===== TEMA "TRACCIATO" (in basso): tracciato grande solo senza foto =====
+    // ===== TEMA "TRACCIATO" (in basso): stats sotto al luogo =====
     const statsH = conFoto ? 420 : 460;
-    const areaBase: AreaTracciato = {
-      x: 56,
-      y: 130,
-      w: LARGHEZZA - 112,
-      h: ALTEZZA - statsH - 150,
-    };
-    if (tracciaGrande && !conFoto && dati.punti.length > 1) {
-      disegnaTracciatoRotato(
-        ctx,
-        dati.punti,
-        areaTracciatoConOffset(areaBase, dati.tracciatoOffsetX, dati.tracciatoOffsetY, LARGHEZZA * 0.42, areaBase.h * 0.35),
-        dati.tracciatoRotazione,
-        { ...tracciatoOpt, spessore: 6 },
-      );
-    }
-
     ctx.fillStyle = TESTO_PRIMARIO;
     ctx.shadowColor = conFoto ? 'rgba(0,0,0,0.65)' : 'transparent';
     ctx.shadowBlur = conFoto ? 14 : 0;

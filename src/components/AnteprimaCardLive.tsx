@@ -3,6 +3,11 @@
 import Image from 'next/image';
 import type { Punto } from '@/lib/geo';
 import { cssFiltroFoto, type FiltroFoto } from '@/lib/card-foto-filtri';
+import {
+  LAYOUT_GRANDE,
+  LAYOUT_MINI_FOTO,
+  panTracciatoFrac,
+} from '@/lib/card-tracciato-layout';
 import { tracciatoSvgPath } from '@/lib/card-tracciato-svg';
 
 export interface StatCard {
@@ -85,8 +90,10 @@ export default function AnteprimaCardLive({
   className = '',
 }: Props) {
   const traccia = punti.length >= 2 ? tracciatoSvgPath(punti) : null;
-  const trPanX = (tracciatoX - 0.5) * 36;
-  const trPanY = (tracciatoY - 0.5) * 36;
+  const panMiniX = panTracciatoFrac(tracciatoX, LAYOUT_MINI_FOTO.panSensPx);
+  const panMiniY = panTracciatoFrac(tracciatoY, LAYOUT_MINI_FOTO.panSensPx);
+  const panGrandeX = panTracciatoFrac(tracciatoX, LAYOUT_GRANDE.panSensPx);
+  const panGrandeY = panTracciatoFrac(tracciatoY, LAYOUT_GRANDE.panSensPx);
   const filtroCss = cssFiltroFoto(fotoLuminosita, fotoContrasto, fotoSaturazione, filtroFoto);
   const panFotoX = (fotoOffsetX - 0.5) * 100;
   const panFotoY = (fotoOffsetY - 0.5) * 100;
@@ -133,9 +140,13 @@ export default function AnteprimaCardLive({
 
       {traccia && tracciatoGrande && (
         <div
-          className={`absolute inset-x-[12%] top-[14%] bottom-[32%] z-10 drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] ${selezione === 'percorso' ? 'rounded-lg ring-2 ring-brand/80' : ''}`}
+          className={`absolute z-10 drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] ${selezione === 'percorso' ? 'rounded-lg ring-2 ring-brand/80' : ''}`}
           style={{
-            transform: `translate(${(tracciatoX - 0.5) * 40}px, ${(tracciatoY - 0.5) * 40}px) scale(${tracciatoZoom}) rotate(${tracciatoRotazione}deg)`,
+            left: `${(LAYOUT_GRANDE.leftPct + panGrandeX) * 100}%`,
+            top: `${(LAYOUT_GRANDE.topPct + panGrandeY) * 100}%`,
+            width: `${LAYOUT_GRANDE.widthPct * 100}%`,
+            height: `${LAYOUT_GRANDE.heightPct * 100}%`,
+            transform: `scale(${tracciatoZoom}) rotate(${tracciatoRotazione}deg)`,
             transformOrigin: 'center center',
           }}
         >
@@ -145,10 +156,12 @@ export default function AnteprimaCardLive({
 
       {traccia && !tracciatoGrande && (
         <div
-          className={`absolute z-10 h-[20%] w-[26%] min-w-[68px] origin-top-left drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] ${selezione === 'percorso' ? 'rounded-md ring-2 ring-brand/80' : ''}`}
+          className={`absolute z-10 min-w-[68px] drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] ${selezione === 'percorso' ? 'rounded-md ring-2 ring-brand/80' : ''}`}
           style={{
-            left: `calc(7% + ${trPanX}px)`,
-            top: `calc(13% + ${trPanY}px)`,
+            left: `${(LAYOUT_MINI_FOTO.leftPct + panMiniX) * 100}%`,
+            top: `${(LAYOUT_MINI_FOTO.topPct + panMiniY) * 100}%`,
+            width: `${LAYOUT_MINI_FOTO.widthPct * 100}%`,
+            height: `${LAYOUT_MINI_FOTO.heightPct * 100}%`,
             transform: `scale(${tracciatoZoom}) rotate(${tracciatoRotazione}deg)`,
             transformOrigin: 'center center',
           }}
