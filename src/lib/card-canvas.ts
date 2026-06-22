@@ -1,6 +1,7 @@
 'use client';
 
 import { Punto } from '@/lib/geo';
+import { filtriFotoCanvas, type FiltroFoto } from '@/lib/card-foto-filtri';
 
 const LARGHEZZA = 1080;
 const ALTEZZA = 1920;
@@ -57,7 +58,7 @@ interface DatiCard {
   /** Saturazione foto: 1 = normale */
   fotoSaturazione?: number;
   /** Filtro colore rapido */
-  filtroFoto?: 'none' | 'cinema' | 'caldo' | 'bw';
+  filtroFoto?: FiltroFoto;
   /** Tracciato GPS sopra la foto (default off: foto pulita) */
   mostraTracciatoSuFoto?: boolean;
   /** Mostra data del giro (default on) */
@@ -236,13 +237,9 @@ function filtriFotoCss(
   luminosita: number,
   contrasto: number,
   saturazione: number,
-  filtro: DatiCard['filtroFoto'],
+  filtro: FiltroFoto,
 ): string {
-  const base = `brightness(${luminosita}) contrast(${contrasto}) saturate(${saturazione})`;
-  if (filtro === 'cinema') return `${base} saturate(0.88) contrast(1.08)`;
-  if (filtro === 'caldo') return `${base} sepia(0.12) saturate(1.18) brightness(1.04)`;
-  if (filtro === 'bw') return `${base} grayscale(1) contrast(1.12)`;
-  return base;
+  return filtriFotoCanvas(luminosita, contrasto, saturazione, filtro);
 }
 
 /** Striscia scura in basso per testi leggibili sulla foto */
