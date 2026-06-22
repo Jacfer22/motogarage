@@ -59,8 +59,10 @@ interface DatiCard {
   fotoSaturazione?: number;
   /** Filtro colore rapido */
   filtroFoto?: FiltroFoto;
-  /** Tracciato GPS sopra la foto (default off: foto pulita) */
+  /** Tracciato GPS sopra la foto (default on) */
   mostraTracciatoSuFoto?: boolean;
+  /** Zoom tracciato mini sulla foto */
+  tracciatoScala?: number;
   /** Mostra data del giro (default on) */
   mostraData?: boolean;
 }
@@ -141,7 +143,7 @@ function disegnaTracciato2D(
   });
 
   const pts = punti.map(proietta);
-  const spessore = opt.spessore ?? 10;
+  const spessore = opt.spessore ?? 5;
 
   const traccia = () => {
     ctx.beginPath();
@@ -154,38 +156,39 @@ function disegnaTracciato2D(
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
 
-  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-  ctx.lineWidth = spessore + 8;
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+  ctx.lineWidth = spessore + 3;
   traccia();
   ctx.stroke();
 
   ctx.strokeStyle = opt.segnale;
   ctx.lineWidth = spessore;
-  ctx.shadowColor = 'rgba(0,0,0,0.35)';
-  ctx.shadowBlur = 14;
+  ctx.shadowColor = 'rgba(0,0,0,0.28)';
+  ctx.shadowBlur = 8;
   traccia();
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-  ctx.lineWidth = Math.max(2, spessore * 0.25);
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = Math.max(1, spessore * 0.22);
   traccia();
   ctx.stroke();
 
   const start = pts[0];
   const end = pts[pts.length - 1];
+  const rDot = Math.max(2.5, spessore * 0.42);
 
   ctx.fillStyle = '#22c55e';
   ctx.beginPath();
-  ctx.arc(start.x, start.y, spessore * 0.55, 0, Math.PI * 2);
+  ctx.arc(start.x, start.y, rDot, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = opt.cemento;
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
   ctx.fillStyle = opt.segnale;
   ctx.beginPath();
-  ctx.arc(end.x, end.y, spessore * 0.55, 0, Math.PI * 2);
+  ctx.arc(end.x, end.y, rDot, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -299,7 +302,7 @@ function disegnaTracciatoMini(
 ) {
   ctx.save();
   ctx.globalAlpha = 0.92;
-  disegnaTracciato2D(ctx, punti, area, { ...opt, spessore: 5 });
+  disegnaTracciato2D(ctx, punti, area, { ...opt, spessore: 2.5 });
   ctx.restore();
 }
 
@@ -398,24 +401,27 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
   }
 
   const tracciatoOpt = { segnale: TRACCIATO_COLORE, cemento: TESTO_PRIMARIO };
-  const tracciaSuFoto = conFoto && (dati.mostraTracciatoSuFoto ?? false);
-  const tracciaGrande = !conFoto || tracciaSuFoto;
+  const tracciaSuFoto = conFoto && dati.mostraTracciatoSuFoto !== false;
+  const tracciaGrande = !conFoto;
 
   if (conFoto) {
     disegnaPannelloBasso(ctx, tema === 'foto' ? 520 : 480);
   }
 
-  // Tracciato mini in angolo — solo se richiesto esplicitamente sulla foto
+  // Tracciato mini in alto a sinistra — sempre sulla foto
   if (tracciaSuFoto && dati.punti.length > 1) {
+    const trZoom = Math.min(2.2, Math.max(0.45, dati.tracciatoScala ?? 1));
+    const baseW = 200 * trZoom;
+    const baseH = 155 * trZoom;
     disegnaTracciatoMini(
       ctx,
       dati.punti,
       areaTracciatoConOffset(
-        { x: 48, y: ALTEZZA - 620, w: 220, h: 180 },
+        { x: 48, y: 128, w: baseW, h: baseH },
         dati.tracciatoOffsetX,
         dati.tracciatoOffsetY,
-        80,
-        60,
+        100 * trZoom,
+        80 * trZoom,
       ),
       tracciatoOpt,
     );
@@ -429,7 +435,7 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
         ctx,
         dati.punti,
         areaTracciatoConOffset(areaBase, dati.tracciatoOffsetX, dati.tracciatoOffsetY, LARGHEZZA * 0.38, ALTEZZA * 0.28),
-        { ...tracciatoOpt, spessore: 9 },
+        { ...tracciatoOpt, spessore: 5 },
       );
     }
 
@@ -483,7 +489,7 @@ export async function generaCardGiro(dati: DatiCard): Promise<string> {
         ctx,
         dati.punti,
         areaTracciatoConOffset(areaBase, dati.tracciatoOffsetX, dati.tracciatoOffsetY, LARGHEZZA * 0.42, areaBase.h * 0.35),
-        { ...tracciatoOpt, spessore: 11 },
+        { ...tracciatoOpt, spessore: 6 },
       );
     }
 

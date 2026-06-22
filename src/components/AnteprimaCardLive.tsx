@@ -11,6 +11,9 @@ export interface StatCard {
   accent?: boolean;
 }
 
+export type LayoutCard = 'laterale' | 'basso';
+export type SelezioneCard = 'foto' | 'percorso';
+
 interface Props {
   fotoUrl?: string | null;
   fotoZoom?: number;
@@ -24,13 +27,35 @@ interface Props {
   data?: string;
   mostraData?: boolean;
   stats: StatCard[];
-  layout: 'strava' | 'story';
+  layout: LayoutCard;
   punti?: Punto[];
-  mostraTracciato?: boolean;
   tracciatoGrande?: boolean;
   tracciatoX?: number;
   tracciatoY?: number;
+  tracciatoZoom?: number;
+  selezione?: SelezioneCard | null;
   className?: string;
+}
+
+function TracciaSvg({
+  traccia,
+  snello = true,
+}: {
+  traccia: { d: string; start: [number, number]; end: [number, number] };
+  snello?: boolean;
+}) {
+  const ombra = snello ? 4.5 : 8;
+  const linea = snello ? 2.8 : 5.5;
+  const r = snello ? 2.2 : 3.5;
+  return (
+    <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
+      <path d={traccia.d} fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth={ombra} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={traccia.d} fill="none" stroke="#f2b705" strokeWidth={linea} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={traccia.d} fill="none" stroke="rgba(255,255,255,0.32)" strokeWidth={Math.max(0.8, linea * 0.28)} strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={traccia.start[0]} cy={traccia.start[1]} r={r} fill="#22c55e" stroke="#fff" strokeWidth="0.9" />
+      <circle cx={traccia.end[0]} cy={traccia.end[1]} r={r} fill="#f2b705" />
+    </svg>
+  );
 }
 
 export default function AnteprimaCardLive({
@@ -48,18 +73,18 @@ export default function AnteprimaCardLive({
   stats,
   layout,
   punti = [],
-  mostraTracciato = false,
   tracciatoGrande = false,
-  tracciatoX = 0.5,
-  tracciatoY = 0.5,
+  tracciatoX = 0.35,
+  tracciatoY = 0.22,
+  tracciatoZoom = 1,
+  selezione = null,
   className = '',
 }: Props) {
-  const traccia = mostraTracciato ? tracciatoSvgPath(punti) : null;
+  const traccia = punti.length >= 2 ? tracciatoSvgPath(punti) : null;
   const panX = (fotoOffsetX - 0.5) * 24;
   const panY = (fotoOffsetY - 0.5) * 24;
-  const trPanX = (tracciatoX - 0.5) * 28;
-  const trPanY = (tracciatoY - 0.5) * 28;
-
+  const trPanX = (tracciatoX - 0.5) * 36;
+  const trPanY = (tracciatoY - 0.5) * 36;
   const filtroCss = cssFiltroFoto(fotoLuminosita, fotoContrasto, fotoSaturazione, filtroFoto);
 
   return (
@@ -70,7 +95,7 @@ export default function AnteprimaCardLive({
           src={fotoUrl}
           alt=""
           draggable={false}
-          className="pointer-events-none absolute left-1/2 top-1/2 max-w-none select-none"
+          className={`pointer-events-none absolute left-1/2 top-1/2 max-w-none select-none ${selezione === 'foto' ? 'ring-2 ring-brand/70 ring-offset-0' : ''}`}
           style={{
             filter: filtroCss,
             minWidth: `${fotoZoom * 100}%`,
@@ -93,13 +118,11 @@ export default function AnteprimaCardLive({
         }}
       />
 
-      {/* Logo */}
       <div className="absolute left-3 top-3 z-10 flex items-center gap-1.5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
         <Image src="/logo-motogarage.png" alt="" width={26} height={26} className="h-6 w-auto object-contain" />
         <span className="font-display text-[9px] font-bold uppercase tracking-wide text-white">Moto Garage</span>
       </div>
 
-      {/* Data — badge top right */}
       {mostraData && data && (
         <div className="absolute right-3 top-3 z-10 rounded-xl border border-segnale/40 bg-black/75 px-2.5 py-1.5 backdrop-blur-sm">
           <p className="font-mono text-[7px] font-bold uppercase tracking-wider text-segnale/90">Giro del</p>
@@ -107,39 +130,33 @@ export default function AnteprimaCardLive({
         </div>
       )}
 
-      {/* Tracciato — grande al centro (solo GPS) o mini stile Strava */}
       {traccia && tracciatoGrande && (
         <div
-          className="absolute inset-x-[12%] top-[14%] bottom-[32%] z-10 drop-shadow-[0_4px_20px_rgba(0,0,0,0.45)]"
-          style={{ transform: `translate(${(tracciatoX - 0.5) * 40}px, ${(tracciatoY - 0.5) * 40}px)` }}
-        >
-          <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-            <path d={traccia.d} fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
-            <path d={traccia.d} fill="none" stroke="#f2b705" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx={traccia.start[0]} cy={traccia.start[1]} r="4" fill="#22c55e" stroke="#fff" strokeWidth="1.5" />
-            <circle cx={traccia.end[0]} cy={traccia.end[1]} r="4" fill="#f2b705" />
-          </svg>
-        </div>
-      )}
-      {traccia && !tracciatoGrande && (
-        <div
-          className="absolute z-10 h-[22%] w-[28%] min-w-[72px] drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)]"
+          className={`absolute inset-x-[12%] top-[14%] bottom-[32%] z-10 drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] ${selezione === 'percorso' ? 'rounded-lg ring-2 ring-brand/80' : ''}`}
           style={{
-            left: `calc(8% + ${trPanX}px)`,
-            top: `calc(14% + ${trPanY}px)`,
+            transform: `translate(${(tracciatoX - 0.5) * 40}px, ${(tracciatoY - 0.5) * 40}px) scale(${tracciatoZoom})`,
+            transformOrigin: 'center center',
           }}
         >
-          <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-            <path d={traccia.d} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
-            <path d={traccia.d} fill="none" stroke="#f2b705" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx={traccia.start[0]} cy={traccia.start[1]} r="3.5" fill="#22c55e" stroke="#fff" strokeWidth="1.2" />
-            <circle cx={traccia.end[0]} cy={traccia.end[1]} r="3.5" fill="#f2b705" />
-          </svg>
+          <TracciaSvg traccia={traccia} snello={false} />
         </div>
       )}
 
-      {/* Stats — Strava: destra / Story: basso */}
-      {layout === 'strava' ? (
+      {traccia && !tracciatoGrande && (
+        <div
+          className={`absolute z-10 h-[20%] w-[26%] min-w-[68px] origin-top-left drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] ${selezione === 'percorso' ? 'rounded-md ring-2 ring-brand/80' : ''}`}
+          style={{
+            left: `calc(7% + ${trPanX}px)`,
+            top: `calc(13% + ${trPanY}px)`,
+            transform: `scale(${tracciatoZoom})`,
+            transformOrigin: 'top left',
+          }}
+        >
+          <TracciaSvg traccia={traccia} snello />
+        </div>
+      )}
+
+      {layout === 'laterale' ? (
         <div className="absolute right-3 top-[18%] z-10 max-w-[48%] space-y-3 text-right drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)]">
           {stats.map((s) => (
             <div key={s.label}>
@@ -169,14 +186,12 @@ export default function AnteprimaCardLive({
         </div>
       )}
 
-      {/* Luogo in layout Strava */}
-      {layout === 'strava' && luogo && (
+      {layout === 'laterale' && luogo && (
         <p className="absolute bottom-12 left-4 right-4 z-10 font-display text-base font-black uppercase leading-tight tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {luogo}
         </p>
       )}
 
-      {/* Watermark */}
       <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1 opacity-90 drop-shadow-md">
         <Image src="/logo-motogarage.png" alt="" width={16} height={16} className="h-4 w-auto" />
         <span className="font-display text-[7px] font-bold uppercase text-white">Moto Garage</span>

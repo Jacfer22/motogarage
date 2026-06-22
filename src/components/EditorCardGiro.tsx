@@ -6,7 +6,7 @@ import { generaCardGiro } from '@/lib/card-canvas';
 import { PRESET_LOOK, type FiltroFoto, type PresetLook } from '@/lib/card-foto-filtri';
 import type { GiroUtente } from '@/lib/giri-store';
 import { useFeedback } from '@/components/FeedbackProvider';
-import AnteprimaCardLive from '@/components/AnteprimaCardLive';
+import AnteprimaCardLive, { type LayoutCard, type SelezioneCard } from '@/components/AnteprimaCardLive';
 
 function formattaDataBreve(iso: string): string {
   return new Date(iso).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -68,17 +68,17 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   const stat = statisticheGiro(giro.punti, giro.durataSec, giro.km);
   const giroMontagna = (stat.dislivelloPositivoM || giro.dislivelloM) >= 150;
 
-  const [layout, setLayout] = useState<'strava' | 'story'>('strava');
+  const [layout, setLayout] = useState<LayoutCard>('laterale');
   const [luogoCard, setLuogoCard] = useState(giro.nome === 'Giro libero' ? '' : giro.nome);
   const [mostraMax, setMostraMax] = useState(true);
   const [mostraMedia, setMostraMedia] = useState(false);
   const [mostraCurve, setMostraCurve] = useState(false);
   const [mostraDislivello, setMostraDislivello] = useState(false);
   const [mostraData, setMostraData] = useState(true);
-  const [mostraTracciato, setMostraTracciato] = useState(false);
+  const [selezione, setSelezione] = useState<SelezioneCard>('foto');
   const [tracciatoX, setTracciatoX] = useState(0.35);
-  const [tracciatoY, setTracciatoY] = useState(0.25);
-  const [elementoTrascina, setElementoTrascina] = useState<'foto' | 'tracciato'>('foto');
+  const [tracciatoY, setTracciatoY] = useState(0.22);
+  const [tracciatoZoom, setTracciatoZoom] = useState(1);
 
   const [fotoSalvata, setFotoSalvata] = useState<string | null>(null);
   const [preferFoto, setPreferFoto] = useState(false);
@@ -99,10 +99,11 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     offX: 0.5,
     offY: 0.5,
     trX: 0.35,
-    trY: 0.25,
+    trY: 0.22,
     zoom: 1,
     dist: 0,
   });
+  const tapRef = useRef({ x: 0, y: 0, mosso: false });
 
   const [cardUrl, setCardUrl] = useState<string | null>(null);
   const [generandoCard, setGenerandoCard] = useState(false);
@@ -110,6 +111,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
 
   const dataBreve = formattaDataBreve(giro.data);
   const luogo = (luogoCard.trim() || giro.nome).toUpperCase();
+  const selezioneAttiva: SelezioneCard = preferFoto ? selezione : 'percorso';
 
   const statsLive = useMemo(() => {
     const s: { label: string; valore: string; accent?: boolean }[] = [
@@ -152,7 +154,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
         durata: formattaDurata(giro.durataSec),
         data: dataBreve,
         punti: giro.punti,
-        tema: layout === 'strava' ? 'foto' : 'tracciato',
+        tema: layout === 'laterale' ? 'foto' : 'tracciato',
         palette: 'scuro',
         luogo: luogoCard.trim() || null,
         fotoDataUrl: preferFoto ? fotoSalvata : null,
@@ -162,6 +164,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
         curve: mostraCurve ? (stat.curve || giro.curve) : null,
         tracciatoOffsetX: tracciatoX,
         tracciatoOffsetY: tracciatoY,
+        tracciatoScala: tracciatoZoom,
         fotoScala: preferFoto ? fotoZoom : undefined,
         fotoLuminosita: preferFoto ? fotoLuminosita : undefined,
         fotoContrasto: preferFoto ? fotoContrasto : undefined,
@@ -169,7 +172,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
         filtroFoto: preferFoto ? filtroFoto : undefined,
         fotoOffsetX: preferFoto ? fotoOffsetX : undefined,
         fotoOffsetY: preferFoto ? fotoOffsetY : undefined,
-        mostraTracciatoSuFoto: preferFoto ? mostraTracciato : undefined,
+        mostraTracciatoSuFoto: preferFoto ? true : undefined,
         mostraData,
       });
       setCardUrl(url);
@@ -192,9 +195,9 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     mostraMax,
     mostraCurve,
     mostraData,
-    mostraTracciato,
     tracciatoX,
     tracciatoY,
+    tracciatoZoom,
     fotoZoom,
     fotoLuminosita,
     fotoContrasto,
@@ -205,9 +208,16 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     stat,
   ]);
 
-  function cosaTrascina(): 'foto' | 'tracciato' {
-    if (preferFoto) return mostraTracciato && elementoTrascina === 'tracciato' ? 'tracciato' : 'foto';
-    return 'tracciato';
+  function selezionaDaTap(clientX: number, clientY: number) {
+    const rect = anteprimaRef.current?.getBoundingClientRect();
+    if (!rect || !preferFoto) {
+      setSelezione('percorso');
+      return;
+    }
+    const lx = (clientX - rect.left) / rect.width;
+    const ly = (clientY - rect.top) / rect.height;
+    if (lx < 0.44 && ly < 0.42) setSelezione('percorso');
+    else setSelezione('foto');
   }
 
   function distanzaDita(touches: React.TouchList | TouchList) {
@@ -217,9 +227,10 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   }
 
   function applicaPan(dx: number, dy: number, rect: DOMRect) {
+    tapRef.current.mosso = true;
     const sens = 0.95;
     const st = gestiRef.current;
-    if (cosaTrascina() === 'foto') {
+    if (selezioneAttiva === 'foto') {
       setFotoOffsetX(Math.min(1, Math.max(0, st.offX + (dx / rect.width) * sens)));
       setFotoOffsetY(Math.min(1, Math.max(0, st.offY + (dy / rect.height) * sens)));
     } else {
@@ -229,6 +240,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   }
 
   function iniziaPan(clientX: number, clientY: number) {
+    tapRef.current = { x: clientX, y: clientY, mosso: false };
     gestiRef.current = {
       ...gestiRef.current,
       tipo: 'pan',
@@ -245,16 +257,27 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     const st = gestiRef.current;
     const rect = anteprimaRef.current?.getBoundingClientRect();
     if (!rect || st.tipo !== 'pan') return;
+    if (Math.abs(clientX - tapRef.current.x) > 6 || Math.abs(clientY - tapRef.current.y) > 6) {
+      tapRef.current.mosso = true;
+    }
     applicaPan(clientX - st.x, clientY - st.y, rect);
   }
 
-  function terminaGesto() {
+  function terminaGesto(clientX?: number, clientY?: number) {
+    if (gestiRef.current.tipo === 'pan' && !tapRef.current.mosso && clientX != null && clientY != null) {
+      selezionaDaTap(clientX, clientY);
+    }
     gestiRef.current.tipo = 'none';
   }
 
   function iniziaTouch(e: React.TouchEvent) {
-    if (e.touches.length === 2 && preferFoto && cosaTrascina() === 'foto') {
-      gestiRef.current = { ...gestiRef.current, tipo: 'pinch', zoom: fotoZoom, dist: distanzaDita(e.touches) };
+    if (e.touches.length === 2) {
+      gestiRef.current = {
+        ...gestiRef.current,
+        tipo: 'pinch',
+        zoom: selezioneAttiva === 'percorso' ? tracciatoZoom : fotoZoom,
+        dist: distanzaDita(e.touches),
+      };
     } else if (e.touches.length === 1) {
       iniziaPan(e.touches[0].clientX, e.touches[0].clientY);
     }
@@ -262,9 +285,12 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
 
   function muoviTouch(e: React.TouchEvent) {
     const st = gestiRef.current;
-    if (st.tipo === 'pinch' && e.touches.length === 2 && preferFoto && cosaTrascina() === 'foto') {
+    if (st.tipo === 'pinch' && e.touches.length === 2) {
       e.preventDefault();
-      setFotoZoom(Math.min(2, Math.max(0.6, st.zoom * (distanzaDita(e.touches) / st.dist))));
+      const ratio = distanzaDita(e.touches) / st.dist;
+      const next = Math.min(2.2, Math.max(0.45, st.zoom * ratio));
+      if (selezioneAttiva === 'percorso') setTracciatoZoom(next);
+      else setFotoZoom(next);
       return;
     }
     if (st.tipo === 'pan' && e.touches.length === 1) {
@@ -280,9 +306,13 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
   }
 
   function onWheel(e: React.WheelEvent) {
-    if (!preferFoto || cosaTrascina() !== 'foto') return;
     e.preventDefault();
-    setFotoZoom((z) => Math.min(2, Math.max(0.6, z + (e.deltaY > 0 ? -0.05 : 0.05))));
+    const delta = e.deltaY > 0 ? -0.06 : 0.06;
+    if (selezioneAttiva === 'percorso') {
+      setTracciatoZoom((z) => Math.min(2.2, Math.max(0.45, z + delta)));
+    } else if (preferFoto) {
+      setFotoZoom((z) => Math.min(2.2, Math.max(0.45, z + delta)));
+    }
   }
 
   async function scaricaCard() {
@@ -328,6 +358,11 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     scaricaCard();
   }
 
+  const hintSelezione =
+    selezioneAttiva === 'foto'
+      ? 'Foto selezionata — trascina o pinch per spostare e zoomare'
+      : 'Percorso selezionato — trascina o pinch per spostare e zoomare';
+
   return (
     <div className="editor-card space-y-4 rounded-app-lg border border-white/10 bg-[#0e1012] p-4 text-cemento shadow-app-lg sm:p-5">
       <header>
@@ -354,19 +389,27 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
         </button>
       )}
 
-      {/* Anteprima live — aggiornamento istantaneo */}
       <section className="editor-card-preview space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="editor-card-label mb-0">Anteprima</p>
+          {preferFoto && (
+            <div className="flex gap-1.5">
+              <Pill attivo={selezione === 'foto'} onClick={() => setSelezione('foto')}>Foto</Pill>
+              <Pill attivo={selezione === 'percorso'} onClick={() => setSelezione('percorso')}>Percorso</Pill>
+            </div>
+          )}
+        </div>
         <div
           ref={anteprimaRef}
           className="editor-card-preview-canvas mx-auto w-full max-w-[300px] overflow-hidden rounded-[16px] shadow-[0_12px_40px_rgba(0,0,0,0.5)] touch-none sm:max-w-[280px]"
           onTouchStart={iniziaTouch}
           onTouchMove={muoviTouch}
-          onTouchEnd={terminaGesto}
+          onTouchEnd={(e) => terminaGesto(e.changedTouches[0]?.clientX, e.changedTouches[0]?.clientY)}
           onTouchCancel={terminaGesto}
           onPointerDown={onPointerDown}
           onPointerMove={(e) => gestiRef.current.tipo === 'pan' && muoviPan(e.clientX, e.clientY)}
-          onPointerUp={terminaGesto}
-          onPointerCancel={terminaGesto}
+          onPointerUp={(e) => terminaGesto(e.clientX, e.clientY)}
+          onPointerCancel={() => terminaGesto()}
           onWheel={onWheel}
         >
           <AnteprimaCardLive
@@ -384,20 +427,18 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
             stats={statsLive}
             layout={layout}
             punti={giro.punti}
-            mostraTracciato={mostraTracciato || !preferFoto}
             tracciatoGrande={!preferFoto}
             tracciatoX={tracciatoX}
             tracciatoY={tracciatoY}
+            tracciatoZoom={tracciatoZoom}
+            selezione={preferFoto ? selezione : 'percorso'}
           />
         </div>
-        <p className="text-center font-mono text-[9px] uppercase tracking-wide text-cemento/45">
-          {preferFoto
-            ? 'Trascina per spostare · 2 dita o rotella per zoom'
-            : 'Trascina per spostare il tracciato'}
+        <p className="text-center font-mono text-[9px] uppercase tracking-wide text-cemento/50">
+          Tocca l&apos;anteprima per selezionare · {hintSelezione}
         </p>
       </section>
 
-      {/* Azioni foto */}
       <div className="flex flex-wrap gap-2">
         <label className="tap btn-primary flex-1 cursor-pointer sm:flex-none">
           {preferFoto ? 'Cambia foto' : 'Scegli foto'}
@@ -411,13 +452,15 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
               const foto = await scegliFotoCard(f);
               setFotoSalvata(foto);
               setPreferFoto(true);
-              setLayout('strava');
-              setMostraTracciato(false);
+              setLayout('laterale');
               setFotoOffsetX(0.5);
               setFotoOffsetY(0.5);
               setFotoZoom(1);
+              setTracciatoX(0.35);
+              setTracciatoY(0.22);
+              setTracciatoZoom(1);
+              setSelezione('foto');
               applicaPreset('normale');
-              setElementoTrascina('foto');
             }}
           />
         </label>
@@ -426,7 +469,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
             type="button"
             onClick={() => {
               setPreferFoto(false);
-              setMostraTracciato(true);
+              setSelezione('percorso');
             }}
             className="tap editor-card-btn-secondary flex-1 sm:flex-none"
           >
@@ -435,7 +478,6 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
         )}
       </div>
 
-      {/* Look — preset visibili subito */}
       {preferFoto && (
         <div>
           <p className="editor-card-label mb-2">Stile foto</p>
@@ -449,19 +491,18 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
         </div>
       )}
 
-      {/* Layout stile Strava */}
       <div>
         <p className="editor-card-label mb-2">Layout</p>
         <div className="flex gap-2">
-          <Pill attivo={layout === 'strava'} onClick={() => setLayout('strava')}>
-            Strava
+          <Pill attivo={layout === 'laterale'} onClick={() => setLayout('laterale')}>
+            Laterale
           </Pill>
-          <Pill attivo={layout === 'story'} onClick={() => setLayout('story')}>
-            Story
+          <Pill attivo={layout === 'basso'} onClick={() => setLayout('basso')}>
+            In basso
           </Pill>
         </div>
         <p className="mt-1.5 font-mono text-[9px] text-cemento/40">
-          Strava = stats a destra, foto libera · Story = stats in basso
+          Laterale = stats a destra · In basso = stats sotto al luogo
         </p>
       </div>
 
@@ -478,7 +519,6 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
         />
       </div>
 
-      {/* Dati opzionali — pill semplici */}
       <div>
         <p className="editor-card-label mb-2">Aggiungi dati</p>
         <div className="flex flex-wrap gap-2">
@@ -487,9 +527,6 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
           <Pill attivo={mostraMedia} onClick={() => setMostraMedia((v) => !v)}>Vel. media</Pill>
           <Pill attivo={mostraCurve} onClick={() => setMostraCurve((v) => !v)}>Curve</Pill>
           <Pill attivo={mostraDislivello} onClick={() => setMostraDislivello((v) => !v)}>Dislivello</Pill>
-          {preferFoto && (
-            <Pill attivo={mostraTracciato} onClick={() => setMostraTracciato((v) => !v)}>Tracciato</Pill>
-          )}
         </div>
         {giroMontagna && !mostraDislivello && (
           <button
@@ -501,13 +538,6 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
           </button>
         )}
       </div>
-
-      {preferFoto && mostraTracciato && (
-        <div className="flex gap-2">
-          <Pill attivo={elementoTrascina === 'foto'} onClick={() => setElementoTrascina('foto')}>Sposta foto</Pill>
-          <Pill attivo={elementoTrascina === 'tracciato'} onClick={() => setElementoTrascina('tracciato')}>Sposta tracciato</Pill>
-        </div>
-      )}
 
       {errore && (
         <p className="rounded-app border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{errore}</p>
