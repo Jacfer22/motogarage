@@ -107,7 +107,7 @@ function FeatureCard({
   titolo,
   desc,
   inEvidenza,
-  bento = 'sm',
+  bento = 'side-top',
   delay = 0,
 }: {
   href: string;
