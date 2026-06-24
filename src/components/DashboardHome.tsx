@@ -6,10 +6,10 @@ import { useAuth } from './AuthProvider';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { etichettaCategoria } from '@/lib/categorie-moto';
 import { caricaGiriUtente, type GiroUtente } from '@/lib/giri-store';
-import { nomeMoto } from '@/lib/garage';
+import { nomeMoto, urlModello } from '@/lib/garage';
+import { formattaKmDisplay } from '@/lib/geo';
 import ChecklistHub from './ChecklistHub';
 import BadgeUtente from './BadgeUtente';
-import DashboardFooterLegale from './DashboardFooterLegale';
 import Reveal from './Reveal';
 
 interface AnteprimaMoto {
@@ -88,7 +88,7 @@ export default function DashboardHome() {
 
     supabase
       .from('moto')
-      .select('id, marca, modello, foto_sx_url, modello_3d_url, stato_generazione')
+      .select('id, marca, modello, foto_sx_url, glb_url, model_url, stato, vetrina_url, updated_at')
       .eq('utente_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -99,17 +99,19 @@ export default function DashboardHome() {
           return;
         }
         let fotoUrl: string | null = null;
-        if (data.foto_sx_url) {
+        const pathAnteprima = data.vetrina_url ?? data.foto_sx_url;
+        if (pathAnteprima) {
           const { data: signed } = await supabase.storage
             .from('foto-moto')
-            .createSignedUrl(data.foto_sx_url, 3600);
+            .createSignedUrl(pathAnteprima, 3600);
           fotoUrl = signed?.signedUrl ?? null;
         }
+        const haModello3d = data.stato === 'pronto' && Boolean(urlModello(data));
         setMoto({
           id: data.id,
           nome: nomeMoto(data),
           fotoUrl,
-          haModello3d: Boolean(data.modello_3d_url && data.stato_generazione === 'completato'),
+          haModello3d,
         });
       });
   }, [user]);
@@ -187,7 +189,7 @@ export default function DashboardHome() {
             <div className="dash-card-foot compact">
               {ultimoGiro ? (
                 <>
-                  <p className="font-display text-2xl font-black text-[#f2b705]">{ultimoGiro.km} km</p>
+                  <p className="font-display text-2xl font-black text-[#f2b705]">{formattaKmDisplay(ultimoGiro.km)} km</p>
                   <p className="font-mono text-[10px] uppercase text-cemento/55">{ultimoGiro.nome}</p>
                 </>
               ) : (
@@ -282,8 +284,6 @@ export default function DashboardHome() {
           <BadgeUtente />
         </div>
       </Reveal>
-
-      <DashboardFooterLegale />
     </div>
   );
 }

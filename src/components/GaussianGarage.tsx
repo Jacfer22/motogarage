@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GarageMoto } from '@/lib/garage';
 import { urlModello } from '@/lib/garage';
 import { posizioneCameraReelGarage, REEL_GARAGE_LOOK_AT } from '@/lib/reel-garage-camera';
+import { catturaESalvaVetrina } from '@/lib/garage-vetrina-client';
 
 interface Props {
   moto: GarageMoto[];
@@ -12,6 +13,8 @@ interface Props {
   modalitaHero?: boolean;
   /** Cattura reel: camera più lontana, moto intera in frame */
   modalitaReel?: boolean;
+  motoIdVetrina?: string | null;
+  onVetrinaSalvata?: () => void;
 }
 
 function posizione(index: number, totale: number): [number, number, number] {
@@ -37,11 +40,12 @@ function disabilitaTastieraViewer(viewer: import('@mkkellogg/gaussian-splats-3d'
   }
 }
 
-export default function GaussianGarage({ moto, selezionataId, modalitaViewer = false, modalitaHero = false, modalitaReel = false }: Props) {
+export default function GaussianGarage({ moto, selezionataId, modalitaViewer = false, modalitaHero = false, modalitaReel = false, motoIdVetrina = null, onVetrinaSalvata }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<import('@mkkellogg/gaussian-splats-3d').Viewer | null>(null);
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState<string | null>(null);
+  const [salvaVetrina, setSalvaVetrina] = useState(false);
 
   const scene = useMemo(() => {
     const pronte = moto.filter((item) => item.stato === 'pronto' && urlModello(item));
@@ -166,11 +170,35 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
     else await host.requestFullscreen();
   }
 
+  async function screenshotVetrina() {
+    const canvas = hostRef.current?.querySelector('canvas');
+    const id = motoIdVetrina ?? selezionataId ?? scene[0]?.id;
+    if (!canvas || !id || salvaVetrina) return;
+    setSalvaVetrina(true);
+    try {
+      const esito = await catturaESalvaVetrina(canvas, id);
+      if (esito.ok) onVetrinaSalvata?.();
+      else if (esito.messaggio) window.alert(esito.messaggio);
+    } finally {
+      setSalvaVetrina(false);
+    }
+  }
+
   return (
     <div className={`relative h-full w-full overflow-hidden ${modalitaHero ? 'min-h-0 bg-transparent' : 'min-h-[460px] bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.16),transparent_30%),#0F0B0A] sm:min-h-[580px]'}`}>
       <div ref={hostRef} className="absolute inset-0" aria-label="Viewer 3D interattivo" />
       {!modalitaHero && (
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-end gap-3 p-3">
+        {modalitaViewer && (motoIdVetrina ?? selezionataId ?? scene[0]?.id) && (
+          <button
+            type="button"
+            onClick={screenshotVetrina}
+            disabled={salvaVetrina || caricamento}
+            className="pointer-events-auto rounded-full border border-brand/40 bg-brand/90 px-3 py-2 font-mono text-[10px] font-bold uppercase text-white backdrop-blur disabled:opacity-60"
+          >
+            {salvaVetrina ? 'Salvo…' : 'Screenshot Vetrina'}
+          </button>
+        )}
         <button type="button" onClick={fullscreen} className="pointer-events-auto rounded-full border border-white/15 bg-black/60 px-3 py-2 font-mono text-[10px] font-bold uppercase text-white/75 backdrop-blur">
           Fullscreen
         </button>

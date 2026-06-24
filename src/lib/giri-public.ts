@@ -38,7 +38,7 @@ export async function getGiroPubblico(id: string): Promise<GiroPubblico | null> 
   return {
     id: data.id as string,
     nome: (data.nome as string) ?? 'Giro libero',
-    km: Number(data.km) * 1000,
+    km: Number(data.km),
     durataSec: Number(data.durata_sec) ?? 0,
     velMediaKmh: Number(data.vel_media_kmh) ?? 0,
     velMaxKmh: Number(data.vel_max_kmh) ?? 0,

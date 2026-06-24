@@ -1,4 +1,4 @@
-import { formattaDurata, formattaKm } from '@/lib/geo';
+import { formattaDurata, formattaKmDisplay } from '@/lib/geo';
 import type { GiroUtente } from '@/lib/giri-store';
 import { BRAND_DOMAIN } from '@/lib/brand-display';
 
@@ -6,7 +6,7 @@ export function generaDidascaliaGiro(
   giro: Pick<GiroUtente, 'nome' | 'km' | 'durataSec' | 'curve' | 'dislivelloM' | 'velMediaKmh'>,
   luogo?: string,
 ): string {
-  const km = formattaKm(giro.km);
+  const km = formattaKmDisplay(giro.km);
   const durata = formattaDurata(giro.durataSec);
   const righe = [
     giro.nome?.trim() || 'Giro in moto',

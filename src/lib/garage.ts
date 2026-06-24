@@ -11,6 +11,7 @@ export interface GarageMoto {
   colore_secondario: string | null;
   foto_sx_url: string | null;
   foto_dx_url: string | null;
+  vetrina_url?: string | null;
   glb_url: string | null;
   model_url?: string | null;
   model_format?: FormatoModello | null;

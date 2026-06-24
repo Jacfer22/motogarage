@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { GarageMoto } from '@/lib/garage';
 import { posizioneCameraReelGarage, REEL_GARAGE_LOOK_AT } from '@/lib/reel-garage-camera';
+import { catturaESalvaVetrina } from '@/lib/garage-vetrina-client';
 
 interface Props {
   moto: GarageMoto[];
@@ -14,6 +15,8 @@ interface Props {
   modalitaViewer?: boolean;
   modalitaHero?: boolean;
   modalitaReel?: boolean;
+  motoIdVetrina?: string | null;
+  onVetrinaSalvata?: () => void;
 }
 
 function posizioniMoto(numero: number): THREE.Vector3[] {
@@ -105,14 +108,16 @@ function preparaModello(root: THREE.Group, index: number, posizione: THREE.Vecto
   });
 }
 
-export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaViewer = false, modalitaHero = false, modalitaReel = false }: Props) {
+export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaViewer = false, modalitaHero = false, modalitaReel = false, motoIdVetrina = null, onVetrinaSalvata }: Props) {
   const contenitoreRef = useRef<HTMLDivElement>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const controlliRef = useRef<OrbitControls | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const gruppiRef = useRef(new Map<string, THREE.Group>());
   const [autoRotate, setAutoRotate] = useState(false);
   const [caricati, setCaricati] = useState(0);
   const [falliti, setFalliti] = useState(0);
+  const [salvaVetrina, setSalvaVetrina] = useState(false);
 
   const pronte = moto.filter((item) => item.stato === 'pronto' && item.glb_url);
 
@@ -136,6 +141,7 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
     host.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -266,6 +272,7 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
         materials.forEach((material) => material.dispose());
       });
       if (renderer.domElement.parentElement === host) host.removeChild(renderer.domElement);
+      rendererRef.current = null;
       gruppiRef.current.clear();
     };
   }, [modalitaViewer, onSeleziona, moto]);
@@ -332,6 +339,20 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
     else await host.requestFullscreen();
   }
 
+  async function screenshotVetrina() {
+    const canvas = rendererRef.current?.domElement;
+    const id = motoIdVetrina ?? selezionataId;
+    if (!canvas || !id || salvaVetrina) return;
+    setSalvaVetrina(true);
+    try {
+      const esito = await catturaESalvaVetrina(canvas, id);
+      if (esito.ok) onVetrinaSalvata?.();
+      else if (esito.messaggio) window.alert(esito.messaggio);
+    } finally {
+      setSalvaVetrina(false);
+    }
+  }
+
   return (
     <div className="relative h-full min-h-[460px] w-full overflow-hidden bg-black sm:min-h-[580px]">
       <div ref={contenitoreRef} className="absolute inset-0" aria-label="Garage virtuale 3D interattivo" />
@@ -341,6 +362,16 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
           Trascina · zoom · pan · seleziona
         </div>
         <div className="pointer-events-auto flex gap-2">
+          {modalitaViewer && (motoIdVetrina ?? selezionataId) && (
+            <button
+              type="button"
+              onClick={screenshotVetrina}
+              disabled={salvaVetrina}
+              className="rounded-full border border-brand/40 bg-brand/90 px-3 py-2 font-mono text-[10px] font-bold uppercase text-white backdrop-blur disabled:opacity-60"
+            >
+              {salvaVetrina ? 'Salvo…' : 'Screenshot Vetrina'}
+            </button>
+          )}
           <button type="button" onClick={() => setAutoRotate((value) => !value)} className={`rounded-full border px-3 py-2 font-mono text-[10px] font-bold uppercase backdrop-blur ${autoRotate ? 'border-red-500 bg-red-500 text-white' : 'border-white/15 bg-black/55 text-white/70'}`}>
             Auto
           </button>

@@ -54,6 +54,11 @@ export function formattaKm(metri: number): string {
   return (metri / 1000).toLocaleString('it-IT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
+/** Formatta chilometri (valore già in km) con una cifra decimale. */
+export function formattaKmDisplay(km: number): string {
+  return km.toLocaleString('it-IT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
 /** Indice del punto del tracciato più vicino a una posizione. */
 export function indicePuntoPiuVicino(tracciato: Punto[], pos: Punto): number {
   let migliore = 0;

@@ -74,7 +74,7 @@ function daRigaDb(riga: RigaGiroDb): GiroUtente {
     cloudId: riga.id,
     nome: riga.nome,
     data: riga.created_at,
-    km: Number(riga.km) * 1000,
+    km: Number(riga.km),
     durataSec: riga.durata_sec,
     punti: tracciatoDaDb(riga.tracciato),
     velMediaKmh: riga.vel_media_kmh ?? 0,
@@ -144,7 +144,7 @@ export async function caricaGiriUtente(
   for (const locale of locali) {
     const duplicato = cloud.some((g) => {
       const stessoGiorno = new Date(g.data).toDateString() === new Date(locale.data).toDateString();
-      const stessiKm = Math.abs(g.km - locale.km) < 50;
+      const stessiKm = Math.abs(g.km - locale.km) < 0.05;
       return stessoGiorno && stessiKm;
     });
     if (duplicato) continue;
@@ -178,7 +178,7 @@ export async function salvaGiroCloud(
     .insert({
       utente_id: utenteId,
       nome: titolo,
-      km: Number((giro.km / 1000).toFixed(2)),
+      km: Number(giro.km.toFixed(2)),
       durata_sec: Math.round(giro.durataSec),
       vel_media_kmh: giro.velMediaKmh,
       vel_max_kmh: giro.velMaxKmh,
@@ -264,7 +264,7 @@ export function giroDaSessione(
     cloudId: null,
     nome,
     data,
-    km: distanzaM,
+    km: distanzaM / 1000,
     durataSec,
     punti,
     velMediaKmh: stat.velMediaKmh,

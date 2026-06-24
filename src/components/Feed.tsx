@@ -160,7 +160,7 @@ export default function Feed() {
           {v.tipo === 'giro' && (
             <div className="mt-2">
               <div className="flex flex-wrap items-center gap-4">
-                <span className="font-display text-3xl font-bold leading-none">{v.km} <span className="text-base">km</span></span>
+                <span className="font-display text-3xl font-bold leading-none">{v.km.toLocaleString('it-IT', { maximumFractionDigits: 1 })} <span className="text-base">km</span></span>
                 {v.curve > 0 && (
                   <span className="font-mono text-sm text-asfalto/60">{v.curve} curve</span>
                 )}

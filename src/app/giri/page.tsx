@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/AuthProvider';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
-import { formattaDurata, formattaKm } from '@/lib/geo';
+import { formattaDurata, formattaKmDisplay } from '@/lib/geo';
 import {
   aggiornaGiroCloud,
   caricaGiriUtente,
@@ -85,9 +85,9 @@ export default function PaginaMieiGiri() {
   }
 
   async function eliminaGiro(giro: GiroUtente) {
-    const msg = giro.km < 50
+    const msg = giro.km < 0.05
       ? 'Eliminare questo giro? Sembra avviato per errore.'
-      : `Eliminare il giro del ${formattaDataBreve(giro.data)} (${formattaKm(giro.km)} km)? Non si può annullare.`;
+      : `Eliminare il giro del ${formattaDataBreve(giro.data)} (${formattaKmDisplay(giro.km)} km)? Non si può annullare.`;
     const ok = await conferma({
       titolo: 'Elimina giro',
       messaggio: msg,
@@ -177,7 +177,7 @@ export default function PaginaMieiGiri() {
                   >
                     <p className="font-display text-lg font-bold uppercase leading-tight text-white">{giro.nome}</p>
                     <p className="mt-0.5 font-mono text-[11px] uppercase text-cemento/50">
-                      {formattaDataBreve(giro.data)} · {formattaKm(giro.km)} km · {formattaDurata(giro.durataSec)}
+                      {formattaDataBreve(giro.data)} · {formattaKmDisplay(giro.km)} km · {formattaDurata(giro.durataSec)}
                     </p>
                     <p className="mt-1 font-mono text-[10px] uppercase text-cemento/40">
                       {giro.pubblico ? 'In community' : 'Privato'}

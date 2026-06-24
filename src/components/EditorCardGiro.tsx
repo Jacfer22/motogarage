@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { formattaDurata, formattaKm, statisticheGiro } from '@/lib/geo';
+import { formattaDurata, formattaKmDisplay, statisticheGiro } from '@/lib/geo';
 import { generaCardGiro } from '@/lib/card-canvas';
 import { PRESET_LOOK, type FiltroFoto, type PresetLook } from '@/lib/card-foto-filtri';
 import type { GiroUtente } from '@/lib/giri-store';
@@ -189,7 +189,7 @@ function Pill({
 
 export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }: Props) {
   const { toast } = useFeedback();
-  const stat = statisticheGiro(giro.punti, giro.durataSec, giro.km);
+  const stat = statisticheGiro(giro.punti, giro.durataSec, giro.km * 1000);
   const giroMontagna = (stat.dislivelloPositivoM || giro.dislivelloM) >= 150;
 
   const [layout, setLayout] = useState<LayoutCard>('laterale');
@@ -326,7 +326,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
 
   const statsLive = useMemo(() => {
     const s: { label: string; valore: string; accent?: boolean }[] = [
-      { label: 'Distanza', valore: `${formattaKm(giro.km)} km` },
+      { label: 'Distanza', valore: `${formattaKmDisplay(giro.km)} km` },
       { label: 'Durata', valore: formattaDurata(giro.durataSec) },
     ];
     if (mostraMedia && (stat.velMediaKmh || giro.velMediaKmh))
@@ -361,7 +361,7 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       const titolo = luogoCard.trim() || giro.nome;
       const url = await generaCardGiro({
         titolo,
-        km: formattaKm(giro.km),
+        km: formattaKmDisplay(giro.km),
         durata: formattaDurata(giro.durataSec),
         data: dataBreve,
         punti: giro.punti,

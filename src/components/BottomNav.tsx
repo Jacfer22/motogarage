@@ -2,11 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { useAuth } from './AuthProvider';
-
-/** Pagine dove la bottom nav appare solo scrollando in fondo. */
-const REVEAL_ON_SCROLL = ['/hub'];
 
 function IconaBussola({ attiva }: { attiva: boolean }) {
   return (
@@ -65,28 +61,6 @@ export default function BottomNav() {
   const pathname = usePathname();
   const { user, nonConfigurato } = useAuth();
   const loggato = nonConfigurato || !!user;
-  const [navVisibile, setNavVisibile] = useState(true);
-
-  const revealMode = REVEAL_ON_SCROLL.some((p) => pathname.startsWith(p));
-
-  useEffect(() => {
-    if (!revealMode) {
-      setNavVisibile(true);
-      return;
-    }
-
-    setNavVisibile(false);
-
-    const sentinel = document.getElementById('app-scroll-end');
-    if (!sentinel) return;
-
-    const obs = new IntersectionObserver(
-      ([entry]) => setNavVisibile(entry.isIntersecting),
-      { root: null, threshold: 0.05, rootMargin: '0px 0px -20px 0px' },
-    );
-    obs.observe(sentinel);
-    return () => obs.disconnect();
-  }, [revealMode, pathname]);
 
   if (!loggato) {
     return (
@@ -109,12 +83,9 @@ export default function BottomNav() {
 
   return (
     <nav
-      className={`app-chrome-bottomnav vetro fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-asfalto/95 text-cemento transition-transform duration-300 ease-out md:hidden ${
-        revealMode && !navVisibile ? 'bottom-nav-hidden' : 'bottom-nav-visible'
-      }`}
+      className="app-chrome-bottomnav vetro fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-asfalto/95 text-cemento md:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="Navigazione principale"
-      aria-hidden={revealMode && !navVisibile}
     >
       <div className="mx-auto flex max-w-md items-end justify-between px-1">
         <VoceNav href="/naviga" label="Naviga" Icona={IconaBussola} attiva={pathname.startsWith('/naviga')} />

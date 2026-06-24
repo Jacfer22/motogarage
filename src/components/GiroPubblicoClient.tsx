@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { formattaDurata, formattaKm } from '@/lib/geo';
+import { formattaDurata, formattaKmDisplay } from '@/lib/geo';
 import type { GiroPubblico } from '@/lib/giri-public';
 import { BRAND_DOMAIN } from '@/lib/brand-display';
 import { scaricaGpx } from '@/lib/gpx-export';
@@ -36,7 +36,7 @@ export default function GiroPubblicoClient({ giro }: Props) {
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { l: 'Distanza', v: formattaKm(giro.km), u: 'km' },
+          { l: 'Distanza', v: formattaKmDisplay(giro.km), u: 'km' },
           { l: 'Durata', v: formattaDurata(giro.durataSec), u: '' },
           { l: 'Curve', v: String(giro.curve), u: '' },
           { l: 'Dislivello', v: String(giro.dislivelloM), u: 'm' },
