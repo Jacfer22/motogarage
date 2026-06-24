@@ -16,6 +16,7 @@ interface Props {
   onSeleziona: (id: string) => void;
   fotoAnteprima?: string | null;
   mostraViewer?: boolean;
+  onVetrinaSalvata?: () => void;
   children?: React.ReactNode;
 }
 
@@ -25,6 +26,7 @@ export default function GarageAmbiente({
   onSeleziona,
   fotoAnteprima,
   mostraViewer = true,
+  onVetrinaSalvata,
   children,
 }: Props) {
   const motoInPalco = useMemo(() => {
@@ -46,6 +48,8 @@ export default function GarageAmbiente({
             selezionataId={selezionataId ?? motoInPalco[0]?.id ?? null}
             onSeleziona={onSeleziona}
             modalitaHero
+            motoIdVetrina={motoInPalco[0]?.id ?? null}
+            onVetrinaSalvata={onVetrinaSalvata}
           />
         ) : fotoAnteprima ? (
           <div className="garage-anteprima-foto">

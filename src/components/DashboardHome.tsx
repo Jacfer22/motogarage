@@ -17,6 +17,7 @@ interface AnteprimaMoto {
   nome: string;
   fotoUrl: string | null;
   haModello3d: boolean;
+  haVetrina: boolean;
 }
 
 function salutoGiorno() {
@@ -107,11 +108,13 @@ export default function DashboardHome() {
           fotoUrl = signed?.signedUrl ?? null;
         }
         const haModello3d = data.stato === 'pronto' && Boolean(urlModello(data));
+        const haVetrina = Boolean(data.vetrina_url);
         setMoto({
           id: data.id,
           nome: nomeMoto(data),
           fotoUrl,
           haModello3d,
+          haVetrina,
         });
       });
   }, [user]);
@@ -156,7 +159,7 @@ export default function DashboardHome() {
           <p className="dash-card-label">Il mio garage</p>
           <div className="dash-garage-visual">
             {moto?.fotoUrl ? (
-              <img src={moto.fotoUrl} alt="" className="h-full w-full object-cover" />
+              <img src={moto.fotoUrl} alt="" className="h-full w-full bg-white object-contain" />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-2 text-cemento/40">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -172,7 +175,11 @@ export default function DashboardHome() {
                 {moto?.nome ?? 'Garage vuoto'}
               </p>
               <p className="mt-1 font-mono text-[10px] uppercase text-cemento/50">
-                {moto?.haModello3d ? 'Modello 3D · tap per entrare' : 'Tap per creare avatar 3D'}
+                {moto?.haVetrina
+                  ? 'Vetrina · tap per entrare'
+                  : moto?.haModello3d
+                    ? 'Modello 3D · tap per entrare'
+                    : 'Tap per creare avatar 3D'}
               </p>
             </div>
             <Chevron />

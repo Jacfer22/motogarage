@@ -163,6 +163,10 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
     return () => window.removeEventListener('reel-garage-frame', onFrame);
   }, [modalitaReel, caricamento]);
 
+  const sfondoBianco = modalitaViewer;
+  const mostraVetrina = (modalitaViewer || modalitaHero) && !modalitaReel && !caricamento;
+  const idVetrina = motoIdVetrina ?? selezionataId ?? scene[0]?.id;
+
   async function fullscreen() {
     const host = hostRef.current;
     if (!host) return;
@@ -185,28 +189,36 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
   }
 
   return (
-    <div className={`relative h-full w-full overflow-hidden ${modalitaHero ? 'min-h-0 bg-transparent' : 'min-h-[460px] bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.16),transparent_30%),#0F0B0A] sm:min-h-[580px]'}`}>
-      <div ref={hostRef} className="absolute inset-0" aria-label="Viewer 3D interattivo" />
-      {!modalitaHero && (
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-end gap-3 p-3">
-        {modalitaViewer && (motoIdVetrina ?? selezionataId ?? scene[0]?.id) && (
+    <div className={`relative h-full w-full overflow-hidden ${
+      modalitaHero && !sfondoBianco
+        ? 'min-h-0 bg-transparent'
+        : sfondoBianco
+          ? 'min-h-[460px] bg-white sm:min-h-[580px]'
+          : 'min-h-[460px] bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.16),transparent_30%),#0F0B0A] sm:min-h-[580px]'
+    }`}>
+      <div ref={hostRef} className={`absolute inset-0 ${sfondoBianco ? 'bg-white' : ''}`} aria-label="Viewer 3D interattivo" />
+      {!modalitaReel && (
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-end gap-2 p-3 sm:p-4">
+        {mostraVetrina && idVetrina && (
           <button
             type="button"
             onClick={screenshotVetrina}
-            disabled={salvaVetrina || caricamento}
-            className="pointer-events-auto rounded-full border border-brand/40 bg-brand/90 px-3 py-2 font-mono text-[10px] font-bold uppercase text-white backdrop-blur disabled:opacity-60"
+            disabled={salvaVetrina}
+            className="pointer-events-auto rounded-full border border-brand/40 bg-brand px-3 py-2 font-mono text-[10px] font-bold uppercase text-white shadow-sm disabled:opacity-60"
           >
             {salvaVetrina ? 'Salvo…' : 'Screenshot Vetrina'}
           </button>
         )}
-        <button type="button" onClick={fullscreen} className="pointer-events-auto rounded-full border border-white/15 bg-black/60 px-3 py-2 font-mono text-[10px] font-bold uppercase text-white/75 backdrop-blur">
+        {!modalitaHero && (
+        <button type="button" onClick={fullscreen} className={`pointer-events-auto rounded-full border px-3 py-2 font-mono text-[10px] font-bold uppercase backdrop-blur ${sfondoBianco ? 'border-black/15 bg-white/90 text-asfalto/75' : 'border-white/15 bg-black/60 text-white/75'}`}>
           Fullscreen
         </button>
+        )}
       </div>
       )}
       {caricamento && (
-        <div className="pointer-events-none absolute inset-0 grid place-items-center bg-black/20">
-          <p className="rounded-full border border-white/10 bg-black/70 px-5 py-3 font-mono text-xs uppercase tracking-wide text-white/70 backdrop-blur">
+        <div className={`pointer-events-none absolute inset-0 grid place-items-center ${sfondoBianco ? 'bg-white/50' : 'bg-black/20'}`}>
+          <p className={`rounded-full border px-5 py-3 font-mono text-xs uppercase tracking-wide backdrop-blur ${sfondoBianco ? 'border-black/10 bg-white/90 text-asfalto/70' : 'border-white/10 bg-black/70 text-white/70'}`}>
             Caricamento avatar 3D…
           </p>
         </div>

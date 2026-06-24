@@ -21,7 +21,7 @@ export function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([bytes], { type: mime });
 }
 
-async function blobToJpeg(blob: Blob, quality = 0.92): Promise<Blob> {
+async function blobToJpeg(blob: Blob, quality = 0.92, sfondo = '#0F0B0A'): Promise<Blob> {
   const bitmap = await createImageBitmap(blob);
   const canvas = document.createElement('canvas');
   canvas.width = bitmap.width;
@@ -31,7 +31,7 @@ async function blobToJpeg(blob: Blob, quality = 0.92): Promise<Blob> {
     bitmap.close();
     throw new Error('Canvas non disponibile');
   }
-  ctx.fillStyle = '#0F0B0A';
+  ctx.fillStyle = sfondo;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
@@ -50,7 +50,7 @@ export interface ImmagineStoryPronta {
 /** Prepara JPEG 9:16 per galleria e app social (migliore compatibilità mobile). */
 export async function preparaImmagineStory(
   dataUrl: string,
-  opzioni?: { jpeg?: boolean; nomeBase?: string },
+  opzioni?: { jpeg?: boolean; nomeBase?: string; sfondo?: string },
 ): Promise<ImmagineStoryPronta> {
   const usaJpeg = opzioni?.jpeg !== false;
   const nomeBase = opzioni?.nomeBase ?? 'motogarage-story';
@@ -64,7 +64,7 @@ export async function preparaImmagineStory(
     return { blob: pngBlob, file, anteprimaUrl: dataUrl, estensione: 'png' };
   }
 
-  const jpegBlob = await blobToJpeg(pngBlob);
+  const jpegBlob = await blobToJpeg(pngBlob, 0.92, opzioni?.sfondo ?? '#0F0B0A');
   const file = new File([jpegBlob], `${nomeBase}.jpg`, {
     type: 'image/jpeg',
     lastModified: Date.now(),
