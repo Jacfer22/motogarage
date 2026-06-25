@@ -1932,6 +1932,83 @@ body.nav-fullscreen-active.con-bottomnav {
   background: rgba(255, 255, 255, 0.04);
   padding: 0.75rem 0.9rem;
 }
+
+/* Badge livello — complessità cresce col rango */
+.badge-livello-card {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1rem 1.1rem;
+  backdrop-filter: blur(8px);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.badge-livello-emblema {
+  display: grid;
+  place-items: center;
+  line-height: 0;
+}
+.badge-livello-nome {
+  margin-top: 0.35rem;
+  font-size: 1.35rem;
+}
+.badge-livello-nome.rango-4 { font-size: 1.45rem; }
+.badge-livello-nome.rango-5 { font-size: 1.55rem; }
+.badge-livello-nome.rango-6 { font-size: 1.65rem; }
+.badge-livello-bar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+.badge-livello-bar-fill {
+  background: linear-gradient(90deg, #f2b705, #ED2100);
+}
+.badge-livello-rango-0 {
+  border-color: rgba(120, 113, 108, 0.35);
+}
+.badge-livello-rango-1 {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+.badge-livello-rango-2 {
+  border-color: rgba(237, 33, 0, 0.22);
+  background: linear-gradient(145deg, rgba(237, 33, 0, 0.06), rgba(255, 255, 255, 0.03));
+}
+.badge-livello-rango-3 {
+  border-color: rgba(237, 33, 0, 0.32);
+  box-shadow: 0 6px 24px rgba(237, 33, 0, 0.08);
+  background: linear-gradient(145deg, rgba(237, 33, 0, 0.09), rgba(15, 11, 10, 0.5));
+}
+.badge-livello-rango-4 {
+  border-color: rgba(237, 33, 0, 0.42);
+  box-shadow:
+    0 0 0 1px rgba(237, 33, 0, 0.08),
+    0 8px 28px rgba(237, 33, 0, 0.12);
+  background: linear-gradient(160deg, rgba(237, 33, 0, 0.12), rgba(20, 18, 17, 0.85));
+}
+.badge-livello-rango-5 {
+  border-color: rgba(253, 224, 138, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(237, 33, 0, 0.15),
+    0 10px 32px rgba(237, 33, 0, 0.18);
+  background: linear-gradient(165deg, rgba(237, 33, 0, 0.14), rgba(15, 11, 10, 0.92));
+  padding: 1.15rem 1.2rem;
+}
+.badge-livello-rango-6 {
+  border-color: rgba(253, 224, 138, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(237, 33, 0, 0.25),
+    0 0 24px rgba(237, 33, 0, 0.2),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(237, 33, 0, 0.2), transparent 55%),
+    linear-gradient(165deg, rgba(28, 22, 20, 0.98), rgba(15, 11, 10, 0.98));
+  padding: 1.25rem 1.25rem;
+}
+.badge-livello-rango-6 .badge-livello-emblema {
+  filter: drop-shadow(0 0 8px rgba(237, 33, 0, 0.45));
+}
+.badge-livello-rango-6 .badge-livello-bar-fill {
+  background: linear-gradient(90deg, #fde68a, #f2b705, #ED2100);
+}
+
 .btn-instagram {
   border: none;
   background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
@@ -2006,6 +2083,23 @@ body.nav-fullscreen-active.con-bottomnav {
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(237, 33, 0, 0.15), transparent 60%),
     rgba(20, 18, 17, 0.9);
 }
+.dash-card-tile {
+  background: linear-gradient(180deg, rgba(25, 28, 32, 0.95), rgba(15, 11, 10, 0.98));
+}
+.dash-card-community {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(237, 33, 0, 0.12), transparent 60%),
+    rgba(20, 18, 17, 0.9);
+}
+.dash-tile-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.75rem 0.25rem;
+  text-align: center;
+}
 .dash-card-link {
   min-height: auto;
   padding: 14px;
@@ -2032,6 +2126,13 @@ body.nav-fullscreen-active.con-bottomnav {
   width: 32px;
   height: 32px;
   font-size: 14px;
+}
+.dash-icon-wrap.lg {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: rgba(237, 33, 0, 0.12);
+  color: #ed2100;
 }
 .dash-footer-legale {
   scroll-margin-bottom: calc(88px + env(safe-area-inset-bottom));

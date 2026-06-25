@@ -4,18 +4,21 @@ export interface Badge {
   id: string;
   nome: string;
   kmRichiesti: number;
-  emoji: string;
+  /** 0 = più semplice · 6 = massimo (cornice, strati, corona) */
+  rango: number;
 }
 
 export const BADGES: Badge[] = [
-  { id: 'novellino', nome: 'Novellino', kmRichiesti: 0, emoji: '🔑' },
-  { id: 'strada-aperta', nome: 'Strada aperta', kmRichiesti: 100, emoji: '🏍️' },
-  { id: 're-curve', nome: 'Re delle curve', kmRichiesti: 500, emoji: '🛣️' },
-  { id: 'guerriero-passi', nome: 'Guerriero dei passi', kmRichiesti: 1000, emoji: '⭐' },
-  { id: 're-asfalto', nome: 'Re dell\'asfalto', kmRichiesti: 2500, emoji: '🏔️' },
-  { id: 'leggenda-motori', nome: 'Leggenda dei motori', kmRichiesti: 5000, emoji: '👑' },
-  { id: 'divinita-strada', nome: 'Divinità della strada', kmRichiesti: 10000, emoji: '⚡' },
+  { id: 'chiave-in-mano', nome: 'Chiave in mano', kmRichiesti: 0, rango: 0 },
+  { id: 'strada-aperta', nome: 'Strada aperta', kmRichiesti: 500, rango: 1 },
+  { id: 'centauro-asfalto', nome: 'Centauro dell\'asfalto', kmRichiesti: 2_500, rango: 2 },
+  { id: 'conquistatore-passi', nome: 'Conquistatore dei passi', kmRichiesti: 7_500, rango: 3 },
+  { id: 're-delle-curve', nome: 'Re delle curve', kmRichiesti: 15_000, rango: 4 },
+  { id: 'leggenda-in-sella', nome: 'Leggenda in sella', kmRichiesti: 30_000, rango: 5 },
+  { id: 'divinita-bitume', nome: 'Divinità del bitume', kmRichiesti: 50_000, rango: 6 },
 ];
+
+export const KM_MASSIMO_BADGE = BADGES[BADGES.length - 1].kmRichiesti;
 
 export function badgeRaggiunto(kmTotali: number): Badge {
   let attuale = BADGES[0];

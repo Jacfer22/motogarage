@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { useAuth } from './AuthProvider';
 import { badgeRaggiunto, prossimoBadge, avanzamento, BADGES } from '@/lib/badge';
+import IconaBadgeLivello from './icons/IconaBadgeLivello';
 
 export default function BadgeUtente() {
   const { user, nonConfigurato } = useAuth();
@@ -25,50 +26,59 @@ export default function BadgeUtente() {
 
   if (nonConfigurato) return null;
   if (km === null) {
-    return <div className="skeleton h-28 rounded-app" />;
+    return <div className="skeleton h-32 rounded-app-lg" />;
   }
 
   const attuale = badgeRaggiunto(km);
   const prossimo = prossimoBadge(km);
   const perc = avanzamento(km);
   const indiceAttuale = BADGES.findIndex((b) => b.id === attuale.id);
+  const iconSize = 56 + attuale.rango * 6;
 
   return (
-    <div className="rounded-app-lg border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm">
-      <div className="flex items-center gap-4">
-        <span className="text-4xl" aria-hidden="true">{attuale.emoji}</span>
-        <div className="min-w-0 flex-1">
-          <p className="font-mono text-[11px] uppercase tracking-wide text-guardrail">
+    <div className={`badge-livello-card badge-livello-rango-${attuale.rango}`}>
+      <div className="flex items-start gap-4">
+        <div className="badge-livello-emblema shrink-0" aria-hidden="true">
+          <IconaBadgeLivello badge={attuale} size={iconSize} />
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand/90">
             Il tuo livello
           </p>
-          <p className="font-display text-2xl font-bold uppercase leading-none tracking-tight text-cemento">
+          <p className={`badge-livello-nome font-display font-black uppercase leading-none tracking-tight text-white rango-${attuale.rango}`}>
             {attuale.nome}
           </p>
-          <p className="mt-0.5 font-mono text-xs text-guardrail">
+          <p className="mt-1.5 font-mono text-[11px] text-cemento/55">
             {km.toLocaleString('it-IT')} km registrati
           </p>
         </div>
-        <span className="font-mono text-xs text-guardrail">
-          {indiceAttuale + 1}/{BADGES.length}
-        </span>
+        <div className="badge-livello-contatore shrink-0 text-right">
+          <p className="font-display text-lg font-black leading-none text-brand">{indiceAttuale + 1}</p>
+          <p className="font-mono text-[9px] uppercase text-cemento/40">/{BADGES.length}</p>
+        </div>
       </div>
 
       {prossimo ? (
         <div className="mt-4">
-          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+          <div className="badge-livello-bar-track h-2 overflow-hidden rounded-full">
             <div
-              className="h-full rounded-full bg-segnale transition-all duration-700"
+              className="badge-livello-bar-fill h-full rounded-full transition-all duration-700"
               style={{ width: `${perc}%` }}
             />
           </div>
-          <p className="mt-1.5 font-mono text-[11px] text-guardrail">
-            {(prossimo.kmRichiesti - km).toLocaleString('it-IT')} km al badge
-            «{prossimo.nome}» {prossimo.emoji}
-          </p>
+          <div className="mt-2 flex items-center gap-2.5">
+            <IconaBadgeLivello badge={prossimo} size={28} className="opacity-55" />
+            <p className="font-mono text-[10px] leading-snug text-cemento/55">
+              <span className="text-cemento/75">{perc}%</span>
+              {' · '}
+              {(prossimo.kmRichiesti - km).toLocaleString('it-IT')} km a{' '}
+              <span className="font-bold uppercase text-cemento/80">{prossimo.nome}</span>
+            </p>
+          </div>
         </div>
       ) : (
-        <p className="mt-4 font-mono text-xs uppercase tracking-wide text-segnale">
-          Divinità della strada. Hai conquistato ogni badge. ⚡
+        <p className="mt-4 font-mono text-[10px] uppercase tracking-wide text-segnale">
+          Divinità del bitume — hai raggiunto il rango massimo
         </p>
       )}
     </div>

@@ -171,9 +171,115 @@ export default function DashboardHome() {
 
       <NotificheKmSettimana utenteId={user.id} />
 
-      {/* Hero: Il mio garage (profilo moto) */}
+      {/* Il tuo livello */}
       <Reveal delay={60}>
-        <Link href="/garage" className="dash-card dash-card-hero dash-card-garage group">
+        <BadgeUtente />
+      </Reveal>
+
+      {/* I miei giri + Traccia un giro */}
+      <div className="dash-grid-2 mt-3">
+        <Reveal delay={80}>
+          <Link href="/giri" className="dash-card dash-card-half dash-card-giri group">
+            <p className="dash-card-label">I miei giri</p>
+            <MappaGiroMini punti={ultimoGiro?.punti ?? []} />
+            <div className="dash-card-foot compact">
+              {ultimoGiro ? (
+                <>
+                  <p className="font-display text-2xl font-black text-[#f2b705]">{formattaKmDisplay(ultimoGiro.km)} km</p>
+                  <p className="font-mono text-[10px] uppercase text-cemento/55">{ultimoGiro.nome}</p>
+                </>
+              ) : (
+                <p className="text-sm text-cemento/50">Nessun giro ancora</p>
+              )}
+              <Chevron />
+            </div>
+          </Link>
+        </Reveal>
+
+        <Reveal delay={100}>
+          <Link href="/traccia" className="dash-card dash-card-half dash-card-traccia group">
+            <p className="dash-card-label">Traccia un giro</p>
+            <div className="flex flex-1 flex-col items-center justify-center py-4">
+              <IconaGpsLive size={36} className="text-brand" />
+              <p className="mt-3 text-center font-display text-lg font-black uppercase leading-tight text-white">
+                GPS live
+              </p>
+              <p className="mt-1 font-mono text-[9px] uppercase tracking-wide text-cemento/45">Card · stats</p>
+            </div>
+            <div className="dash-card-foot compact justify-end">
+              <Chevron />
+            </div>
+          </Link>
+        </Reveal>
+      </div>
+
+      {/* Itinerari + Community (stessa altezza dei giri) */}
+      <div className="dash-grid-2 mt-3">
+        <Reveal delay={120}>
+          <Link href="/itinerari" className="dash-card dash-card-half dash-card-tile group">
+            <p className="dash-card-label">Itinerari</p>
+            <div className="dash-tile-body">
+              <span className="dash-icon-wrap lg">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M4 22 9 2" /><path d="M20 22 15 2" />
+                </svg>
+              </span>
+              <p className="mt-3 font-display text-lg font-black uppercase leading-tight text-white">Itinerari</p>
+              <p className="mt-1 text-center font-mono text-[9px] uppercase tracking-wide text-cemento/45">Mappe · GPX · tappe</p>
+            </div>
+            <div className="dash-card-foot compact justify-end">
+              <Chevron />
+            </div>
+          </Link>
+        </Reveal>
+
+        <Reveal delay={140}>
+          <Link href="/community" className="dash-card dash-card-half dash-card-tile dash-card-community group">
+            <p className="dash-card-label">Community</p>
+            <div className="dash-tile-body">
+              <span className="dash-icon-wrap lg">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <circle cx="8.5" cy="10" r="1.5" />
+                  <path d="M14 9h4M14 12h3" strokeLinecap="round" />
+                </svg>
+              </span>
+              <p className="mt-3 font-display text-lg font-black uppercase leading-tight text-white">Community</p>
+              <p className="mt-1 text-center font-mono text-[9px] uppercase tracking-wide text-cemento/45">Foto · giri · commenti</p>
+            </div>
+            <div className="dash-card-foot compact justify-end">
+              <Chevron />
+            </div>
+          </Link>
+        </Reveal>
+      </div>
+
+      {/* Navigatore + Classifica km */}
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <Reveal delay={160}>
+          <Link href="/naviga" className="dash-card dash-card-pill group">
+            <span className="dash-icon-wrap sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <polygon points="12,5 14,13 12,11 10,13" fill="currentColor" />
+              </svg>
+            </span>
+            <span className="font-display text-sm font-bold uppercase text-white">Navigatore</span>
+            <Chevron />
+          </Link>
+        </Reveal>
+        <Reveal delay={180}>
+          <Link href="/community/classifica" className="dash-card dash-card-pill group">
+            <span className="dash-icon-wrap sm">🏆</span>
+            <span className="font-display text-sm font-bold uppercase text-white">Classifica km</span>
+            <Chevron />
+          </Link>
+        </Reveal>
+      </div>
+
+      {/* Il mio garage */}
+      <Reveal delay={200}>
+        <Link href="/garage" className="dash-card dash-card-hero dash-card-garage group mt-3">
           <p className="dash-card-label">Il mio garage</p>
           <div className="dash-garage-visual">
             {anteprimaGarage ? (
@@ -181,7 +287,7 @@ export default function DashboardHome() {
                 src={anteprimaGarage}
                 alt=""
                 className="h-full w-full object-contain"
-                loading="eager"
+                loading="lazy"
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-2 text-cemento/40">
@@ -210,116 +316,18 @@ export default function DashboardHome() {
         </Link>
       </Reveal>
 
+      {/* Garage live · link in bio */}
       {profilo?.username && (
-        <Reveal delay={80}>
-          <BloccoGarageBio
-            username={profilo.username}
-            motoPubblica={moto?.isPublic ?? false}
-            compatto
-          />
+        <Reveal delay={220}>
+          <div className="mt-3">
+            <BloccoGarageBio
+              username={profilo.username}
+              motoPubblica={moto?.isPublic ?? false}
+              compatto
+            />
+          </div>
         </Reveal>
       )}
-
-      {/* Griglia 2x2: Giri + Traccia + Itinerari + Community */}
-      <div className="dash-grid-2 mt-3">
-        <Reveal delay={100}>
-          <Link href="/giri" className="dash-card dash-card-half dash-card-giri group">
-            <p className="dash-card-label">I miei giri</p>
-            <MappaGiroMini punti={ultimoGiro?.punti ?? []} />
-            <div className="dash-card-foot compact">
-              {ultimoGiro ? (
-                <>
-                  <p className="font-display text-2xl font-black text-[#f2b705]">{formattaKmDisplay(ultimoGiro.km)} km</p>
-                  <p className="font-mono text-[10px] uppercase text-cemento/55">{ultimoGiro.nome}</p>
-                </>
-              ) : (
-                <p className="text-sm text-cemento/50">Nessun giro ancora</p>
-              )}
-              <Chevron />
-            </div>
-          </Link>
-        </Reveal>
-
-        <Reveal delay={120}>
-          <Link href="/traccia" className="dash-card dash-card-half dash-card-traccia group">
-            <p className="dash-card-label">Traccia un giro</p>
-            <div className="flex flex-1 flex-col items-center justify-center py-4">
-              <IconaGpsLive size={36} className="text-brand" />
-              <p className="mt-3 text-center font-display text-lg font-black uppercase leading-tight text-white">
-                GPS live
-              </p>
-              <p className="mt-1 font-mono text-[9px] uppercase tracking-wide text-cemento/45">Card · stats</p>
-            </div>
-            <div className="dash-card-foot compact justify-end">
-              <Chevron />
-            </div>
-          </Link>
-        </Reveal>
-
-        <Reveal delay={140}>
-          <Link href="/itinerari" className="dash-card dash-card-half dash-card-link group">
-            <div className="flex items-center gap-3">
-              <span className="dash-icon-wrap">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M4 22 9 2" /><path d="M20 22 15 2" />
-                </svg>
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-display text-base font-bold uppercase text-white">Itinerari</p>
-                <p className="text-[11px] leading-snug text-cemento/50">Mappe, tappe, GPX verificati</p>
-              </div>
-              <Chevron />
-            </div>
-          </Link>
-        </Reveal>
-
-        <Reveal delay={160}>
-          <Link href="/community" className="dash-card dash-card-half dash-card-link group">
-            <div className="flex items-center gap-3">
-              <span className="dash-icon-wrap">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <rect x="3" y="5" width="18" height="14" rx="2" />
-                  <circle cx="8.5" cy="10" r="1.5" />
-                </svg>
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-display text-base font-bold uppercase text-white">Community</p>
-                <p className="text-[11px] leading-snug text-cemento/50">Foto, giri, commenti</p>
-              </div>
-              <Chevron />
-            </div>
-          </Link>
-        </Reveal>
-      </div>
-
-      {/* Navigatore + Classifica */}
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <Reveal delay={180}>
-          <Link href="/naviga" className="dash-card dash-card-pill group">
-            <span className="dash-icon-wrap sm">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <polygon points="12,5 14,13 12,11 10,13" fill="currentColor" />
-              </svg>
-            </span>
-            <span className="font-display text-sm font-bold uppercase text-white">Navigatore</span>
-            <Chevron />
-          </Link>
-        </Reveal>
-        <Reveal delay={200}>
-          <Link href="/community/classifica" className="dash-card dash-card-pill group">
-            <span className="dash-icon-wrap sm">🏆</span>
-            <span className="font-display text-sm font-bold uppercase text-white">Classifica km</span>
-            <Chevron />
-          </Link>
-        </Reveal>
-      </div>
-
-      <Reveal delay={220}>
-        <div className="mt-5">
-          <BadgeUtente />
-        </div>
-      </Reveal>
     </div>
   );
 }
