@@ -13,7 +13,7 @@ export default function PaginaAnteprimaBadge() {
             key={b.id}
             className={`badge-livello-card badge-livello-rango-${b.rango} flex flex-col items-center p-4 text-center`}
           >
-            <IconaBadgeLivello badge={b} size={64} />
+            <IconaBadgeLivello badge={b} size="grande" />
             <p className="mt-3 font-display text-sm font-black uppercase text-white">{b.nome}</p>
             <p className="mt-1 font-mono text-[10px] text-cemento/50">
               {b.kmRichiesti.toLocaleString('it-IT')} km · rango {b.rango + 1}

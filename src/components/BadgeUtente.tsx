@@ -33,13 +33,12 @@ export default function BadgeUtente() {
   const prossimo = prossimoBadge(km);
   const perc = avanzamento(km);
   const indiceAttuale = BADGES.findIndex((b) => b.id === attuale.id);
-  const iconSize = 52;
 
   return (
     <div className={`badge-livello-card badge-livello-rango-${attuale.rango}`}>
       <div className="flex items-start gap-4">
         <div className="badge-livello-emblema shrink-0" aria-hidden="true">
-          <IconaBadgeLivello badge={attuale} size={iconSize} />
+          <IconaBadgeLivello badge={attuale} size="grande" />
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand/90">
@@ -67,7 +66,7 @@ export default function BadgeUtente() {
             />
           </div>
           <div className="mt-2 flex items-center gap-2.5">
-            <IconaBadgeLivello badge={prossimo} size={26} className="opacity-60 shrink-0" />
+            <IconaBadgeLivello badge={prossimo} size="compact" className="opacity-60 shrink-0" />
             <p className="font-mono text-[10px] leading-snug text-cemento/55">
               <span className="text-cemento/75">{perc}%</span>
               {' · '}
