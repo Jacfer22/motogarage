@@ -116,17 +116,15 @@ export default function IconaBadgeLivello({
         </>
       )}
 
-      {/* Rango 0 — sola cornice rettangola arrotondata */}
+      {/* Rango 0 — cornice tonda semplice */}
       {r === 0 && (
-        <rect
-          x="12"
-          y="12"
-          width="40"
-          height="40"
-          rx="8"
-          fill="rgba(255,255,255,0.03)"
+        <circle
+          cx="32"
+          cy="32"
+          r="24"
+          fill="rgba(255,255,255,0.04)"
           stroke="#78716c"
-          strokeWidth="1.2"
+          strokeWidth="1.4"
         />
       )}
 
@@ -143,18 +141,41 @@ export default function IconaBadgeLivello({
 
       {/* Icone interne uniche per badge */}
       {badge.id === 'chiave-in-mano' && (
-        <g stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="text-cemento/80">
-          <circle cx="38" cy="26" r="4" fill="none" />
-          <path d="M34 26 H24 V30 H28 V38" fill="none" />
-          <path d="M28 34 H26" />
+        <g transform="translate(32 33)">
+          {/* Chiave classica da moto — centrata, pulita */}
+          <circle cx="0" cy="-9" r="8" fill="none" stroke="#d6d3d1" strokeWidth="2" />
+          <circle cx="0" cy="-9" r="3" fill="none" stroke="#78716c" strokeWidth="1.2" />
+          <rect x="-2" y="-1" width="4" height="16" rx="1.5" fill="#d6d3d1" />
+          <rect x="-6" y="10" width="5" height="2.5" rx="0.8" fill="#d6d3d1" />
+          <rect x="-6" y="14.5" width="4" height="2.5" rx="0.8" fill="#d6d3d1" />
         </g>
       )}
 
       {badge.id === 'strada-aperta' && (
-        <g className="text-brand">
-          <path d="M18 40 L32 28 L46 40" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
-          <path d="M32 28 V22" stroke="#f2b705" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M26 36 H38" stroke="rgba(255,255,255,0.5)" strokeWidth="1" strokeDasharray="2 2" />
+        <g>
+          {/* Strada in prospettiva — due cigli + tratto centrale */}
+          <path
+            d="M16 44 L32 24 L48 44 Z"
+            fill="#1c1917"
+            stroke="#57534e"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M22 44 L32 28 L42 44"
+            fill="none"
+            stroke="#78716c"
+            strokeWidth="1"
+            strokeLinecap="round"
+          />
+          <path
+            d="M32 28 L32 44"
+            stroke="#f2b705"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeDasharray="2.5 2.5"
+          />
+          <circle cx="32" cy="22" r="2.5" fill="#f2b705" opacity="0.85" />
         </g>
       )}
 

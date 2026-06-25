@@ -1830,19 +1830,25 @@ body.nav-fullscreen-active.con-bottomnav {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 8px;
+  overflow: visible;
+  padding-top: 0.65rem;
+  padding-right: 0.65rem;
 }
 .dash-avatar {
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  border: 2px solid var(--brand);
+  border: 2.5px solid var(--brand);
   display: grid;
   place-items: center;
   overflow: hidden;
   font-family: var(--font-display);
   font-weight: 700;
+  font-size: 1.25rem;
   flex-shrink: 0;
   background: var(--asfalto);
+  transform: translate(-0.65rem, -0.65rem);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 .dash-card {
   display: flex;
