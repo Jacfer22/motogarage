@@ -208,9 +208,6 @@ export default function DashboardHome() {
               </p>
               <p className="mt-1 font-mono text-[9px] uppercase tracking-wide text-cemento/45">Card · stats</p>
             </div>
-            <div className="dash-card-foot compact justify-end">
-              <Chevron />
-            </div>
           </Link>
         </Reveal>
       </div>
@@ -229,9 +226,6 @@ export default function DashboardHome() {
               <p className="mt-3 font-display text-lg font-black uppercase leading-tight text-white">Itinerari</p>
               <p className="mt-1 text-center font-mono text-[9px] uppercase tracking-wide text-cemento/45">Mappe · GPX · tappe</p>
             </div>
-            <div className="dash-card-foot compact justify-end">
-              <Chevron />
-            </div>
           </Link>
         </Reveal>
 
@@ -248,9 +242,6 @@ export default function DashboardHome() {
               </span>
               <p className="mt-3 font-display text-lg font-black uppercase leading-tight text-white">Community</p>
               <p className="mt-1 text-center font-mono text-[9px] uppercase tracking-wide text-cemento/45">Foto · giri · commenti</p>
-            </div>
-            <div className="dash-card-foot compact justify-end">
-              <Chevron />
             </div>
           </Link>
         </Reveal>
