@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { formattaDurata, formattaKm, statisticheGiro } from '@/lib/geo';
 import type { GiroUtente } from '@/lib/giri-store';
-import EditorCardGiro from '@/components/EditorCardGiro';
+import EditorCardGiro, { type EditorCardGiroHandle } from '@/components/EditorCardGiro';
 import { usePwaInstall } from '@/hooks/use-pwa-install';
 
 interface Props {
@@ -27,8 +27,19 @@ type Step = 'stats' | 'card' | 'fine';
 
 export default function WizardGiroConcluso(props: Props) {
   const [step, setStep] = useState<Step>('stats');
+  const cardRef = useRef<EditorCardGiroHandle>(null);
+  const [condividendo, setCondividendo] = useState(false);
   const { disponibile: pwaDisponibile, installata: pwaInstallata, installa: installaPwa } = usePwaInstall();
   const stat = statisticheGiro(props.punti, props.durataSec, props.distanzaM);
+
+  async function condividiInstagram() {
+    setCondividendo(true);
+    try {
+      await cardRef.current?.condividi();
+    } finally {
+      setCondividendo(false);
+    }
+  }
 
   return (
     <div className="wizard-giro animate-fade-in">
@@ -87,35 +98,40 @@ export default function WizardGiroConcluso(props: Props) {
         </section>
       )}
 
-      {step === 'card' && (
-        <section>
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand">Step 2 · Card + didascalia</p>
-          <p className="mt-1 text-sm text-cemento/55">
-            Personalizza la card e copia la didascalia pronta per Instagram.
-          </p>
-          <div className="mt-2">
-            <label className="editor-card-label" htmlFor="nome-wizard">Nome giro</label>
-            <input
-              id="nome-wizard"
-              type="text"
-              value={props.luogoCard}
-              onChange={(e) => props.onLuogoCardChange(e.target.value)}
-              placeholder="Es. Passo dello Stelvio"
-              maxLength={40}
-              className="editor-card-input mt-2"
-            />
-          </div>
-          <div className="mt-4">
-            <EditorCardGiro
-              giro={props.giroConcluso}
-              onNomeChange={props.onNomeChange}
-              onPubblicoChange={props.onPubblicoChange}
-            />
-          </div>
-          <button type="button" onClick={() => setStep('fine')} className="tap btn-primary mt-6 w-full">
-            Continua
-          </button>
-        </section>
+      {(step === 'card' || step === 'fine') && (
+        <div className={step === 'fine' ? 'sr-only' : undefined} aria-hidden={step === 'fine'}>
+          <section>
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand">Step 2 · Card + didascalia</p>
+            <p className="mt-1 text-sm text-cemento/55">
+              Personalizza la card e copia la didascalia pronta per Instagram.
+            </p>
+            <div className="mt-2">
+              <label className="editor-card-label" htmlFor="nome-wizard">Nome giro</label>
+              <input
+                id="nome-wizard"
+                type="text"
+                value={props.luogoCard}
+                onChange={(e) => props.onLuogoCardChange(e.target.value)}
+                placeholder="Es. Passo dello Stelvio"
+                maxLength={40}
+                className="editor-card-input mt-2"
+              />
+            </div>
+            <div className="mt-4">
+              <EditorCardGiro
+                ref={cardRef}
+                giro={props.giroConcluso}
+                onNomeChange={props.onNomeChange}
+                onPubblicoChange={props.onPubblicoChange}
+              />
+            </div>
+            {step === 'card' && (
+              <button type="button" onClick={() => setStep('fine')} className="tap btn-primary mt-6 w-full">
+                Continua
+              </button>
+            )}
+          </section>
+        </div>
       )}
 
       {step === 'fine' && (
@@ -125,8 +141,16 @@ export default function WizardGiroConcluso(props: Props) {
             Pronto da condividere
           </h2>
           <p className="mt-3 text-sm text-cemento/55">
-            Card e didascalia pronti. Condividi su Instagram o salva in I miei giri.
+            Card 9:16 e didascalia pronti. Un tap e la story va su Instagram.
           </p>
+          <button
+            type="button"
+            onClick={() => void condividiInstagram()}
+            disabled={condividendo}
+            className="tap btn-instagram mt-8 w-full rounded-app py-4 font-mono text-[11px] font-bold uppercase sm:w-auto sm:px-14"
+          >
+            {condividendo ? 'Preparo la card…' : 'Condividi su Instagram'}
+          </button>
           {pwaDisponibile && !pwaInstallata && (
             <div className="mt-6 rounded-app border border-brand/30 bg-brand/10 p-4">
               <p className="font-mono text-[10px] font-bold uppercase tracking-wide text-brand">App sul telefono</p>

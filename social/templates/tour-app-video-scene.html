@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 1080px; height: 1920px; overflow: hidden; }
+    body {
+      background: #0A0807;
+      font-family: 'Archivo', system-ui, sans-serif;
+      color: #F4F4F5;
+      display: flex;
+      flex-direction: column;
+    }
+    .bg-gradient {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 85% 45% at 50% 88%, {{GLOW_COLOR}} 0%, transparent 62%),
+        linear-gradient(180deg, #121010 0%, #0A0807 50%, #080605 100%);
+      pointer-events: none;
+    }
+    .top {
+      position: relative;
+      z-index: 3;
+      padding: 40px 44px 0;
+      flex-shrink: 0;
+    }
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .tour-step {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(240,241,242,0.42);
+    }
+    .feature-tag {
+      padding: 8px 16px;
+      background: {{ACCENT_COLOR}};
+      color: #fff;
+      border-radius: 999px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .headline {
+      margin-top: 14px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 0.94;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .main {
+      position: relative;
+      z-index: 3;
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px 28px 0;
+      gap: 0;
+      min-height: 0;
+    }
+    .phone-col {
+      flex-shrink: 0;
+      width: 420px;
+      transform: translateY({{PHONE_FLOAT}}px);
+    }
+    .phone-frame {
+      background: linear-gradient(145deg, #2a2826, #141210);
+      border-radius: 36px;
+      padding: 14px;
+      border: 2px solid rgba(255,255,255,0.11);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    }
+    .phone-notch {
+      width: 100px;
+      height: 6px;
+      margin: 0 auto 10px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.14);
+    }
+    .phone-screen {
+      border-radius: 26px;
+      overflow: hidden;
+      background: #0F0B0A;
+      aspect-ratio: 9 / 19.5;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .phone-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+    }
+    .comic-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: {{COMIC_ALIGN}};
+      padding-bottom: 48px;
+      margin-left: {{COMIC_MARGIN}};
+      margin-right: {{COMIC_MARGIN_R}};
+    }
+    .bubble {
+      position: relative;
+      max-width: 340px;
+      background: rgba(252,252,253,0.98);
+      color: #141210;
+      border-radius: 22px;
+      padding: 18px 20px;
+      font-size: 24px;
+      line-height: 1.38;
+      font-weight: 500;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.38);
+      margin-bottom: 12px;
+    }
+    .bubble strong { font-weight: 700; color: {{ACCENT_DARK}}; }
+    .bubble--destra::after {
+      content: '';
+      position: absolute;
+      right: 28px;
+      bottom: -12px;
+      width: 24px;
+      height: 24px;
+      background: rgba(252,252,253,0.98);
+      transform: rotate(45deg);
+      border-radius: 3px;
+    }
+    .bubble--sinistra::after {
+      content: '';
+      position: absolute;
+      left: 28px;
+      bottom: -12px;
+      width: 24px;
+      height: 24px;
+      background: rgba(252,252,253,0.98);
+      transform: rotate(45deg);
+      border-radius: 3px;
+    }
+    .mascot-wrap {
+      width: 380px;
+      max-height: 280px;
+      transform: {{MASCOT_TRANSFORM}};
+      filter: drop-shadow(0 18px 36px rgba(0,0,0,0.5)) {{MOTION_BLUR}};
+    }
+    .mascot-wrap img {
+      width: 100%;
+      height: auto;
+      max-height: 280px;
+      object-fit: contain;
+      display: block;
+    }
+    .mascot-name {
+      margin-top: 6px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: {{ACCENT_COLOR}};
+      text-align: center;
+    }
+    .footer {
+      position: relative;
+      z-index: 3;
+      padding: 18px 44px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+    .footer-brand {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .footer-brand span { color: #ED2100; }
+    .footer-url { font-size: 14px; color: rgba(240,241,242,0.35); margin-top: 2px; }
+    .dots { display: flex; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.16); }
+    .dot.on { width: 26px; border-radius: 6px; background: {{ACCENT_COLOR}}; }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="top">
+    <div class="meta-row">
+      <p class="tour-step">{{STEP_LABEL}}</p>
+      <span class="feature-tag">{{FEATURE}}</span>
+    </div>
+    <h1 class="headline">{{HEADLINE}}</h1>
+  </div>
+  <div class="main">
+    <div class="phone-col">
+      <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <img src="{{SCREEN_IMG}}" alt="" />
+        </div>
+      </div>
+    </div>
+    <div class="comic-col">
+      <div class="bubble bubble--{{BUBBLE_SIDE}}">{{CAPTION}}</div>
+      <div class="mascot-wrap">
+        <img src="{{MASCOT_IMG}}" alt="" />
+      </div>
+      <p class="mascot-name">{{MASCOT_NAME}}</p>
+    </div>
+  </div>
+  <div class="footer">
+    <div>
+      <p class="footer-brand">Moto<span>Garage</span></p>
+      <p class="footer-url">motogarage.info</p>
+    </div>
+    <div class="dots">{{DOTS}}</div>
+  </div>
+</body>
+</html>

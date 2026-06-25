@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import type { GarageMoto } from '@/lib/garage';
 import { dataMoto, nomeMoto } from '@/lib/garage';
 import Logo from './Logo';
+import { urlGaragePubblico } from './BloccoGarageBio';
 
 const GarageModelViewer = dynamic(() => import('./GarageModelViewer'), {
   ssr: false,
@@ -22,9 +23,14 @@ export default function GaragePubblico({ username, moto }: { username: string; m
     <main className="min-h-[100dvh] bg-[#07080a] pb-20 text-cemento">
       <section className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(220,38,38,0.18),transparent_32%),linear-gradient(135deg,#0F0B0A,#1B1813_55%,#28282B)]">
         <div className="mx-auto max-w-7xl px-4 py-9">
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-red-400">Garage pubblico</p>
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-red-400">Garage live</p>
           <h1 className="mt-2 font-display text-5xl font-black uppercase tracking-tight sm:text-7xl">{username}</h1>
-          <p className="mt-3 text-sm text-cemento/55">Puoi guardare, ruotare e avvicinarti. Solo il proprietario può modificare le moto.</p>
+          <p className="mt-3 text-sm text-cemento/55">
+            Garage 3D interattivo — ruota, zooma ed esplora. Ideale come link in bio Instagram o TikTok.
+          </p>
+          <p className="mt-2 font-mono text-[10px] uppercase tracking-wide text-cemento/35">
+            {urlGaragePubblico(username)}
+          </p>
         </div>
       </section>
 

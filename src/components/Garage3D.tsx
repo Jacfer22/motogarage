@@ -8,6 +8,7 @@ import type { GarageMoto } from '@/lib/garage';
 import { posizioneCameraReelGarage, REEL_GARAGE_LOOK_AT } from '@/lib/reel-garage-camera';
 import { catturaESalvaVetrina } from '@/lib/garage-vetrina-client';
 import { attendiFrameRender } from '@/lib/vetrina-immagine';
+import { useFeedback } from '@/components/FeedbackProvider';
 
 interface Props {
   moto: GarageMoto[];
@@ -110,6 +111,7 @@ function preparaModello(root: THREE.Group, index: number, posizione: THREE.Vecto
 }
 
 export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaViewer = false, modalitaHero = false, modalitaReel = false, motoIdVetrina = null, onVetrinaSalvata }: Props) {
+  const { toast } = useFeedback();
   const contenitoreRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -121,9 +123,10 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
   const [caricati, setCaricati] = useState(0);
   const [falliti, setFalliti] = useState(0);
   const [salvaVetrina, setSalvaVetrina] = useState(false);
+  const [cameraSpostata, setCameraSpostata] = useState(modalitaViewer);
 
   const pronte = moto.filter((item) => item.stato === 'pronto' && item.glb_url);
-  const sfondoBianco = modalitaViewer || modalitaHero;
+  const sfondoBianco = modalitaViewer;
   const mostraVetrina = (modalitaViewer || modalitaHero) && !modalitaReel && caricati > 0;
 
   useEffect(() => {
@@ -165,6 +168,7 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
     controls.maxPolarAngle = Math.PI * 0.49;
     controls.target.set(0, 1.15, 0);
     controlliRef.current = controls;
+    controls.addEventListener('start', () => setCameraSpostata(true));
 
     scene.add(new THREE.HemisphereLight(0xffffff, 0xe8e8e8, sfondoBianco ? 2.2 : 1.15));
     const key = new THREE.SpotLight(0xffffff, sfondoBianco ? 95 : 115, 32, Math.PI / 5.5, 0.55, 1.3);
@@ -389,8 +393,10 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
       renderer.render(scene, camera);
 
       const esito = await catturaESalvaVetrina(renderer.domElement, id);
-      if (esito.ok) onVetrinaSalvata?.();
-      else if (esito.messaggio) window.alert(esito.messaggio);
+      if (esito.ok) {
+        onVetrinaSalvata?.();
+        toast('Vetrina salvata — visibile nell\'hub');
+      } else if (esito.messaggio) toast(esito.messaggio, 'errore');
     } finally {
       scene.background = prevBg;
       renderer.setClearColor(prevClear, prevAlpha);
@@ -404,6 +410,7 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
   }
 
   const idVetrina = motoIdVetrina ?? selezionataId;
+  const vetrinaPronta = modalitaViewer || cameraSpostata;
   const chipClass = sfondoBianco
     ? 'rounded-full border border-black/10 bg-white/90 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-asfalto/70 backdrop-blur'
     : 'rounded-full border border-white/10 bg-black/55 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/65 backdrop-blur';
@@ -412,7 +419,13 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
     : 'rounded-full border border-white/15 bg-black/55 px-3 py-2 font-mono text-[10px] font-bold uppercase text-white/70 backdrop-blur';
 
   return (
-    <div className={`relative h-full w-full overflow-hidden ${sfondoBianco ? 'min-h-0 bg-white' : 'min-h-[460px] bg-black sm:min-h-[580px]'}`}>
+    <div className={`relative h-full w-full overflow-hidden ${
+      modalitaHero && !sfondoBianco
+        ? 'min-h-0 bg-transparent'
+        : sfondoBianco
+          ? 'min-h-0 bg-white'
+          : 'min-h-[460px] bg-black sm:min-h-[580px]'
+    }`}>
       <div ref={contenitoreRef} className="absolute inset-0" aria-label="Garage virtuale 3D interattivo" />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3 sm:p-4">
@@ -425,7 +438,8 @@ export default function Garage3D({ moto, selezionataId, onSeleziona, modalitaVie
               type="button"
               onClick={screenshotVetrina}
               disabled={salvaVetrina}
-              className="rounded-full border border-brand/40 bg-brand px-3 py-2 font-mono text-[10px] font-bold uppercase text-white shadow-sm disabled:opacity-60"
+              title={vetrinaPronta ? 'Salva screenshot vetrina' : 'Ruota la camera per sbloccare lo screenshot'}
+              className={`vetrina-btn ${vetrinaPronta ? 'vetrina-btn-pronto' : 'vetrina-btn-ghost'}`}
             >
               {salvaVetrina ? 'Salvo…' : 'Screenshot Vetrina'}
             </button>

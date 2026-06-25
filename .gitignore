@@ -11,6 +11,9 @@ social/starter-kit/**/*.json
 social/starter-kit/**/_concat.txt
 social/starter-kit/**/_work/
 social/starter-kit/**/*.jpg
+social/tour-video/_work/
+social/tour-video/**/*.mp4
+!social/tour-video/README.md
 social/mascot/out/
 social/mascot/out/**/*
 social/mascot/*-cutout.png

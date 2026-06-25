@@ -15,6 +15,7 @@ import { risolviCategoriaMoto } from '@/lib/foto-categoria-moto';
 import { normalizzaScheda, type SchedaModifiche } from '@/lib/scheda-moto';
 import { richiedeApprovazioneAdmin } from '@/lib/garage-limite';
 import { useFeedback } from '@/components/FeedbackProvider';
+import BloccoGarageBio from '@/components/BloccoGarageBio';
 
 const GarageAmbiente = dynamic(() => import('@/components/GarageAmbiente'), {
   ssr: false,
@@ -383,10 +384,16 @@ export default function PaginaGarage() {
                       <label className="mt-4 flex items-center justify-between gap-4 rounded-app border border-white/10 p-3">
                         <span>
                           <span className="block font-mono text-[10px] font-bold uppercase text-white">Garage pubblico</span>
-                          <span className="block text-[10px] text-cemento/45">Visibile dal tuo profilo</span>
+                          <span className="block text-[10px] text-cemento/45">Link in bio Instagram · visitatori 3D</span>
                         </span>
                         <input type="checkbox" checked={selezionata.is_public} onChange={(event) => aggiornaMoto({ is_public: event.target.checked })} disabled={salvando} className="h-5 w-5 accent-brand" />
                       </label>
+                    )}
+
+                    {profilo?.username && selezionata.stato === 'pronto' && (
+                      <div className="mt-4">
+                        <BloccoGarageBio username={profilo.username} motoPubblica={Boolean(selezionata.is_public)} />
+                      </div>
                     )}
 
                     <div className="mt-4 border-t border-white/10 pt-4">

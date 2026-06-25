@@ -11,6 +11,8 @@ import AuthWall, { AuthWallLoading } from '@/components/AuthWall';
 import { Button } from '@/components/Button';
 import { useTracciamentoGiro } from '@/hooks/use-tracciamento-giro';
 import AvvisoGpsTraccia from '@/components/AvvisoGpsTraccia';
+import OnboardingTraccia from '@/components/OnboardingTraccia';
+import IconaGpsLive from '@/components/icons/IconaGpsLive';
 
 const MappaTraccia = dynamic(() => import('@/components/MappaTraccia'), { ssr: false });
 
@@ -96,10 +98,16 @@ export default function PaginaTraccia() {
 
   return (
     <AppPageShell className="pagina-immersiva">
-      <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand">Tracciamento GPS</p>
-      <h1 className="mt-1 font-display text-3xl font-black uppercase leading-none tracking-tight text-white md:text-5xl">
-        Traccia un giro
-      </h1>
+      <OnboardingTraccia pronto={track.stato === 'pronto'} />
+      <div className="flex items-center gap-3">
+        <IconaGpsLive size={32} className="shrink-0 text-brand" />
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand">Tracciamento GPS</p>
+          <h1 className="mt-0.5 font-display text-3xl font-black uppercase leading-none tracking-tight text-white md:text-5xl">
+            Traccia un giro
+          </h1>
+        </div>
+      </div>
       <p className="mt-3 text-sm text-cemento/55">
         Registra il percorso reale. Alla fine, wizard card e condivisione.
       </p>

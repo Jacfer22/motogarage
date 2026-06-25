@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from './AuthProvider';
+import IconaGpsLive from './icons/IconaGpsLive';
 
 function IconaBussola({ attiva }: { attiva: boolean }) {
   return (
@@ -27,12 +28,10 @@ function IconaGarage({ attiva }: { attiva: boolean }) {
 
 function IconaTraccia({ attiva }: { attiva: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={attiva ? 2.4 : 2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="6" cy="18" r="2" fill={attiva ? 'currentColor' : 'none'} />
-      <circle cx="18" cy="6" r="2" fill={attiva ? 'currentColor' : 'none'} />
-      <path d="M8 16c3-4 5-6 10-8" />
-    </svg>
+    <IconaGpsLive
+      size={22}
+      className={attiva ? 'text-brand' : 'text-cemento/70'}
+    />
   );
 }
 

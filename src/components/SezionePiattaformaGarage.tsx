@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
+import IconaGpsLive from '@/components/icons/IconaGpsLive';
 
 const SATELLITI = [
   {
@@ -57,7 +58,8 @@ export default function SezionePiattaformaGarage() {
           {SATELLITI.filter((s) => s.pos === 'top').map((item) => (
             <Reveal key={item.href} delay={40}>
               <Link href={item.href} className="landing-garage-sat landing-garage-sat-top group">
-                <h3 className="font-display text-lg font-bold uppercase tracking-tight group-hover:text-brand sm:text-xl">
+                <IconaGpsLive size={28} className="text-brand" />
+                <h3 className="mt-3 font-display text-lg font-bold uppercase tracking-tight group-hover:text-brand sm:text-xl">
                   {item.titolo}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-asfalto/65 dark:text-cemento/65">{item.desc}</p>

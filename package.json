@@ -11,7 +11,8 @@
     "reel": "node scripts/build-instagram-reel.mjs",
     "social:post": "node scripts/generate-social-post.mjs",
     "social:starter-kit": "node scripts/generate-starter-kit.mjs",
-    "social:tour": "node scripts/generate-tour.mjs"
+    "social:tour": "node scripts/generate-tour.mjs",
+    "social:tour-video": "node scripts/build-mascot-tour-video.mjs"
   },
   "dependencies": {
     "@gradio/client": "^2.3.0",

@@ -11,6 +11,9 @@ import { formattaKmDisplay } from '@/lib/geo';
 import ChecklistHub from './ChecklistHub';
 import BadgeUtente from './BadgeUtente';
 import Reveal from './Reveal';
+import IconaGpsLive from './icons/IconaGpsLive';
+import BloccoGarageBio from './BloccoGarageBio';
+import NotificheKmSettimana from './NotificheKmSettimana';
 
 interface AnteprimaMoto {
   id: string;
@@ -19,6 +22,7 @@ interface AnteprimaMoto {
   fotoSxUrl: string | null;
   haModello3d: boolean;
   haVetrina: boolean;
+  isPublic: boolean;
 }
 
 function salutoGiorno() {
@@ -90,7 +94,7 @@ export default function DashboardHome() {
 
     supabase
       .from('moto')
-      .select('id, marca, modello, foto_sx_url, glb_url, model_url, stato, vetrina_url, updated_at')
+      .select('id, marca, modello, foto_sx_url, glb_url, model_url, stato, vetrina_url, is_public, updated_at')
       .eq('utente_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -125,6 +129,7 @@ export default function DashboardHome() {
           fotoSxUrl,
           haModello3d,
           haVetrina,
+          isPublic: Boolean(data.is_public),
         });
       });
   }, [user]);
@@ -164,6 +169,8 @@ export default function DashboardHome() {
         profiloOk={Boolean(profilo?.username?.trim())}
       />
 
+      <NotificheKmSettimana utenteId={user.id} />
+
       {/* Hero: Il mio garage (profilo moto) */}
       <Reveal delay={60}>
         <Link href="/garage" className="dash-card dash-card-hero dash-card-garage group">
@@ -173,7 +180,7 @@ export default function DashboardHome() {
               <img
                 src={anteprimaGarage}
                 alt=""
-                className="h-full w-full bg-white object-contain"
+                className="h-full w-full object-contain"
                 loading="eager"
               />
             ) : (
@@ -203,6 +210,16 @@ export default function DashboardHome() {
         </Link>
       </Reveal>
 
+      {profilo?.username && (
+        <Reveal delay={80}>
+          <BloccoGarageBio
+            username={profilo.username}
+            motoPubblica={moto?.isPublic ?? false}
+            compatto
+          />
+        </Reveal>
+      )}
+
       {/* Griglia 2x2: Giri + Traccia + Itinerari + Community */}
       <div className="dash-grid-2 mt-3">
         <Reveal delay={100}>
@@ -227,11 +244,7 @@ export default function DashboardHome() {
           <Link href="/traccia" className="dash-card dash-card-half dash-card-traccia group">
             <p className="dash-card-label">Traccia un giro</p>
             <div className="flex flex-1 flex-col items-center justify-center py-4">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ED2100" strokeWidth="2" aria-hidden="true">
-                <circle cx="6" cy="18" r="2" />
-                <circle cx="18" cy="6" r="2" />
-                <path d="M8 16c3-4 5-6 10-8" />
-              </svg>
+              <IconaGpsLive size={36} className="text-brand" />
               <p className="mt-3 text-center font-display text-lg font-black uppercase leading-tight text-white">
                 GPS live
               </p>

@@ -6,6 +6,7 @@ import { urlModello } from '@/lib/garage';
 import { posizioneCameraReelGarage, REEL_GARAGE_LOOK_AT } from '@/lib/reel-garage-camera';
 import { catturaESalvaVetrina } from '@/lib/garage-vetrina-client';
 import { attendiFrameRender } from '@/lib/vetrina-immagine';
+import { useFeedback } from '@/components/FeedbackProvider';
 
 interface Props {
   moto: GarageMoto[];
@@ -42,11 +43,13 @@ function disabilitaTastieraViewer(viewer: import('@mkkellogg/gaussian-splats-3d'
 }
 
 export default function GaussianGarage({ moto, selezionataId, modalitaViewer = false, modalitaHero = false, modalitaReel = false, motoIdVetrina = null, onVetrinaSalvata }: Props) {
+  const { toast } = useFeedback();
   const hostRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<import('@mkkellogg/gaussian-splats-3d').Viewer | null>(null);
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState<string | null>(null);
   const [salvaVetrina, setSalvaVetrina] = useState(false);
+  const [cameraSpostata, setCameraSpostata] = useState(modalitaViewer);
 
   const scene = useMemo(() => {
     const pronte = moto.filter((item) => item.stato === 'pronto' && urlModello(item));
@@ -164,9 +167,10 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
     return () => window.removeEventListener('reel-garage-frame', onFrame);
   }, [modalitaReel, caricamento]);
 
-  const sfondoBianco = modalitaViewer || modalitaHero;
+  const sfondoBianco = modalitaViewer;
   const mostraVetrina = (modalitaViewer || modalitaHero) && !modalitaReel && !caricamento;
   const idVetrina = motoIdVetrina ?? selezionataId ?? scene[0]?.id;
+  const vetrinaPronta = modalitaViewer || cameraSpostata;
 
   async function fullscreen() {
     const host = hostRef.current;
@@ -183,8 +187,10 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
     try {
       await attendiFrameRender();
       const esito = await catturaESalvaVetrina(canvas, id);
-      if (esito.ok) onVetrinaSalvata?.();
-      else if (esito.messaggio) window.alert(esito.messaggio);
+      if (esito.ok) {
+        onVetrinaSalvata?.();
+        toast('Vetrina salvata — visibile nell\'hub');
+      } else if (esito.messaggio) toast(esito.messaggio, 'errore');
     } finally {
       setSalvaVetrina(false);
     }
@@ -192,11 +198,13 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
 
   return (
     <div className={`relative h-full w-full overflow-hidden ${
-      sfondoBianco
-        ? 'min-h-0 bg-white'
-        : 'min-h-[460px] bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.16),transparent_30%),#0F0B0A] sm:min-h-[580px]'
+      modalitaHero && !sfondoBianco
+        ? 'min-h-0 bg-transparent'
+        : sfondoBianco
+          ? 'min-h-[460px] bg-white sm:min-h-[580px]'
+          : 'min-h-[460px] bg-[radial-gradient(circle_at_top,rgba(220,38,38,0.16),transparent_30%),#0F0B0A] sm:min-h-[580px]'
     }`}>
-      <div ref={hostRef} className={`absolute inset-0 ${sfondoBianco ? 'bg-white' : ''}`} aria-label="Viewer 3D interattivo" />
+      <div ref={hostRef} className={`absolute inset-0 ${sfondoBianco ? 'bg-white' : ''}`} aria-label="Viewer 3D interattivo" onPointerDown={() => setCameraSpostata(true)} />
       {!modalitaReel && (
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-end gap-2 p-3 sm:p-4">
         {mostraVetrina && idVetrina && (
@@ -204,7 +212,8 @@ export default function GaussianGarage({ moto, selezionataId, modalitaViewer = f
             type="button"
             onClick={screenshotVetrina}
             disabled={salvaVetrina}
-            className="pointer-events-auto rounded-full border border-brand/40 bg-brand px-3 py-2 font-mono text-[10px] font-bold uppercase text-white shadow-sm disabled:opacity-60"
+            title={vetrinaPronta ? 'Salva screenshot vetrina' : 'Ruota la camera per sbloccare lo screenshot'}
+            className={`vetrina-btn ${vetrinaPronta ? 'vetrina-btn-pronto' : 'vetrina-btn-ghost'}`}
           >
             {salvaVetrina ? 'Salvo…' : 'Screenshot Vetrina'}
           </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from 'react';
 import { formattaDurata, formattaKmDisplay, statisticheGiro } from '@/lib/geo';
 import { generaCardGiro } from '@/lib/card-canvas';
 import { PRESET_LOOK, type FiltroFoto, type PresetLook } from '@/lib/card-foto-filtri';
@@ -46,6 +46,10 @@ interface Props {
   giro: GiroUtente;
   onNomeChange?: (nome: string) => void;
   onPubblicoChange?: (pubblico: boolean) => void;
+}
+
+export interface EditorCardGiroHandle {
+  condividi: () => Promise<void>;
 }
 
 const ZOOM_MIN = 0.5;
@@ -187,7 +191,7 @@ function Pill({
   );
 }
 
-export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }: Props) {
+const EditorCardGiro = forwardRef<EditorCardGiroHandle, Props>(function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }, ref) {
   const { toast } = useFeedback();
   const stat = statisticheGiro(giro.punti, giro.durataSec, giro.km * 1000);
   const giroMontagna = (stat.dislivelloPositivoM || giro.dislivelloM) >= 150;
@@ -562,7 +566,10 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
     }
     try {
       const esito = await condividiImmagineSocial(immagine.file);
-      if (esito === 'ok') return;
+      if (esito === 'ok') {
+        toast('Apri Instagram e pubblica la story');
+        return;
+      }
       if (esito === 'annullato') return;
 
       if (mobile) {
@@ -577,6 +584,10 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       toast('Condivisione non riuscita — immagine scaricata');
     }
   }
+
+  useImperativeHandle(ref, () => ({
+    condividi: condividiCard,
+  }));
 
   return (
     <div className="editor-card space-y-4 rounded-app-lg border border-white/10 bg-notte p-4 text-cemento shadow-app-lg sm:p-5">
@@ -814,8 +825,8 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       </div>
 
       <div className="flex flex-col gap-2 border-t border-white/8 pt-4 sm:flex-row">
-        <button type="button" onClick={() => void condividiCard()} disabled={generandoCard} className="tap btn-primary flex-1">
-          {generandoCard ? 'Preparo…' : mobile ? 'Condividi story' : 'Condividi'}
+        <button type="button" onClick={() => void condividiCard()} disabled={generandoCard} className="tap btn-instagram flex-1 rounded-app py-3 font-mono text-[10px] font-bold uppercase">
+          {generandoCard ? 'Preparo…' : mobile ? 'Condividi su Instagram' : 'Condividi su Instagram'}
         </button>
         <button type="button" onClick={() => void scaricaCard()} disabled={generandoCard} className="tap editor-card-btn-secondary flex-1">
           {mobile ? 'Salva in galleria' : 'Salva immagine'}
@@ -827,4 +838,6 @@ export default function EditorCardGiro({ giro, onNomeChange, onPubblicoChange }:
       )}
     </div>
   );
-}
+});
+
+export default EditorCardGiro;

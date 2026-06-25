@@ -1206,18 +1206,16 @@ body {
   top: 50%;
   z-index: 4;
   width: min(96vw, 1100px);
-  height: auto;
+  height: min(78dvh, 820px);
   transform: translate(-50%, -52%);
   pointer-events: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
+/* Solo viewer fullscreen screenshot vetrina */
 .garage-vetrina-frame {
   width: min(92vw, 20rem);
   aspect-ratio: 7 / 6;
-  max-height: min(48dvh, 17.5rem);
+  max-height: min(70dvh, 22rem);
   background: #ffffff;
   border-radius: 14px;
   overflow: hidden;
@@ -1294,14 +1292,8 @@ body {
     top: auto;
     transform: none;
     width: 100%;
-    height: auto;
-    margin-top: 0.75rem;
-    padding: 0 0.75rem;
-  }
-
-  .garage-vetrina-frame {
-    width: min(100%, 18rem);
-    max-height: min(42dvh, 15.5rem);
+    height: 72dvh;
+    margin-top: 0.5rem;
   }
 
   .garage-tuning-wrap {
@@ -1892,9 +1884,92 @@ body.nav-fullscreen-active.con-bottomnav {
   flex: 0 0 auto;
   border-radius: 10px;
   overflow: hidden;
-  background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+  background: rgba(12, 10, 9, 0.92);
+  border: 1.5px solid rgba(237, 33, 0, 0.42);
+  box-shadow:
+    0 0 0 1px rgba(237, 33, 0, 0.08),
+    0 4px 18px rgba(0, 0, 0, 0.35);
+}
+.dash-garage-visual img {
+  background: rgba(255, 255, 255, 0.96);
+}
+.onboard-leggero {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: grid;
+  place-items: end center;
+  padding: 1rem;
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+}
+.onboard-leggero-card {
+  width: min(100%, 22rem);
+  border-radius: 16px;
+  border: 1px solid rgba(237, 33, 0, 0.28);
+  background: linear-gradient(165deg, rgba(28, 24, 22, 0.98), rgba(15, 11, 10, 0.98));
+  padding: 1.1rem 1.15rem 1.15rem;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+}
+.garage-bio-block {
+  margin-top: 0.75rem;
+  border-radius: 14px;
+  border: 1px solid rgba(237, 33, 0, 0.22);
+  background: rgba(237, 33, 0, 0.06);
+  padding: 0.9rem 1rem;
+}
+.garage-bio-block-compact {
+  margin-top: 0;
+}
+.garage-bio-url {
+  display: block;
+}
+.notif-km-banner {
+  margin-top: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.75rem 0.9rem;
+}
+.btn-instagram {
+  border: none;
+  background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(220, 39, 67, 0.35);
+}
+.btn-instagram:disabled {
+  opacity: 0.55;
+}
+.vetrina-btn {
+  pointer-events: auto;
+  border-radius: 9999px;
+  border-width: 1px;
+  border-style: solid;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s;
+}
+.vetrina-btn:disabled {
+  opacity: 0.6;
+}
+.vetrina-btn-ghost {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.45);
+  opacity: 0.55;
+}
+.vetrina-btn-pronto {
+  border-color: rgba(237, 33, 0, 0.45);
+  background: rgba(237, 33, 0, 0.92);
+  color: #fff;
+  opacity: 1;
+  box-shadow: 0 4px 14px rgba(237, 33, 0, 0.28);
 }
 .dash-card-foot {
   display: flex;
