@@ -1829,18 +1829,14 @@ body.nav-fullscreen-active.con-bottomnav {
   overflow: visible;
   margin-bottom: 0.25rem;
   padding-top: max(0.35rem, env(safe-area-inset-top));
+  min-height: 9.5rem;
 }
-.dash-hero-brand-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-height: 4.5rem;
-  overflow: visible;
+.dash-hero-logo {
+  display: inline-flex;
 }
 .dash-hero-user {
-  margin-top: 0.15rem;
-  padding-right: 5.75rem;
+  margin-top: 0.35rem;
+  padding-right: 6.75rem;
 }
 .dash-hero-username {
   margin-top: 0.35rem;
@@ -1858,6 +1854,9 @@ body.nav-fullscreen-active.con-bottomnav {
   padding-right: 1rem;
 }
 .dash-avatar {
+  position: absolute;
+  top: 3rem;
+  right: 2.85rem;
   width: 90px;
   height: 90px;
   border-radius: 50%;
@@ -1870,7 +1869,7 @@ body.nav-fullscreen-active.con-bottomnav {
   font-size: 1.75rem;
   flex-shrink: 0;
   background: var(--asfalto);
-  transform: translate(-0.35rem, -1.35rem);
+  transform: none;
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
   z-index: 2;
 }

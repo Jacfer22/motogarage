@@ -144,16 +144,14 @@ export default function DashboardHome() {
     <div className="dash-home pb-8">
       <Reveal>
         <header className="dash-hero-top">
-          <div className="dash-hero-brand-row">
-            <LogoHomeLink grande />
-            <Link href="/account" className="dash-avatar" title="Profilo">
-              {profilo?.avatar_url ? (
-                <img src={profilo.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
-              ) : (
-                <span>{(profilo?.username ?? 'M').slice(0, 1).toUpperCase()}</span>
-              )}
-            </Link>
-          </div>
+          <LogoHomeLink grande className="dash-hero-logo" />
+          <Link href="/account" className="dash-avatar" title="Profilo">
+            {profilo?.avatar_url ? (
+              <img src={profilo.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
+            ) : (
+              <span>{(profilo?.username ?? 'M').slice(0, 1).toUpperCase()}</span>
+            )}
+          </Link>
           <div className="dash-hero-user">
             <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-brand">{salutoGiorno()}</p>
             <h1 className="dash-hero-username font-display font-black uppercase leading-none tracking-tight text-white">
