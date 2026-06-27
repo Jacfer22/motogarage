@@ -1,48 +1,58 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
 import GaragePubblico from '@/components/GaragePubblico';
-import type { GarageMoto } from '@/lib/garage';
+import { caricaGaragePubblico } from '@/lib/garage-pubblico';
+import { SITE_URL } from '@/lib/home-href';
 
 interface Props {
   params: Promise<{ username: string }>;
 }
 
-function client() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return url && key ? createClient(url, key) : null;
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
+  const dati = await caricaGaragePubblico(username);
+  const nome = dati?.profilo.username ?? username;
+  const km = dati?.stats.kmTotali ?? 0;
+  const badge = dati?.stats.badge.nome;
+  const motoLabel = dati?.profilo.moto?.trim();
+  const descParts = [
+    motoLabel,
+    km > 0 ? `${km.toLocaleString('it-IT')} km registrati` : null,
+    badge,
+    'Garage 3D interattivo su MotoGarage',
+  ].filter(Boolean);
+
   return {
-    title: `Garage di ${username}`,
-    description: `Visita il garage digitale di ${username} su MotoGarage.`,
+    title: `${nome} · Garage 3D`,
+    description: descParts.join(' · '),
     robots: { index: true, follow: true },
+    openGraph: {
+      title: `${nome} · ${km > 0 ? `${km} km · ` : ''}MotoGarage`,
+      description: descParts.join(' · '),
+      type: 'website',
+      url: `${SITE_URL.replace(/\/$/, '')}/garage/${encodeURIComponent(username)}`,
+      images: [{ url: `${SITE_URL.replace(/\/$/, '')}/og-motogarage.png`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${nome} · Garage 3D MotoGarage`,
+      description: descParts.join(' · '),
+    },
   };
 }
 
 export default async function PaginaGaragePubblico({ params }: Props) {
   const { username } = await params;
-  const supabase = client();
-  if (!supabase) notFound();
+  const dati = await caricaGaragePubblico(username);
+  if (!dati) notFound();
 
-  const { data: profilo } = await supabase
-    .from('profiles')
-    .select('id, username')
-    .eq('username', username)
-    .maybeSingle();
-  if (!profilo) notFound();
-
-  const { data } = await supabase
-    .from('moto')
-    .select('*')
-    .eq('utente_id', profilo.id)
-    .eq('is_public', true)
-    .eq('stato', 'pronto')
-    .or('model_url.not.is.null,glb_url.not.is.null')
-    .order('created_at', { ascending: false });
-
-  return <GaragePubblico username={profilo.username ?? username} moto={(data ?? []) as GarageMoto[]} />;
+  return (
+    <GaragePubblico
+      username={dati.profilo.username ?? username}
+      profilo={dati.profilo}
+      moto={dati.moto}
+      stats={dati.stats}
+      vetrinaAnteprima={dati.vetrinaAnteprima}
+    />
+  );
 }

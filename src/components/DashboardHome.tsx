@@ -8,6 +8,7 @@ import { etichettaCategoria } from '@/lib/categorie-moto';
 import { caricaGiriUtente, type GiroUtente } from '@/lib/giri-store';
 import { nomeMoto, urlModello } from '@/lib/garage';
 import { formattaKmDisplay } from '@/lib/geo';
+import { badgeRaggiunto } from '@/lib/badge';
 import ChecklistHub from './ChecklistHub';
 import BadgeUtente from './BadgeUtente';
 import Reveal from './Reveal';
@@ -85,6 +86,8 @@ export default function DashboardHome() {
   const { user, profilo } = useAuth();
   const [ultimoGiro, setUltimoGiro] = useState<GiroUtente | null>(null);
   const [moto, setMoto] = useState<AnteprimaMoto | null>(null);
+  const [kmGarage, setKmGarage] = useState<number | null>(null);
+  const [badgeGarage, setBadgeGarage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -93,6 +96,10 @@ export default function DashboardHome() {
 
     caricaGiriUtente(supabase, user.id).then((giri) => {
       setUltimoGiro(giri[0] ?? null);
+      const tot = giri.reduce((acc, g) => acc + (Number(g.km) || 0), 0);
+      const km = Math.round(tot);
+      setKmGarage(km);
+      setBadgeGarage(badgeRaggiunto(km).nome);
     });
 
     supabase
@@ -327,6 +334,8 @@ export default function DashboardHome() {
               username={profilo.username}
               motoPubblica={moto?.isPublic ?? false}
               compatto
+              kmTotali={kmGarage}
+              badgeNome={badgeGarage}
             />
           </div>
         </Reveal>

@@ -8,13 +8,21 @@ interface Props {
   username: string;
   motoPubblica?: boolean;
   compatto?: boolean;
+  kmTotali?: number | null;
+  badgeNome?: string | null;
 }
 
 export function urlGaragePubblico(username: string) {
   return `${SITE_URL.replace(/\/$/, '')}/garage/${encodeURIComponent(username)}`;
 }
 
-export default function BloccoGarageBio({ username, motoPubblica = false, compatto = false }: Props) {
+export default function BloccoGarageBio({
+  username,
+  motoPubblica = false,
+  compatto = false,
+  kmTotali = null,
+  badgeNome = null,
+}: Props) {
   const { toast } = useFeedback();
   const [copiato, setCopiato] = useState(false);
   const link = urlGaragePubblico(username);
@@ -39,9 +47,19 @@ export default function BloccoGarageBio({ username, motoPubblica = false, compat
           </p>
           <p className="mt-1 text-xs leading-relaxed text-cemento/65">
             {motoPubblica
-              ? 'Chi tocca il link apre il tuo garage 3D nel browser — ruota la moto come in app. Perfetto per Instagram/TikTok bio.'
+              ? 'Km, badge e ultimo giro si aggiornano da soli ad ogni tracciato. Chi tocca il link apre il tuo garage 3D — perfetto in bio Instagram/TikTok.'
               : 'Attiva «Garage pubblico» sulla moto per sbloccare il link da mettere in bio Instagram.'}
           </p>
+          {motoPubblica && (kmTotali !== null || badgeNome) && (
+            <p className="mt-1.5 font-mono text-[10px] uppercase tracking-wide text-cemento/50">
+              {[
+                kmTotali !== null && kmTotali > 0 ? `${kmTotali.toLocaleString('it-IT')} km live` : null,
+                badgeNome,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          )}
         </div>
         <span className="text-lg" aria-hidden="true">📸</span>
       </div>

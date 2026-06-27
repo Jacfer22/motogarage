@@ -7,6 +7,7 @@ import { useFeedback } from '@/components/FeedbackProvider';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { formattaDurata, formattaKmDisplay } from '@/lib/geo';
 import { avanzamento, badgeRaggiunto, prossimoBadge } from '@/lib/badge';
+import BloccoGarageBio from './BloccoGarageBio';
 import { aggiornaGiroCloud } from '@/lib/giri-store';
 import {
   cancellaGiroCelebrato,
@@ -22,6 +23,7 @@ export default function HubPostGiro() {
   const [kmTotali, setKmTotali] = useState<number | null>(null);
   const [pubblico, setPubblico] = useState(false);
   const [pubblicando, setPubblicando] = useState(false);
+  const [motoPubblica, setMotoPubblica] = useState(false);
 
   useEffect(() => {
     const salvato = leggiGiroCelebrato();
@@ -45,6 +47,15 @@ export default function HubPostGiro() {
         const riga = (data ?? []).find((r) => r.id === cloudId);
         if (riga?.pubblico) setPubblico(true);
       }
+      const { data: moto } = await supabase
+        .from('moto')
+        .select('is_public, stato')
+        .eq('utente_id', userId)
+        .eq('is_public', true)
+        .eq('stato', 'pronto')
+        .limit(1)
+        .maybeSingle();
+      setMotoPubblica(Boolean(moto));
     }
     caricaKm();
   }, [giro, user?.id]);
@@ -158,6 +169,26 @@ export default function HubPostGiro() {
           I miei giri
         </Link>
       </div>
+
+      {profilo?.username && (
+        <div className="mt-5 border-t border-white/10 pt-4">
+          <p className="font-mono text-[10px] uppercase tracking-wide text-brand">Garage in bio</p>
+          <p className="mt-1 text-sm text-cemento/60">
+            {pubblico
+              ? 'Il tuo garage si è aggiornato: km, badge e ultimo giro sono live nel link.'
+              : 'Pubblica il giro e il tuo garage si aggiorna con km e badge nel link bio.'}
+          </p>
+          <div className="mt-3">
+            <BloccoGarageBio
+              username={profilo.username}
+              motoPubblica={motoPubblica}
+              compatto
+              kmTotali={kmTotali}
+              badgeNome={attuale?.nome ?? null}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }
