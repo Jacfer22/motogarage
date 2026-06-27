@@ -2182,3 +2182,89 @@ body.nav-fullscreen-active.con-bottomnav {
 .bottom-nav-visible {
   transform: translateY(0);
 }
+
+/* Celebrazione fine giro */
+.celebrazione-giro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 8, 7, 0.92);
+  animation: celeb-overlay-out 0.95s ease forwards;
+  pointer-events: none;
+}
+.celebrazione-giro-burst {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.celebrazione-scintilla {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+  animation: celeb-scintilla 0.75s ease-out forwards;
+}
+.celebrazione-giro-testo {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 1.5rem;
+  animation: celeb-testo-in 0.35s ease-out;
+}
+@keyframes celeb-scintilla {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(0.2);
+  }
+}
+@keyframes celeb-testo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes celeb-overlay-out {
+  0%, 70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Hub post-giro */
+.hub-post-giro {
+  position: relative;
+  margin-bottom: 0.75rem;
+  border-radius: 16px;
+  border: 1px solid rgba(237, 33, 0, 0.35);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(237, 33, 0, 0.18), transparent 55%),
+    linear-gradient(165deg, rgba(28, 22, 20, 0.98), rgba(15, 11, 10, 0.98));
+  padding: 1.1rem 1.15rem 1.15rem;
+  box-shadow: 0 8px 32px rgba(237, 33, 0, 0.12);
+}
+.hub-post-giro-chiudi {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1.25rem;
+  line-height: 1;
+}

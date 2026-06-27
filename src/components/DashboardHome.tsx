@@ -15,6 +15,7 @@ import IconaGpsLive from './icons/IconaGpsLive';
 import BloccoGarageBio from './BloccoGarageBio';
 import NotificheKmSettimana from './NotificheKmSettimana';
 import LogoHomeLink from './LogoHomeLink';
+import HubPostGiro from './HubPostGiro';
 
 interface AnteprimaMoto {
   id: string;
@@ -164,6 +165,10 @@ export default function DashboardHome() {
             )}
           </div>
         </header>
+      </Reveal>
+
+      <Reveal delay={40}>
+        <HubPostGiro />
       </Reveal>
 
       <ChecklistHub

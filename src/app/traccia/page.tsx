@@ -4,7 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import WizardGiroConcluso from '@/components/WizardGiroConcluso';
+import RedirectPostGiro from '@/components/RedirectPostGiro';
 import OverlayTracciaGiro from '@/components/OverlayTracciaGiro';
 import AppPageShell from '@/components/AppPageShell';
 import AuthWall, { AuthWallLoading } from '@/components/AuthWall';
@@ -58,23 +58,10 @@ export default function PaginaTraccia() {
 
   if (track.stato === 'concluso' && track.giroConcluso) {
     return (
-      <AppPageShell className="!py-4">
-        <WizardGiroConcluso
-          giroConcluso={track.giroConcluso}
-          distanzaM={track.distanzaM}
-          durataSec={track.durataSec}
-          punti={track.punti}
-          luogoCard={track.luogoCard}
-          onLuogoCardChange={track.setLuogoCard}
-          salvataggioCloud={track.salvataggioCloud}
-          loggato={!!user}
-          onNomeChange={track.aggiornaNomeGiro}
-          onPubblicoChange={track.giroConcluso.cloudId ? track.impostaGiroPubblico : undefined}
-          onElimina={track.eliminaGiroConcluso}
-          onNuovoGiro={track.nuovoGiro}
-          info={track.info}
-        />
-      </AppPageShell>
+      <RedirectPostGiro
+        giro={track.giroConcluso}
+        durataSec={track.durataSec}
+      />
     );
   }
 

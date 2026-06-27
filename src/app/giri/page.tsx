@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/AuthProvider';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
@@ -29,6 +30,7 @@ function formattaDataBreve(iso: string): string {
 export default function PaginaMieiGiri() {
   const { user, loading } = useAuth();
   const { conferma, toast } = useFeedback();
+  const searchParams = useSearchParams();
   const [giri, setGiri] = useState<GiroUtente[] | null>(null);
   const [selezionatoId, setSelezionatoId] = useState<string | null>(null);
   const [errore, setErrore] = useState<string | null>(null);
@@ -51,6 +53,14 @@ export default function PaginaMieiGiri() {
   useEffect(() => {
     if (!loading && user) ricarica();
   }, [loading, user, ricarica]);
+
+  useEffect(() => {
+    if (!giri?.length) return;
+    const apri = searchParams.get('apri');
+    if (!apri) return;
+    const trovato = giri.find((g) => g.id === apri || g.cloudId === apri);
+    if (trovato) setSelezionatoId(trovato.id);
+  }, [giri, searchParams]);
 
   const selezionato = giri?.find((g) => g.id === selezionatoId) ?? null;
 

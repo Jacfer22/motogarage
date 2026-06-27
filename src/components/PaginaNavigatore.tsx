@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import WizardGiroConcluso from '@/components/WizardGiroConcluso';
+import RedirectPostGiro from '@/components/RedirectPostGiro';
 import OverlayNavigatore from '@/components/OverlayNavigatore';
 import { useTracciamentoGiro } from '@/hooks/use-tracciamento-giro';
 import { useNavigazioneVocale } from '@/hooks/use-navigazione-vocale';
@@ -129,28 +129,10 @@ export default function PaginaNavigatore() {
 
   if (track.stato === 'concluso' && track.giroConcluso) {
     return (
-      <div className="app-pagina px-4 py-4">
-        <WizardGiroConcluso
-          giroConcluso={track.giroConcluso}
-          distanzaM={track.distanzaM}
-          durataSec={track.durataSec}
-          punti={track.punti}
-          luogoCard={track.luogoCard}
-          onLuogoCardChange={track.setLuogoCard}
-          salvataggioCloud={track.salvataggioCloud}
-          loggato={!!user}
-          onNomeChange={track.aggiornaNomeGiro}
-          onPubblicoChange={track.giroConcluso.cloudId ? track.impostaGiroPubblico : undefined}
-          onElimina={track.eliminaGiroConcluso}
-          onNuovoGiro={() => {
-            track.nuovoGiro();
-            setNavOn(false);
-            setDestinazione(null);
-            setRotta(null);
-          }}
-          info={track.info}
-        />
-      </div>
+      <RedirectPostGiro
+        giro={track.giroConcluso}
+        durataSec={track.durataSec}
+      />
     );
   }
 
