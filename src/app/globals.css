@@ -1724,6 +1724,73 @@ body.nav-fullscreen-active.con-bottomnav {
 .nav-stat-box {
   min-width: 4.5rem;
 }
+.nav-overlay-top-sicuro {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.72) 75%, transparent 100%);
+  padding-bottom: 3rem;
+}
+.nav-mappa-distanza {
+  font-size: clamp(3.5rem, 16vw, 5.5rem);
+  letter-spacing: -0.02em;
+}
+.nav-mappa-istruzione {
+  font-size: clamp(1.35rem, 5.5vw, 2rem);
+  line-height: 1.05;
+}
+.nav-stat-box-grande {
+  min-width: 5.5rem;
+}
+
+/* Modalità solo scritte */
+.nav-fullscreen-testo {
+  background: #000;
+}
+.nav-testo-overlay {
+  background: #000;
+}
+.nav-testo-bar {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.95), transparent);
+}
+.nav-testo-distanza {
+  font-size: clamp(4.5rem, 22vw, 7.5rem);
+  letter-spacing: -0.03em;
+}
+.nav-testo-manovra {
+  font-size: clamp(1.75rem, 7vw, 3rem);
+  max-width: 18ch;
+}
+.nav-testo-arrivo {
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  color: #f2b705;
+}
+.nav-testo-via {
+  font-size: clamp(1.1rem, 4.5vw, 1.65rem);
+  max-width: 22ch;
+}
+
+/* Scelta modalità navigatore */
+.nav-modalita-scelta {
+  display: grid;
+  gap: 0.5rem;
+}
+@media (min-width: 480px) {
+  .nav-modalita-scelta {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.nav-modalita-btn {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.85rem 1rem;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+.nav-modalita-btn-attivo {
+  border-color: rgba(237, 33, 0, 0.55);
+  background: rgba(237, 33, 0, 0.12);
+  box-shadow: 0 0 0 1px rgba(237, 33, 0, 0.15);
+}
+
 .safe-top { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 .safe-left { padding-left: env(safe-area-inset-left); }

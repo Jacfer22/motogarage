@@ -115,6 +115,44 @@ export function formattaDistanzaNav(m: number): string {
   return `${Math.max(0, Math.round(m))} m`;
 }
 
+/** Distanza grande al centro (modalità solo scritte). */
+export function distanzaNavGrande(m: number): string {
+  if (m >= 1000) {
+    const km = m / 1000;
+    const arrotondato = km >= 10 ? Math.round(km) : Math.round(km * 10) / 10;
+    return `${arrotondato.toLocaleString('it-IT', { maximumFractionDigits: 1 })} km`;
+  }
+  return `${Math.max(0, Math.round(m))} m`;
+}
+
+/** Manovra senza nome via (es. "Gira a destra"). */
+export function manovraBreve(passo: PassoNavigazione): string {
+  if (passo.istruzione === 'Sei arrivato a destinazione') return passo.istruzione;
+  const tag = ' in ';
+  const idx = passo.istruzione.indexOf(tag);
+  if (idx >= 0) return passo.istruzione.slice(0, idx);
+  return passo.istruzione;
+}
+
+/** Solo il tratto di rotta ancora da percorrere (non il GPS già fatto). */
+export function percorsoRimanente(percorso: Punto[], pos: Punto): Punto[] {
+  if (percorso.length === 0) return [];
+  if (percorso.length === 1) return percorso;
+
+  let idx = 0;
+  let min = Infinity;
+  for (let i = 0; i < percorso.length; i++) {
+    const d = distanzaMetri(pos, percorso[i]!);
+    if (d <= min) {
+      min = d;
+      idx = i;
+    }
+  }
+
+  const resto = percorso.slice(Math.max(0, idx));
+  return resto.length > 0 ? resto : percorso.slice(-1);
+}
+
 export interface RottaCalcolata {
   percorso: Punto[];
   passi: PassoNavigazione[];

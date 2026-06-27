@@ -15,6 +15,8 @@ interface Props {
   onSeguiChange: (segui: boolean) => void;
   ricentraTick: number;
   fullscreen?: boolean;
+  /** false = nasconde il tracciato GPS già percorso (solo rotta da fare) */
+  mostraTracciatoGps?: boolean;
   /** HTML custom per marker posizione (es. avatar cartoon reel) */
   markerPosizioneHtml?: string;
   zoomMinimo?: number;
@@ -33,6 +35,7 @@ export default function MappaNavigatore({
   onSeguiChange,
   ricentraTick,
   fullscreen = false,
+  mostraTracciatoGps = false,
   markerPosizioneHtml,
   zoomMinimo = 16,
   adattaPercorsoTick = 0,
@@ -84,17 +87,19 @@ export default function MappaNavigatore({
       }).addTo(mappa);
 
       lineaNavRef.current = L.polyline([], {
-        color: '#2563eb',
-        weight: 7,
-        opacity: 0.85,
+        color: '#ED2100',
+        weight: 9,
+        opacity: 0.95,
         lineJoin: 'round',
+        lineCap: 'round',
       }).addTo(mappa);
 
       lineaGpsRef.current = L.polyline([], {
         color: '#F2B705',
-        weight: 5,
-        opacity: 0.9,
+        weight: 4,
+        opacity: 0.35,
         lineJoin: 'round',
+        dashArray: '8 10',
       }).addTo(mappa);
 
       setTimeout(() => mappa.invalidateSize(), 200);
@@ -149,9 +154,13 @@ export default function MappaNavigatore({
   useEffect(() => {
     const lineaGps = lineaGpsRef.current as { setLatLngs: (l: [number, number][]) => void } | null;
     if (!lineaGps) return;
+    if (!mostraTracciatoGps) {
+      lineaGps.setLatLngs([]);
+      return;
+    }
     const gpsLatlngs = (percorsoGps ?? []).map((p) => [p.lat, p.lng] as [number, number]);
     lineaGps.setLatLngs(gpsLatlngs);
-  }, [percorsoGps]);
+  }, [percorsoGps, mostraTracciatoGps]);
 
   useEffect(() => {
     const L = leafletRef.current;

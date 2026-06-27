@@ -133,10 +133,10 @@ export default function ReelNavCapture() {
         distanzaMano={distanzaMano}
         distanzaRimanente={distanzaRimanente}
         velocitaKmh={velocita}
-        kmGiro={kmGiro}
-        durataGiro={durataGiro}
         voceAttiva
+        modalita="mappa"
         onToggleVoce={() => {}}
+        onCambiaModalita={() => {}}
         onChiudi={() => {}}
         onRicentra={() => {}}
         inGiro

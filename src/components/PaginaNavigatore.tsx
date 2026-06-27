@@ -15,10 +15,13 @@ import {
   distanzaAlPasso,
   formattaDistanzaNav,
   indicePassoCorrente,
+  percorsoRimanente,
   type DestinazioneNav,
   type RottaCalcolata,
 } from '@/lib/navigazione-osrm';
 import { distanzaRimanenteNav } from '@/lib/chrome-app';
+import { leggiModalitaNav, salvaModalitaNav, type ModalitaNav } from '@/lib/nav-modalita';
+import OverlayNavigatoreTesto from '@/components/OverlayNavigatoreTesto';
 
 const MappaNavigatore = dynamic(() => import('./MappaNavigatore'), { ssr: false });
 
@@ -36,6 +39,16 @@ export default function PaginaNavigatore() {
   const [segui, setSegui] = useState(true);
   const [ricentraTick, setRicentraTick] = useState(0);
   const [voceAttiva, setVoceAttiva] = useState(true);
+  const [modalita, setModalita] = useState<ModalitaNav>('mappa');
+
+  useEffect(() => {
+    setModalita(leggiModalitaNav());
+  }, []);
+
+  function cambiaModalita(m: ModalitaNav) {
+    setModalita(m);
+    salvaModalitaNav(m);
+  }
 
   useEffect(() => {
     if (navOn) {
@@ -119,6 +132,8 @@ export default function PaginaNavigatore() {
       ? distanzaRimanenteNav(rotta.passi, passoIdx, posizione, distanzaAlPasso)
       : null;
   const inGiro = track.stato === 'in_corso' || track.stato === 'in_pausa';
+  const percorsoDaMostrare =
+    rotta && posizione ? percorsoRimanente(rotta.percorso, posizione) : rotta?.percorso;
 
   useNavigazioneVocale({
     abilitata: navOn && voceAttiva,
@@ -137,12 +152,33 @@ export default function PaginaNavigatore() {
   }
 
   if (navOn && passo) {
+    const overlayProps = {
+      passo,
+      distanzaMano,
+      distanzaRimanente,
+      voceAttiva,
+      modalita,
+      onToggleVoce: () => setVoceAttiva((v) => !v),
+      onCambiaModalita: cambiaModalita,
+      onChiudi: chiudiNav,
+      onTerminaGiro: inGiro ? () => void track.terminaGiro() : undefined,
+      inGiro,
+    };
+
+    if (modalita === 'testo') {
+      return (
+        <div className="nav-fullscreen nav-fullscreen-testo">
+          <OverlayNavigatoreTesto {...overlayProps} />
+        </div>
+      );
+    }
+
     return (
       <div className="nav-fullscreen">
         <MappaNavigatore
           posizione={posizione}
-          percorsoNav={rotta?.percorso}
-          percorsoGps={track.punti}
+          percorsoNav={percorsoDaMostrare}
+          mostraTracciatoGps={false}
           destinazione={destinazione}
           segui={segui}
           onSeguiChange={setSegui}
@@ -150,18 +186,9 @@ export default function PaginaNavigatore() {
           fullscreen
         />
         <OverlayNavigatore
-          passo={passo}
-          distanzaMano={distanzaMano}
-          distanzaRimanente={distanzaRimanente}
+          {...overlayProps}
           velocitaKmh={track.velCorrenteKmh}
-          kmGiro={track.formattaKm(track.distanzaM)}
-          durataGiro={track.formattaDurata(track.durataSec)}
-          voceAttiva={voceAttiva}
-          onToggleVoce={() => setVoceAttiva((v) => !v)}
-          onChiudi={chiudiNav}
           onRicentra={ricentra}
-          onTerminaGiro={inGiro ? () => void track.terminaGiro() : undefined}
-          inGiro={inGiro}
           segui={segui}
         />
       </div>
@@ -176,8 +203,28 @@ export default function PaginaNavigatore() {
           Dove vuoi andare?
         </h1>
         <p className="mt-2 text-sm text-cemento/55">
-          Il giro GPS parte in automatico. Indicazioni a schermo intero con voce.
+          Scegli la modalità più sicura per te. La rotta rossa è quella da fare — non confonderla col giro già fatto.
         </p>
+
+        <div className="nav-modalita-scelta mt-4">
+          <button
+            type="button"
+            onClick={() => cambiaModalita('mappa')}
+            className={`tap nav-modalita-btn ${modalita === 'mappa' ? 'nav-modalita-btn-attivo' : ''}`}
+          >
+            <span className="font-display text-sm font-black uppercase text-white">Mappa moto</span>
+            <span className="mt-1 block text-left text-xs text-cemento/55">Rotta rossa + indicazioni grandi</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => cambiaModalita('testo')}
+            className={`tap nav-modalita-btn ${modalita === 'testo' ? 'nav-modalita-btn-attivo' : ''}`}
+          >
+            <span className="font-display text-sm font-black uppercase text-white">Solo scritte · consigliato</span>
+            <span className="mt-1 block text-left text-xs text-cemento/55">Sfondo nero · metri e manovra al centro · zero distrazioni</span>
+          </button>
+        </div>
+
         <div className="mt-4 flex gap-2">
           <input
             type="search"
@@ -224,7 +271,7 @@ export default function PaginaNavigatore() {
         <MappaNavigatore
           posizione={posizione}
           percorsoNav={rotta?.percorso}
-          percorsoGps={track.punti}
+          mostraTracciatoGps={false}
           destinazione={destinazione}
           segui={segui}
           onSeguiChange={setSegui}
