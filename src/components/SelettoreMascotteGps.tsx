@@ -29,16 +29,19 @@ export default function SelettoreMascotteGps({ compatto = false, onChange }: Pro
 
   return (
     <section className={`mascot-gps-picker ${compatto ? 'mascot-gps-picker-compact' : ''}`}>
-      <div className="flex items-start justify-between gap-2">
+      {!compatto && (
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand">La tua guida GPS</p>
           <p className="mt-1 text-xs leading-relaxed text-cemento/60">
-            Scegli la mascotte che avanza sul tracciato al posto del pallino blu.
+            Scegli la mascotte al posto del pallino blu sulla mappa.
           </p>
         </div>
-      </div>
+      )}
+      {compatto && (
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-cemento/50">Icona sulla mappa</p>
+      )}
 
-      <div className="mascot-gps-grid">
+      <div className={`mascot-gps-grid ${compatto ? 'mascot-gps-grid-compact' : ''}`}>
         {MASCOTTE_GPS.map((m) => {
           const attiva = selezionata === m.id;
           return (
@@ -53,12 +56,13 @@ export default function SelettoreMascotteGps({ compatto = false, onChange }: Pro
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={m.immagine} alt="" className="mascot-gps-thumb" />
               <span className="mascot-gps-nome">{m.nome}</span>
-              <span className="mascot-gps-ruolo">{m.ruolo}</span>
+              {!compatto && <span className="mascot-gps-ruolo">{m.ruolo}</span>}
             </button>
           );
         })}
       </div>
 
+      {!compatto && (
       <div className="mascot-gps-future">
         <p className="font-mono text-[9px] uppercase tracking-wide text-cemento/40">
           Prossimamente · icone moto sbloccabili
@@ -72,6 +76,7 @@ export default function SelettoreMascotteGps({ compatto = false, onChange }: Pro
           ))}
         </div>
       </div>
+      )}
     </section>
   );
 }

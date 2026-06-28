@@ -38,7 +38,7 @@ export default function OverlayNavigatoreTesto({
   const via = passo.nomeVia?.trim() || null;
 
   return (
-    <div className="nav-testo-overlay pointer-events-none absolute inset-0 z-[500] flex flex-col bg-black">
+    <div className="nav-testo-overlay pointer-events-none fixed inset-0 z-[500] flex flex-col bg-black">
       <div className="pointer-events-auto nav-testo-bar safe-top flex items-center justify-between gap-2 px-3 pt-2">
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand/80">Solo scritte · sicurezza</p>
         <div className="flex gap-1.5">

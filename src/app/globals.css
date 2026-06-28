@@ -386,51 +386,27 @@ body {
   .marker-posizione {
     animation: none;
   }
-  .marker-mascot-gps {
-    animation: none;
-  }
 }
 
-/* Marker mascotte GPS sul tracciato */
+/* Marker mascotte GPS — vincoli Leaflet + PNG grandi */
+.leaflet-div-icon.marker-mascot-wrap {
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
 .marker-mascot-wrap {
   background: transparent !important;
   border: none !important;
 }
 .marker-mascot-gps {
   position: relative;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
-  animation: mascot-gps-bounce 2.2s ease-in-out infinite;
   pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
 }
 .marker-mascot-gps img {
-  width: 44px;
-  height: auto;
-  max-height: 44px;
-  object-fit: contain;
-  transform: rotate(var(--mascot-rot, 0deg));
-  transform-origin: center bottom;
+  pointer-events: none;
   user-select: none;
-}
-.marker-mascot-gps::after {
-  content: '';
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  width: 14px;
-  height: 4px;
-  margin-left: -7px;
-  border-radius: 9999px;
-  background: color-mix(in srgb, var(--mascot-accent, #ed2100) 55%, transparent);
-  opacity: 0.85;
-}
-@keyframes mascot-gps-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  -webkit-user-drag: none;
 }
 
 /* Selettore mascotte GPS */
@@ -485,6 +461,38 @@ body {
   line-height: 1.3;
   text-transform: uppercase;
   color: rgba(200, 196, 188, 0.45);
+}
+.mascot-gps-grid-compact {
+  margin-top: 0.5rem;
+}
+.mascot-gps-grid-compact .mascot-gps-card {
+  padding: 0.4rem 0.25rem 0.5rem;
+}
+.mascot-gps-grid-compact .mascot-gps-thumb {
+  width: 40px;
+  height: 40px;
+}
+
+/* Navigatore setup — scroll fluido */
+.nav-setup-pagina {
+  background: var(--notte);
+}
+.nav-setup-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+.nav-setup-mappa {
+  overflow: hidden;
+  background: #ede6d8;
+}
+.nav-setup-testo-preview {
+  background: #000;
+}
+.nav-setup-testo-mock {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.25rem 1rem 1.5rem;
+  text-align: center;
 }
 .mascot-gps-future {
   margin-top: 0.85rem;

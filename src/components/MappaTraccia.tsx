@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Punto } from '@/lib/geo';
 import {
-  DIMENSIONI_MARKER_MASCOT,
-  htmlMarkerMascotGps,
+  creaIconaMascotLeaflet,
   mascotGps,
   rotazioneMarkerMascot,
   type IdMascotGps,
@@ -50,6 +49,7 @@ export default function MappaTraccia({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const leafletRef = useRef<any>(null);
   const [mappaPronta, setMappaPronta] = useState(false);
+  const ultimaIconaRef = useRef('');
 
   useEffect(() => {
     const mappa = mappaRef.current as { invalidateSize?: () => void } | null;
@@ -133,35 +133,28 @@ export default function MappaTraccia({
     const ultimo = latlngs[latlngs.length - 1];
     const mascot = mascotGps(mascotId);
     const rot = rotazioneMarkerMascot(punti, mascot);
-    const html = htmlMarkerMascotGps(mascot, rot);
-    const { iconSize, iconAnchor } = DIMENSIONI_MARKER_MASCOT;
+    const chiaveIcona = `${mascotId}-${Math.round(rot / 8)}`;
 
     if (!markerRef.current) {
-      const icona = L.divIcon({
-        className: 'marker-mascot-wrap',
-        html,
-        iconSize,
-        iconAnchor,
-      });
-      markerRef.current = L.marker(ultimo, { icon: icona, zIndexOffset: 1000 }).addTo(mappa);
+      markerRef.current = L.marker(ultimo, {
+        icon: creaIconaMascotLeaflet(L, mascot, rot),
+        zIndexOffset: 1000,
+      }).addTo(mappa);
+      ultimaIconaRef.current = chiaveIcona;
     } else {
       const m = markerRef.current as {
         setLatLng: (latlng: [number, number]) => void;
         setIcon: (icon: unknown) => void;
       };
       m.setLatLng(ultimo);
-      m.setIcon(
-        L.divIcon({
-          className: 'marker-mascot-wrap',
-          html,
-          iconSize,
-          iconAnchor,
-        }),
-      );
+      if (chiaveIcona !== ultimaIconaRef.current) {
+        ultimaIconaRef.current = chiaveIcona;
+        m.setIcon(creaIconaMascotLeaflet(L, mascot, rot));
+      }
     }
 
     if (inCorso) {
-      mappa.panTo(ultimo, { animate: true });
+      mappa.panTo(ultimo, { animate: true, duration: 0.35, easeLinearity: 0.25 });
     } else if (latlngs.length > 1 && !(percorsoNav && percorsoNav.length > 1)) {
       mappa.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30] });
     }

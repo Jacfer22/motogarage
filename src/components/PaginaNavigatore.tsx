@@ -31,7 +31,7 @@ export default function PaginaNavigatore() {
   const { user } = useAuth();
   const { conferma } = useFeedback();
   const track = useTracciamentoGiro(user?.id);
-  const { mascotId } = useMascotGpsId();
+  const { mascotId, impostaMascot } = useMascotGpsId();
   const [query, setQuery] = useState('');
   const [risultati, setRisultati] = useState<DestinazioneNav[]>([]);
   const [destinazione, setDestinazione] = useState<DestinazioneNav | null>(null);
@@ -201,95 +201,114 @@ export default function PaginaNavigatore() {
   }
 
   return (
-    <div className="app-pagina pagina-immersiva flex min-h-[calc(100dvh-4rem)] flex-col">
-      <div className="border-b border-white/10 bg-notte px-4 py-5 text-cemento">
-        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand">Navigatore</p>
-        <h1 className="mt-1 font-display text-2xl font-black uppercase leading-tight tracking-tight text-white">
-          Dove vuoi andare?
-        </h1>
-        <p className="mt-2 text-sm text-cemento/55">
-          Scegli la modalità più sicura per te. La rotta rossa è quella da fare — non confonderla col giro già fatto.
-        </p>
+    <div className="nav-setup-pagina flex min-h-[calc(100dvh-4rem)] flex-col">
+      <div className="nav-setup-scroll flex-1 overflow-y-auto overscroll-contain">
+        <div className="border-b border-white/10 bg-notte px-4 py-5 text-cemento">
+          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand">Navigatore</p>
+          <h1 className="mt-1 font-display text-2xl font-black uppercase leading-tight tracking-tight text-white">
+            Dove vuoi andare?
+          </h1>
+          <p className="mt-2 text-sm text-cemento/55">
+            Scegli la modalità più sicura per te. La rotta rossa è quella da fare — non confonderla col giro già fatto.
+          </p>
 
-        <div className="nav-modalita-scelta mt-4">
-          <button
-            type="button"
-            onClick={() => cambiaModalita('mappa')}
-            className={`tap nav-modalita-btn ${modalita === 'mappa' ? 'nav-modalita-btn-attivo' : ''}`}
-          >
-            <span className="font-display text-sm font-black uppercase text-white">Mappa moto</span>
-            <span className="mt-1 block text-left text-xs text-cemento/55">Rotta rossa + indicazioni grandi</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => cambiaModalita('testo')}
-            className={`tap nav-modalita-btn ${modalita === 'testo' ? 'nav-modalita-btn-attivo' : ''}`}
-          >
-            <span className="font-display text-sm font-black uppercase text-white">Solo scritte · consigliato</span>
-            <span className="mt-1 block text-left text-xs text-cemento/55">Sfondo nero · metri e manovra al centro · zero distrazioni</span>
-          </button>
+          <div className="nav-modalita-scelta mt-4">
+            <button
+              type="button"
+              onClick={() => cambiaModalita('mappa')}
+              className={`tap nav-modalita-btn ${modalita === 'mappa' ? 'nav-modalita-btn-attivo' : ''}`}
+            >
+              <span className="font-display text-sm font-black uppercase text-white">Mappa moto</span>
+              <span className="mt-1 block text-left text-xs text-cemento/55">Rotta rossa + indicazioni grandi</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => cambiaModalita('testo')}
+              className={`tap nav-modalita-btn ${modalita === 'testo' ? 'nav-modalita-btn-attivo' : ''}`}
+            >
+              <span className="font-display text-sm font-black uppercase text-white">Solo scritte · consigliato</span>
+              <span className="mt-1 block text-left text-xs text-cemento/55">Sfondo nero · metri e manovra al centro</span>
+            </button>
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && cerca()}
+              placeholder="Destinazione…"
+              className="editor-card-input min-w-0 flex-1"
+              maxLength={80}
+            />
+            <button
+              type="button"
+              onClick={cerca}
+              disabled={caricamento || query.trim().length < 2}
+              className="tap btn-primary shrink-0 px-5 disabled:opacity-40"
+            >
+              Vai
+            </button>
+          </div>
+          {risultati.length > 0 && (
+            <ul className="mt-3 max-h-44 overflow-y-auto rounded-app border border-white/10 bg-black/40">
+              {risultati.map((r) => (
+                <li key={`${r.lat}-${r.lng}`}>
+                  <button
+                    type="button"
+                    onClick={() => impostaDestinazione(r)}
+                    className="tap w-full border-b border-white/5 px-3 py-3 text-left text-sm text-cemento/85 last:border-0 hover:bg-brand/10"
+                  >
+                    {r.nome}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {(erroreNav || track.errore) && (
+            <p className="mt-2 text-sm text-red-400">{erroreNav ?? track.errore}</p>
+          )}
+          {caricamento && (
+            <p className="mt-2 font-mono text-[10px] uppercase text-cemento/40">Calcolo percorso…</p>
+          )}
+          {modalita === 'mappa' && (
+            <div className="mt-4">
+              <SelettoreMascotteGps compatto onChange={impostaMascot} />
+            </div>
+          )}
         </div>
 
-        <div className="mt-4 flex gap-2">
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && cerca()}
-            placeholder="Destinazione…"
-            className="editor-card-input min-w-0 flex-1"
-            maxLength={80}
-          />
-          <button
-            type="button"
-            onClick={cerca}
-            disabled={caricamento || query.trim().length < 2}
-            className="tap btn-primary shrink-0 px-5 disabled:opacity-40"
-          >
-            Vai
-          </button>
-        </div>
-        {risultati.length > 0 && (
-          <ul className="mt-3 max-h-44 overflow-y-auto rounded-app border border-white/10 bg-black/40">
-            {risultati.map((r) => (
-              <li key={`${r.lat}-${r.lng}`}>
-                <button
-                  type="button"
-                  onClick={() => impostaDestinazione(r)}
-                  className="tap w-full border-b border-white/5 px-3 py-3 text-left text-sm text-cemento/85 last:border-0 hover:bg-brand/10"
-                >
-                  {r.nome}
-                </button>
-              </li>
-            ))}
-          </ul>
+        {modalita === 'mappa' ? (
+          <div className="nav-setup-mappa relative h-[min(42dvh,320px)] min-h-[200px] w-full shrink-0">
+            <MappaNavigatore
+              posizione={posizione}
+              percorsoNav={rotta?.percorso}
+              percorsoGps={track.punti}
+              mostraTracciatoGps={false}
+              destinazione={destinazione}
+              segui={segui}
+              onSeguiChange={setSegui}
+              ricentraTick={ricentraTick}
+              mascotId={mascotId}
+              seguiAnimato={false}
+            />
+          </div>
+        ) : (
+          <div className="nav-setup-testo-preview shrink-0 px-4 py-8">
+            <div className="nav-setup-testo-mock">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand/70">Anteprima solo scritte</p>
+              <p className="nav-testo-distanza mt-6 font-display font-black text-brand">250 m</p>
+              <p className="nav-testo-manovra mt-4 font-display font-black uppercase text-white">Gira a destra</p>
+              <p className="nav-testo-via mt-3 font-display font-bold uppercase text-cemento/60">Via Example</p>
+              <p className="mt-8 font-mono text-[10px] uppercase leading-relaxed text-cemento/40">
+                Nessuna mappa in strada — solo distanza e manovra, come in navigazione attiva.
+              </p>
+            </div>
+          </div>
         )}
-        {(erroreNav || track.errore) && (
-          <p className="mt-2 text-sm text-red-400">{erroreNav ?? track.errore}</p>
-        )}
-        {caricamento && (
-          <p className="mt-2 font-mono text-[10px] uppercase text-cemento/40">Calcolo percorso…</p>
-        )}
-        <div className="mt-4">
-          <SelettoreMascotteGps compatto />
-        </div>
       </div>
 
-      <div className="relative min-h-[45dvh] flex-1">
-        <MappaNavigatore
-          posizione={posizione}
-          percorsoNav={rotta?.percorso}
-          percorsoGps={track.punti}
-          mostraTracciatoGps={false}
-          destinazione={destinazione}
-          segui={segui}
-          onSeguiChange={setSegui}
-          ricentraTick={ricentraTick}
-          mascotId={mascotId}
-        />
-      </div>
-
-      <div className="border-t border-white/8 px-4 py-3">
+      <div className="shrink-0 border-t border-white/8 bg-notte px-4 py-3 safe-bottom">
         <Link href="/traccia" className="font-mono text-[10px] font-bold uppercase tracking-wide text-cemento/45 underline hover:text-brand">
           Traccia senza destinazione
         </Link>

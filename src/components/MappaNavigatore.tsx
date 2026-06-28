@@ -3,8 +3,7 @@
 import { useEffect, useRef } from 'react';
 import type { Punto } from '@/lib/geo';
 import {
-  DIMENSIONI_MARKER_MASCOT,
-  htmlMarkerMascotGps,
+  creaIconaMascotLeaflet,
   mascotGps,
   rotazioneMascotNav,
   type IdMascotGps,
@@ -59,6 +58,7 @@ export default function MappaNavigatore({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const leafletRef = useRef<any>(null);
   const onSeguiChangeRef = useRef(onSeguiChange);
+  const ultimaIconaRef = useRef('');
 
   useEffect(() => {
     const mappa = mappaRef.current as { invalidateSize?: () => void } | null;
@@ -184,40 +184,46 @@ export default function MappaNavigatore({
 
     const mascot = mascotGps(mascotId);
     const rot = rotazioneMascotNav(percorsoGps, posizione, mascot);
-    const htmlMascot = htmlMarkerMascotGps(mascot, rot);
-    const html = markerPosizioneHtml ?? htmlMascot;
-    const neon = html.includes('marker-neon-reel');
-    const usaMascot = !markerPosizioneHtml;
-    const iconSize = neon ? [24, 24] : usaMascot ? DIMENSIONI_MARKER_MASCOT.iconSize : [20, 20];
-    const iconAnchor = neon ? [12, 12] : usaMascot ? DIMENSIONI_MARKER_MASCOT.iconAnchor : [10, 10];
-    const className = neon || usaMascot ? 'marker-mascot-wrap' : '';
+    const chiaveIcona = markerPosizioneHtml ?? `${mascotId}-${Math.round(rot / 8)}`;
 
     if (!markerRef.current) {
-      const icona = L.divIcon({
-        className,
-        html,
-        iconSize,
-        iconAnchor,
-      });
+      const html = markerPosizioneHtml;
+      const icona = html
+        ? L.divIcon({
+            className: html.includes('marker-neon-reel') ? 'reel-marker-wrap' : 'reel-marker-wrap',
+            html,
+            iconSize: html.includes('marker-neon-reel') ? [24, 24] : [52, 36],
+            iconAnchor: html.includes('marker-neon-reel') ? [12, 12] : [26, 18],
+          })
+        : creaIconaMascotLeaflet(L, mascot, rot);
       markerRef.current = L.marker(latlng, { icon: icona, zIndexOffset: 1000 }).addTo(mappa);
+      ultimaIconaRef.current = chiaveIcona;
     } else {
       const m = markerRef.current as {
         setLatLng: (l: [number, number]) => void;
         setIcon: (i: unknown) => void;
       };
       m.setLatLng(latlng);
-      m.setIcon(
-        L.divIcon({
-          className,
-          html,
-          iconSize,
-          iconAnchor,
-        }),
-      );
+      if (chiaveIcona !== ultimaIconaRef.current) {
+        ultimaIconaRef.current = chiaveIcona;
+        if (markerPosizioneHtml) {
+          const neon = markerPosizioneHtml.includes('marker-neon-reel');
+          m.setIcon(
+            L.divIcon({
+              className: 'reel-marker-wrap',
+              html: markerPosizioneHtml,
+              iconSize: neon ? [24, 24] : [52, 36],
+              iconAnchor: neon ? [12, 12] : [26, 18],
+            }),
+          );
+        } else {
+          m.setIcon(creaIconaMascotLeaflet(L, mascot, rot));
+        }
+      }
     }
 
     if (segui) {
-      mappa.setView(latlng, Math.max(mappa.getZoom(), zoomMinimo), { animate: seguiAnimato });
+      mappa.panTo(latlng, { animate: seguiAnimato, duration: 0.4, easeLinearity: 0.22 });
     }
   }, [posizione, segui, markerPosizioneHtml, mascotId, percorsoGps, zoomMinimo, seguiAnimato]);
 
@@ -247,7 +253,7 @@ export default function MappaNavigatore({
   return (
     <div
       ref={contenitore}
-      className={fullscreen ? 'absolute inset-0 h-full w-full' : 'h-full min-h-[45dvh] w-full'}
+      className={fullscreen ? 'absolute inset-0 h-full w-full overflow-hidden' : 'h-full min-h-[200px] w-full overflow-hidden'}
       role="img"
       aria-label="Mappa navigatore con la tua posizione GPS"
     />

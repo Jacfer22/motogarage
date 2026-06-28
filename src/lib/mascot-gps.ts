@@ -8,16 +8,14 @@ export interface MascotGps {
   ruolo: string;
   immagine: string;
   accent: string;
-  /** Rotazione PNG di default (gradi) — il marker somma la direzione di marcia */
   rotazioneBase: number;
 }
 
-/** Mascotte GPS disponibili oggi */
 export const MASCOTTE_GPS: MascotGps[] = [
   {
     id: 'rosso',
     nome: 'Rosso',
-    ruolo: 'Sport · traccia e curve',
+    ruolo: 'Sport',
     immagine: '/mascot/rosso-sport.png',
     accent: '#ED2100',
     rotazioneBase: -90,
@@ -25,7 +23,7 @@ export const MASCOTTE_GPS: MascotGps[] = [
   {
     id: 'blu',
     nome: 'Blu',
-    ruolo: 'Adventure · itinerari',
+    ruolo: 'Adventure',
     immagine: '/mascot/blu-adventure.png',
     accent: '#2B8CDE',
     rotazioneBase: 90,
@@ -33,14 +31,13 @@ export const MASCOTTE_GPS: MascotGps[] = [
   {
     id: 'nero',
     nome: 'Nero',
-    ruolo: 'Cruiser · garage',
+    ruolo: 'Cruiser',
     immagine: '/mascot/nero-cruiser.png',
     accent: '#C8C4BC',
     rotazioneBase: -90,
   },
 ];
 
-/** Anteprima moto sbloccabili in futuro (solo teaser UI) */
 export const MOTO_GPS_FUTURE = [
   { id: 'panigale', nome: 'Panigale', emoji: '🏁' },
   { id: 'africa', nome: 'Adventure', emoji: '🏔️' },
@@ -51,6 +48,9 @@ export const MOTO_GPS_FUTURE = [
 ] as const;
 
 const CHIAVE_STORAGE = 'motogarage-mascot-gps';
+
+/** Pixel display sul marker mappa (PNG sorgente molto grandi) */
+export const MASCOT_MARKER_PX = 40;
 
 export function mascotGps(id: IdMascotGps): MascotGps {
   return MASCOTTE_GPS.find((m) => m.id === id) ?? MASCOTTE_GPS[0];
@@ -68,7 +68,6 @@ export function salvaMascotGps(id: IdMascotGps): void {
   localStorage.setItem(CHIAVE_STORAGE, id);
 }
 
-/** Bearing geografico in gradi (0 = nord, senso orario) */
 export function direzioneGradi(da: Punto, a: Punto): number {
   const lat1 = (da.lat * Math.PI) / 180;
   const lat2 = (a.lat * Math.PI) / 180;
@@ -89,7 +88,6 @@ export function rotazioneMarkerMascot(punti: Punto[], mascot: MascotGps): number
   return mascot.rotazioneBase;
 }
 
-/** Rotazione durante navigazione (GPS o verso posizione corrente) */
 export function rotazioneMascotNav(
   percorsoGps: Punto[] | undefined,
   posizione: Punto | null,
@@ -104,13 +102,29 @@ export function rotazioneMascotNav(
   return mascot.rotazioneBase;
 }
 
+/** HTML marker con dimensioni inline — Leaflet ignora spesso il CSS globale sulle PNG enormi */
 export function htmlMarkerMascotGps(mascot: MascotGps, rotazioneGradi = mascot.rotazioneBase): string {
-  return `<div class="marker-mascot-gps" style="--mascot-accent:${mascot.accent};--mascot-rot:${rotazioneGradi}deg" aria-hidden="true">
-    <img src="${mascot.immagine}" alt="" draggable="false" />
+  const px = MASCOT_MARKER_PX;
+  return `<div class="marker-mascot-gps" style="width:${px}px;height:${px}px;overflow:visible;display:flex;align-items:flex-end;justify-content:center;--mascot-accent:${mascot.accent}">
+    <img src="${mascot.immagine}" alt="" draggable="false" width="${px}" height="${px}" style="width:${px}px;height:${px}px;max-width:${px}px;max-height:${px}px;object-fit:contain;display:block;transform:rotate(${rotazioneGradi}deg);transform-origin:center bottom" />
   </div>`;
 }
 
 export const DIMENSIONI_MARKER_MASCOT = {
-  iconSize: [52, 52] as [number, number],
-  iconAnchor: [26, 44] as [number, number],
+  iconSize: [44, 44] as [number, number],
+  iconAnchor: [22, 38] as [number, number],
 };
+
+export function creaIconaMascotLeaflet(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  L: any,
+  mascot: MascotGps,
+  rotazioneGradi: number,
+) {
+  return L.divIcon({
+    className: 'marker-mascot-wrap',
+    html: htmlMarkerMascotGps(mascot, rotazioneGradi),
+    iconSize: DIMENSIONI_MARKER_MASCOT.iconSize,
+    iconAnchor: DIMENSIONI_MARKER_MASCOT.iconAnchor,
+  });
+}
